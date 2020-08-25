@@ -8,6 +8,6 @@ using namespace std;
 #include "PKB.h"
 #include "TNode.h"
 
-int Parse () {
+int Parse() {
     return 0;
 }
