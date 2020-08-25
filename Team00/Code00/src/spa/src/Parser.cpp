@@ -1,5 +1,5 @@
-#include<stdio.h>
 #include <iostream>
+#include <stdio.h>
 #include <string>
 #include <vector>
 
@@ -9,6 +9,5 @@ using namespace std;
 #include "TNode.h"
 
 int Parse () {
-
-	return 0;
+    return 0;
 }
