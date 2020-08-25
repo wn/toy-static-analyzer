@@ -28,6 +28,9 @@ jobs:
     
     - name: clang-format lint
       uses: DoozyX/clang-format-lint-action@v0.8
+      with:
+        source: './src/spa'
+        extensions: 'cpp,h'
 
 
     # Runs a set of commands using the runners shell
