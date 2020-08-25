@@ -68,5 +68,5 @@ struct Token {
     explicit Token(TokenType t) : type(t), line(), linePosition(), nameValue(), integerValue(){};
 };
 
-std::vector<Token> tokenize(std::string fileContent);
+std::vector<Token> tokenize(std::istream &stream);
 }

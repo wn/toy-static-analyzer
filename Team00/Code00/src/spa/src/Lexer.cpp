@@ -6,7 +6,7 @@
 
 namespace lexer {
 
-// for debugging
+// TODO remove this. this is for debugging
 std::map<TokenType, std::string> showtype = {
     { LBRACE, "LBRACE" },
     { RBRACE, "RBRACE" },
@@ -65,51 +65,62 @@ std::vector<std::pair<TokenType, std::string>> rules = {
     { INTEGER, "^(\\d+)\\b" },
 };
 
-std::string_view trimLeadingWhitespace(const std::string_view& s) {
-    const std::string WHITESPACE = " \n\r\t\f\v";
-    size_t start = s.find_first_not_of(WHITESPACE);
-    return (start == std::string::npos) ? "" : s.substr(start);
+
+std::vector<std::string> splitLines(std::istream& stream) {
+    std::vector<std::string> result;
+    std::string line;
+    while (std::getline(stream, line)) {
+        result.push_back(line);
+    }
+    return result;
 }
 
-std::vector<Token> tokenize(std::string content) {
-    std::string_view fileView = std::string_view(content);
+std::vector<Token> tokenize(std::istream& stream) {
     std::vector<Token> result;
-    fileView = trimLeadingWhitespace(fileView);
-    int line = 0;
-    int linePos = 0;
-    while (fileView.size() > 0) {
-        bool matchedSomething = false;
-        for (auto const& p : rules) {
-            // TODO scrap
-            if (p.second.empty()) continue;
 
-            std::match_results<std::string_view::const_iterator> match;
-            if (std::regex_search(fileView.begin(), fileView.end(), match, std::regex(p.second))) {
+    int lineNumber = 0;
+    std::vector<std::string> lines = splitLines(stream);
 
-                std::cout << showtype[p.first] << ":" << match.str() << " ";
-                if (p.first == LBRACE || p.first == RBRACE || p.first == SEMICOLON)
-                    std::cout << "\n";
+    for (; lineNumber < lines.size(); lineNumber++) {
+        std::string line = lines[lineNumber];
+        std::string originalLine = line.substr();
+        while (!line.empty()) {
+            bool matchedSomething = false;
+            for (auto const& p : rules) {
+                std::smatch match;
+                if (std::regex_search(line, match, std::regex(p.second))) {
 
-                Token t(p.first);
-                if (p.first == NAME) {
-                    t.nameValue = match.str();
-                } else if (p.first == INTEGER) {
-                    t.integerValue = std::stoi(match.str());
+                    Token t(p.first);
+                    t.line = lineNumber;
+                    t.linePosition = (int) (originalLine.size() - line.size());
+                    if (p.first == NAME) {
+                        t.nameValue = match.str();
+                    } else if (p.first == INTEGER) {
+                        t.integerValue = std::stoi(match.str());
+                    }
+                    result.push_back(t);
+
+                    // TODO remove this. This is for debugging
+                    std::cout << showtype[p.first] << "<" << t.line << ", " << t.linePosition << ">";
+                    if (p.first == NAME || p.first == INTEGER)
+                              std::cout << ":" << match.str();
+                    std::cout << " ";
+                    if (p.first == LBRACE || p.first == RBRACE || p.first == SEMICOLON)
+                        std::cout << "\n";
+
+
+                    matchedSomething = true;
+                    line = line.substr(match.str().size());
+                    break;
                 }
-                result.push_back(t);
+            }
 
-                matchedSomething = true;
-                int push = match.str().size();
-                if (push == 0) push = 1;
-                fileView = fileView.substr(push);
-                break;
+            // No valid matches. Move on
+            if (!matchedSomething) {
+                // TODO log the first few characters or something
+                line = line.substr(1);
             }
         }
-
-        // Move along. TODO this shouldnt be needed.
-        if (!matchedSomething) fileView = fileView.substr(1);
-
-        fileView = trimLeadingWhitespace(fileView);
     }
     return result;
 }
