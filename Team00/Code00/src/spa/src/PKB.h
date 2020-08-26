@@ -29,6 +29,7 @@ class PKB {
     /* API for parents */
     STATEMENTS getAncestors(STATEMENT s);
     STATEMENTS getDescendents(STATEMENT s);
+
   private:
     // get all statements in the same block as s.
     STATEMENTS getBlockStatementsNumber(STATEMENT s);
