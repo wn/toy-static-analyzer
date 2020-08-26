@@ -1,11 +1,4 @@
-//
-// Created by Vignesh Shankar on 25/8/20.
-//
-
-#ifndef AUTOTESTER_LEXER_H
-#define AUTOTESTER_LEXER_H
-
-#endif // AUTOTESTER_LEXER_H
+#pragma once
 
 #include <iostream>
 #include <map>

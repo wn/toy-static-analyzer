@@ -1,12 +1,9 @@
-//
-// Created by Vignesh Shankar on 25/8/20.
-//
+#define DEBUG 0
 
 #include "Lexer.h"
 
 namespace lexer {
 
-// TODO remove this. this is for debugging
 std::map<TokenType, std::string> showtype = {
     { LBRACE, "LBRACE" },
     { RBRACE, "RBRACE" },
@@ -100,14 +97,14 @@ std::vector<Token> tokenize(std::istream& stream) {
                     }
                     result.push_back(t);
 
-                    // TODO remove this. This is for debugging
-                    std::cout << showtype[p.first] << "<" << t.line << ", " << t.linePosition << ">";
-                    if (p.first == NAME || p.first == INTEGER)
-                              std::cout << ":" << match.str();
-                    std::cout << " ";
-                    if (p.first == LBRACE || p.first == RBRACE || p.first == SEMICOLON)
-                        std::cout << "\n";
-
+                    if (DEBUG) {
+                        std::cout << showtype[p.first] << "<" << t.line << ", " << t.linePosition << ">";
+                        if (p.first == NAME || p.first == INTEGER)
+                            std::cout << ":" << match.str();
+                        std::cout << " ";
+                        if (p.first == LBRACE || p.first == RBRACE || p.first == SEMICOLON)
+                            std::cout << "\n";
+                    }
 
                     matchedSomething = true;
                     line = line.substr(match.str().size());
