@@ -25,20 +25,12 @@ STATEMENTS PKB::getPostFollows(STATEMENT s) {
     return STATEMENTS();
 }
 
-bool PKB::isFollow(STATEMENT s1, STATEMENT s2, bool glob) {
-    return false;
-}
-
 STATEMENTS PKB::getAncestors(STATEMENT s) {
     return STATEMENTS();
 }
 
 STATEMENTS PKB::getDescendents(STATEMENT s) {
     return STATEMENTS();
-}
-
-bool PKB::isAncestor(STATEMENT s1, STATEMENT s2, bool glob) {
-    return false;
 }
 
 STATEMENTS PKB::getBlockStatementsNumber(STATEMENT s) {

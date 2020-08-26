@@ -25,14 +25,10 @@ class PKB {
     STATEMENTS getPreFollows(STATEMENT s);
     // Given s, return all s' such that follow*(s, s').
     STATEMENTS getPostFollows(STATEMENT s);
-    bool isFollow(STATEMENT s1, STATEMENT s2, bool glob = false);
 
     /* API for parents */
     STATEMENTS getAncestors(STATEMENT s);
     STATEMENTS getDescendents(STATEMENT s);
-    // Check if s1 is an ancestor of s2
-    bool isAncestor(STATEMENT s1, STATEMENT s2, bool glob = false);
-
   private:
     // get all statements in the same block as s.
     STATEMENTS getBlockStatementsNumber(STATEMENT s);
