@@ -89,7 +89,7 @@ std::vector<Token> tokenize(std::istream& stream) {
 
                     Token t(p.first);
                     t.line = lineNumber;
-                    t.linePosition = (int) (originalLine.size() - line.size());
+                    t.linePosition = (int)(originalLine.size() - line.size());
                     if (p.first == NAME) {
                         t.nameValue = match.str();
                     } else if (p.first == INTEGER) {
@@ -99,8 +99,7 @@ std::vector<Token> tokenize(std::istream& stream) {
 
                     if (DEBUG) {
                         std::cout << showtype[p.first] << "<" << t.line << ", " << t.linePosition << ">";
-                        if (p.first == NAME || p.first == INTEGER)
-                            std::cout << ":" << match.str();
+                        if (p.first == NAME || p.first == INTEGER) std::cout << ":" << match.str();
                         std::cout << " ";
                         if (p.first == LBRACE || p.first == RBRACE || p.first == SEMICOLON)
                             std::cout << "\n";

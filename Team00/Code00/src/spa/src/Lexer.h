@@ -1,12 +1,12 @@
 #pragma once
 
+#include <algorithm>
 #include <iostream>
 #include <map>
 #include <regex>
 #include <string>
 #include <string_view>
 #include <vector>
-#include <algorithm>
 
 namespace lexer {
 enum TokenType {
@@ -61,5 +61,5 @@ struct Token {
     explicit Token(TokenType t) : type(t), line(), linePosition(), nameValue(), integerValue(){};
 };
 
-std::vector<Token> tokenize(std::istream &stream);
-}
+std::vector<Token> tokenize(std::istream& stream);
+} // namespace lexer
