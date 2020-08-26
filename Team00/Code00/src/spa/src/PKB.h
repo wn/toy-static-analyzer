@@ -9,6 +9,7 @@ typedef short PROC;
 typedef int STATEMENT;
 typedef std::vector<STATEMENT> STATEMENTS;
 
+namespace backend {
 class TNode;
 
 class VarTable; // no need to #include "VarTable.h" as all I need is pointer
@@ -24,15 +25,16 @@ class PKB {
     STATEMENTS getPreFollows(STATEMENT s);
     // Given s, return all s' such that follow*(s, s').
     STATEMENTS getPostFollows(STATEMENT s);
-    bool isFollow(STATEMENT s1, STATEMENT s2);
+    bool isFollow(STATEMENT s1, STATEMENT s2, bool glob = false);
 
     /* API for parents */
-    STATEMENTS getParents(STATEMENT s);
-    STATEMENTS getChildren(STATEMENT s);
-    // Check if s1 is a parent of s2
-    bool isParent(STATEMENT s1, STATEMENT s2);
+    STATEMENTS getAncestors(STATEMENT s);
+    STATEMENTS getDescendents(STATEMENT s);
+    // Check if s1 is an ancestor of s2
+    bool isAncestor(STATEMENT s1, STATEMENT s2, bool glob = false);
 
   private:
     // get all statements in the same block as s.
     STATEMENTS getBlockStatementsNumber(STATEMENT s);
 };
+} // namespace backend

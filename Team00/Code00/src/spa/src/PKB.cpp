@@ -8,6 +8,7 @@
 #include "PKB.h"
 #include "TNode.h"
 
+namespace backend {
 int PKB::setProcToAST(PROC p, TNode* r) {
     return 0;
 }
@@ -24,22 +25,23 @@ STATEMENTS PKB::getPostFollows(STATEMENT s) {
     return STATEMENTS();
 }
 
-bool PKB::isFollow(STATEMENT s1, STATEMENT s2) {
+bool PKB::isFollow(STATEMENT s1, STATEMENT s2, bool glob) {
     return false;
 }
 
-STATEMENTS PKB::getParents(STATEMENT s) {
+STATEMENTS PKB::getAncestors(STATEMENT s) {
     return STATEMENTS();
 }
 
-STATEMENTS PKB::getChildren(STATEMENT s) {
+STATEMENTS PKB::getDescendents(STATEMENT s) {
     return STATEMENTS();
 }
 
-bool PKB::isParent(STATEMENT s1, STATEMENT s2) {
+bool PKB::isAncestor(STATEMENT s1, STATEMENT s2, bool glob) {
     return false;
 }
 
 STATEMENTS PKB::getBlockStatementsNumber(STATEMENT s) {
     return STATEMENTS();
 }
+} // namespace backend
