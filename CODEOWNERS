@@ -1,0 +1,12 @@
+# These owners will be the default owners for everything in
+# the repo. Unless a later match takes precedence,
+* @huichun66 @doittomorrow @eleenyang @wn @remo5000  @jeffkwoh
+
+# CPP Readability owners
+*.cpp @wn @remo5000
+*.h @wn @remo5000
+
+# Owners for any files in a docs directory. Includes nested
+# files.
+docs/  @jeffkwoh @huichun66
+
