@@ -5,9 +5,11 @@
 #include <string>
 #include <vector>
 
-using namespace std;
 typedef short PROC;
+typedef int STATEMENT;
+typedef std::vector<STATEMENT> STATEMENTS;
 
+namespace backend {
 class TNode;
 
 class VarTable; // no need to #include "VarTable.h" as all I need is pointer
@@ -17,4 +19,18 @@ class PKB {
     static VarTable* varTable;
     static int setProcToAST(PROC p, TNode* r);
     static TNode* getRootAST(PROC p);
+
+    /* API for follows */
+    // Given s, return all s' such that follow*(s', s).
+    STATEMENTS getPreFollows(STATEMENT s);
+    // Given s, return all s' such that follow*(s, s').
+    STATEMENTS getPostFollows(STATEMENT s);
+
+    /* API for parents */
+    STATEMENTS getAncestors(STATEMENT s);
+    STATEMENTS getDescendents(STATEMENT s);
+
+  private:
+    STATEMENTS getStatementsInSameBlock(STATEMENT s);
 };
+} // namespace backend
