@@ -33,7 +33,7 @@ STATEMENTS PKB::getDescendents(STATEMENT s) {
     return STATEMENTS();
 }
 
-STATEMENTS PKB::getBlockStatementsNumber(STATEMENT s) {
+STATEMENTS PKB::getStatementsInSameBlock(STATEMENT s) {
     return STATEMENTS();
 }
 } // namespace backend

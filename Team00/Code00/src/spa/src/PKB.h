@@ -31,7 +31,6 @@ class PKB {
     STATEMENTS getDescendents(STATEMENT s);
 
   private:
-    // get all statements in the same block as s.
-    STATEMENTS getBlockStatementsNumber(STATEMENT s);
+    STATEMENTS getStatementsInSameBlock(STATEMENT s);
 };
 } // namespace backend
