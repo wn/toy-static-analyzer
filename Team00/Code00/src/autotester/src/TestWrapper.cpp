@@ -23,7 +23,7 @@ TestWrapper::TestWrapper() {
 void TestWrapper::parse(std::string filename) {
     std::ifstream inputFileStream;
     inputFileStream.open(filename);
-//    std::string fileContents = std::string(std::istreambuf_iterator<char>{inputFileStream}, {});
+    //    std::string fileContents = std::string(std::istreambuf_iterator<char>{inputFileStream}, {});
     lexer::tokenize(inputFileStream);
     // call your parser to do the parsing
     // ...rest of your code...
