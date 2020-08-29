@@ -1,5 +1,7 @@
 **/CMakeCache.txt
 **/Team00/Code00/CMakeFiles/
+**/Team00/Code00/build_win/
+**/.vs/
 **/.idea/
 **/out.xml
 **/cmake-build-debug/
