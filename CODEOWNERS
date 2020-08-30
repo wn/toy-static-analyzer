@@ -7,6 +7,11 @@
 *.cpp @wn @remo5000
 *.h @wn @remo5000
 
+# SPA backend
+Lexer.* @wn @remo5000
+Parser.* @wn @remo5000
+TNode.* @wn @remo5000
+
 # Owners for any files in a docs directory. Includes nested
 # files.
 docs/  @jeffkwoh @huichun66

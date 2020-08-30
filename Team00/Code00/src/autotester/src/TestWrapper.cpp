@@ -1,8 +1,11 @@
 #include "TestWrapper.h"
 #include <Lexer.h>
+#include <Parser.h>
 #include <fstream>
 #include <ios>
 #include <iterator>
+
+#define DEBUG 1
 
 // implementation code of WrapperFactory - do NOT modify the next 5 lines
 AbstractWrapper* WrapperFactory::wrapper = 0;
@@ -23,10 +26,9 @@ TestWrapper::TestWrapper() {
 void TestWrapper::parse(std::string filename) {
     std::ifstream inputFileStream;
     inputFileStream.open(filename);
-    //    std::string fileContents = std::string(std::istreambuf_iterator<char>{inputFileStream}, {});
-    lexer::tokenize(inputFileStream);
-    // call your parser to do the parsing
-    // ...rest of your code...
+    backend::TNode ast = backend::Parser(backend::lexer::tokenize(inputFileStream)).parse();
+    DEBUG&& std::cout << "AST:" << std::endl
+                      << backend::TNode::toString(ast, 0) << std::endl; // for debugging
 }
 
 // method to evaluating a query

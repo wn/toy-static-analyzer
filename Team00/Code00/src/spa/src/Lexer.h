@@ -8,6 +8,7 @@
 #include <string_view>
 #include <vector>
 
+namespace backend {
 namespace lexer {
 enum TokenType {
     // Characters
@@ -47,6 +48,7 @@ enum TokenType {
     INTEGER,
 };
 
+std::string prettyPrintType(TokenType t);
 
 struct Token {
     // Required
@@ -63,3 +65,4 @@ struct Token {
 
 std::vector<Token> tokenize(std::istream& stream);
 } // namespace lexer
+} // namespace backend

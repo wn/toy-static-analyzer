@@ -2,40 +2,44 @@
 
 #include "Lexer.h"
 
+namespace backend {
 namespace lexer {
 
-std::map<TokenType, std::string> showtype = {
-    { LBRACE, "LBRACE" },
-    { RBRACE, "RBRACE" },
-    { LPAREN, "LPAREN" },
-    { RPAREN, "RPAREN" },
-    { SEMICOLON, "SEMICOLON" },
-    { SINGLE_EQ, "SINGLE_EQ" },
-    { NOT, "NOT" },
-    { ANDAND, "ANDAND" },
-    { OROR, "OROR" },
-    { EQEQ, "EQEQ" },
-    { NEQ, "NEQ" },
-    { GT, "GT" },
-    { GTE, "GTE" },
-    { LT, "LT" },
-    { LTE, "LTE" },
-    { PLUS, "PLUS" },
-    { MINUS, "MINUS" },
-    { MULT, "MULT" },
-    { DIV, "DIV" },
-    { MOD, "MOD" },
-    { PROCEDURE, "PROCEDURE" },
-    { READ, "READ" },
-    { PRINT, "PRINT" },
-    { WHILE, "WHILE" },
-    { CALL, "CALL" },
-    { IF, "IF" },
-    { THEN, "THEN" },
-    { ELSE, "ELSE" },
-    { NAME, "NAME" },
-    { INTEGER, "INTEGER" },
-};
+std::string prettyPrintType(TokenType t) {
+    std::map<TokenType, std::string> m = {
+        { LBRACE, "LBRACE" },
+        { RBRACE, "RBRACE" },
+        { LPAREN, "LPAREN" },
+        { RPAREN, "RPAREN" },
+        { SEMICOLON, "SEMICOLON" },
+        { SINGLE_EQ, "SINGLE_EQ" },
+        { NOT, "NOT" },
+        { ANDAND, "ANDAND" },
+        { OROR, "OROR" },
+        { EQEQ, "EQEQ" },
+        { NEQ, "NEQ" },
+        { GT, "GT" },
+        { GTE, "GTE" },
+        { LT, "LT" },
+        { LTE, "LTE" },
+        { PLUS, "PLUS" },
+        { MINUS, "MINUS" },
+        { MULT, "MULT" },
+        { DIV, "DIV" },
+        { MOD, "MOD" },
+        { PROCEDURE, "PROCEDURE" },
+        { READ, "READ" },
+        { PRINT, "PRINT" },
+        { WHILE, "WHILE" },
+        { CALL, "CALL" },
+        { IF, "IF" },
+        { THEN, "THEN" },
+        { ELSE, "ELSE" },
+        { NAME, "NAME" },
+        { INTEGER, "INTEGER" },
+    };
+    return m[t];
+}
 
 std::vector<std::pair<TokenType, std::string>> rules = {
     { LBRACE, "^\\{" },        { RBRACE, "^\\}" },
@@ -75,11 +79,11 @@ std::vector<std::string> splitLines(std::istream& stream) {
 std::vector<Token> tokenize(std::istream& stream) {
     std::vector<Token> result;
 
-    int lineNumber = 0;
+    int lineNumber = 1;
     std::vector<std::string> lines = splitLines(stream);
 
-    for (; lineNumber < lines.size(); lineNumber++) {
-        std::string line = lines[lineNumber];
+    for (; lineNumber <= lines.size(); lineNumber++) {
+        std::string line = lines[lineNumber - 1];
         std::string originalLine = line.substr();
         while (!line.empty()) {
             bool matchedSomething = false;
@@ -98,7 +102,7 @@ std::vector<Token> tokenize(std::istream& stream) {
                     result.push_back(t);
 
                     if (DEBUG) {
-                        std::cout << showtype[p.first] << "<" << t.line << ", " << t.linePosition << ">";
+                        std::cout << prettyPrintType(p.first) << "<" << t.line << ", " << t.linePosition << ">";
                         if (p.first == NAME || p.first == INTEGER) std::cout << ":" << match.str();
                         std::cout << " ";
                         if (p.first == LBRACE || p.first == RBRACE || p.first == SEMICOLON)
@@ -122,3 +126,4 @@ std::vector<Token> tokenize(std::istream& stream) {
 }
 
 } // namespace lexer
+} // namespace backend

@@ -1,0 +1,9 @@
+procedure Example {
+  x = 2;
+  z = 3;
+  i = 5;
+  call p;
+  }
+
+procedure p {
+  z = z + x + i; }
