@@ -1,8 +1,7 @@
 #include "TNode.h"
 
 namespace backend {
-
-std::string TNode::getName(TNodeType t) {
+std::string getTNodeTypeString(TNodeType t) {
     switch (t) {
     case TNodeType::Program:
         return "Program";
@@ -62,25 +61,49 @@ std::string TNode::getName(TNodeType t) {
     };
 }
 
-std::string TNode::toString(TNode const& tNode, int tabs) {
-    std::string name = getName(tNode.type);
+std::string TNode::toString() const {
+    return toStringHelper(0);
+}
+
+std::string TNode::toStringHelper(int tabs) const {
+    std::string name = getTNodeTypeString(type);
     std::ostringstream stringStream;
 
     for (int i = 0; i < tabs; ++i)
         stringStream << " ";
-    stringStream << name << " " << tNode.name;
-    if (tNode.line >= 0) {
-        stringStream << " @ " << tNode.line;
+    stringStream << name << " " << name;
+    if (line >= 0) {
+        stringStream << " @ " << line;
     }
     stringStream << " : [\n";
 
-    for (const auto& child : tNode.children) {
-        stringStream << toString(child, tabs + 1);
+    for (const auto& child : children) {
+        stringStream << child.toStringHelper(tabs + 1);
     }
 
     for (int i = 0; i < tabs; ++i)
         stringStream << " ";
     stringStream << "]\n";
     return stringStream.str();
+}
+
+bool TNode::operator==(const TNode& rhs) const {
+    if (type != rhs.type || line != rhs.line || name != rhs.name) {
+        return false;
+    }
+    if (children.size() != rhs.children.size()) {
+        return false;
+    }
+    for (int i = 0; i < children.size(); ++i) {
+        if (children[i] == rhs.children[i]) {
+            continue;
+        }
+        return false;
+    }
+    return true;
+}
+
+void TNode::addChild(const TNode& c) {
+    children.emplace_back(c);
 }
 } // namespace backend

@@ -97,5 +97,4 @@ State Parser::parseProcedure(int tokenPos) {
         return stmtListResult;
     }
 }
-
 } // namespace backend

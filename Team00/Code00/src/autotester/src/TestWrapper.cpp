@@ -27,8 +27,7 @@ void TestWrapper::parse(std::string filename) {
     std::ifstream inputFileStream;
     inputFileStream.open(filename);
     backend::TNode ast = backend::Parser(backend::lexer::tokenize(inputFileStream)).parse();
-    DEBUG&& std::cout << "AST:" << std::endl
-                      << backend::TNode::toString(ast, 0) << std::endl; // for debugging
+    DEBUG&& std::cout << "AST:" << std::endl << ast.toString() << std::endl; // for debugging
 }
 
 // method to evaluating a query

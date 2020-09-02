@@ -43,6 +43,8 @@ enum TNodeType {
     INVALID,
 };
 
+std::string getTNodeTypeString(TNodeType t);
+
 
 class TNode {
   public:
@@ -60,7 +62,11 @@ class TNode {
     // For variables and procedures
     std::string name;
 
-    static std::string toString(TNode const& tNode, int tabs);
-    static std::string getName(TNodeType t);
+    void addChild(const TNode& c);
+    std::string toString() const;
+    bool operator==(const TNode& s) const;
+
+  private:
+    std::string toStringHelper(int tabs) const;
 };
 } // namespace backend
