@@ -40,7 +40,7 @@ bool Parser::tokenTypeIs(int pos, lexer::TokenType type) {
 
 // Parsers
 TNode Parser::parse() {
-    log("Parser: Parsing program");
+    logLine("Parser: Parsing program");
     return parseProgram(0).tNode;
 }
 
@@ -49,17 +49,17 @@ State Parser::parseProgram(int tokenPos) {
     while (haveTokensLeft(tokenPos)) {
         State procState = parseProcedure(tokenPos);
         if (!procState.accepted) {
-            log("Parser: Could not parse Program from");
-            log(procState.pos);
+            logLine("Parser: Could not parse Program from");
+            logWord(procState.pos);
             return State(tokenPos);
         } else {
-            log("Parser: Procedure AC");
+            logLine("Parser: Procedure AC");
             programNode.children.emplace_back(procState.tNode);
             tokenPos = procState.pos;
         }
     }
 
-    log("Parser: Program AC");
+    logLine("Parser: Program AC");
     return State(tokenPos, programNode);
 }
 
