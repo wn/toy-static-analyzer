@@ -1,0 +1,14 @@
+procedure Example {
+    while () {
+        x = 1;
+    }
+    if () then {
+        x = 1;
+    } else {
+        x = 1;
+    }
+    some_var = 23 + another_var;
+}
+
+procedure p {
+}

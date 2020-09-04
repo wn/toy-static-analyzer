@@ -7,28 +7,27 @@
 #include "Parser.h"
 
 namespace backend {
-
-// Constructors
 Parser::Parser(std::vector<lexer::Token> tokens) : tokens(std::move(tokens)) {
 }
-State::State(int pos)
-: accepted(false), tNode(TNode(TNodeType::INVALID, std::vector<TNode>())), pos(pos){};
-State::State(int pos, TNode tNode) : accepted(true), tNode(std::move(tNode)), pos(pos){};
+State::State(int tokenPos, TNode tNode) : tNode(std::move(tNode)), tokenPos(tokenPos){};
 
-// Parser Helpers
-bool Parser::haveTokensLeft(int pos) {
-    return pos < tokens.size();
+bool Parser::haveTokensLeft(int tokenPos) const {
+    return tokenPos < tokens.size();
 }
 
-lexer::Token Parser::peekToken(int pos) {
-    assert(haveTokensLeft(pos));
-    return tokens[pos];
+lexer::Token Parser::peekToken(int tokenPos) {
+    assert(haveTokensLeft(tokenPos));
+    return tokens[tokenPos];
 }
 
-lexer::Token Parser::popToken(int pos) {
-    assert(haveTokensLeft(pos));
-    lexer::Token tok = peekToken(pos);
-    pos++;
+lexer::Token Parser::assertTokenAndPop(int& tokenPos, lexer::TokenType type) {
+    assert(haveTokensLeft(tokenPos));
+    if (tokens[tokenPos].type != type) {
+        throw std::runtime_error("expect " + lexer::prettyPrintType(type) + ", got " +
+                                 lexer::prettyPrintType(tokens[tokenPos].type));
+    }
+    lexer::Token tok = peekToken(tokenPos);
+    tokenPos++;
     return tok;
 }
 
@@ -37,64 +36,50 @@ bool Parser::tokenTypeIs(int pos, lexer::TokenType type) {
     return tokens[pos].type == type;
 }
 
-
-// Parsers
 TNode Parser::parse() {
     logLine("Parser: Parsing program");
-    return parseProgram(0).tNode;
+    auto result = parseProgram(0).tNode;
+    logLine("Parser: Parsed program completed.");
+    return result;
 }
 
 State Parser::parseProgram(int tokenPos) {
+    logLine("start parseProgram");
     TNode programNode = TNode(TNodeType::Program);
     while (haveTokensLeft(tokenPos)) {
         State procState = parseProcedure(tokenPos);
-        if (!procState.accepted) {
-            logLine("Parser: Could not parse Program from");
-            logWord(procState.pos);
-            return State(tokenPos);
-        } else {
-            logLine("Parser: Procedure AC");
-            programNode.children.emplace_back(procState.tNode);
-            tokenPos = procState.pos;
-        }
+        programNode.addChild(procState.tNode);
+        tokenPos = procState.tokenPos;
     }
-
-    logLine("Parser: Program AC");
+    logLine("success parseProgram");
     return State(tokenPos, programNode);
 }
 
-// Consume a token, return false state with the current tokens if we fail.
-#define EAT(tokenType)                                        \
-    if (haveTokensLeft(pos) && tokenTypeIs(pos, tokenType)) { \
-        popToken(pos);                                        \
-    } else                                                    \
-        return State(pos);
-
 State Parser::parseProcedure(int tokenPos) {
-    if (!tokenTypeIs(tokenPos, lexer::TokenType::PROCEDURE)) {
-        return State(tokenPos);
-    }
-    TNode procedureNode = TNode(TNodeType::Procedure, popToken(tokenPos).line);
+    logLine("start parseProcedure");
+    TNode procedureNode =
+    TNode(TNodeType::Procedure, assertTokenAndPop(tokenPos, lexer::TokenType::PROCEDURE).line);
+    procedureNode.name = assertTokenAndPop(tokenPos, lexer::TokenType::NAME).nameValue;
 
-    if (!tokenTypeIs(tokenPos, lexer::TokenType::NAME)) {
-        return State(tokenPos);
-    }
-    procedureNode.name = peekToken(tokenPos).nameValue;
-    popToken(tokenPos);
+    State stmtListResult = parseStatementList(tokenPos);
+    procedureNode.children.push_back(stmtListResult.tNode);
+    logLine("success parseProcedure");
+    return State(stmtListResult.tokenPos, procedureNode);
+}
+
+State Parser::parseStatementList(int tokenPos) {
+    logLine("start parseStatementList");
+    TNode statementList(TNodeType::StatementList,
+                        assertTokenAndPop(tokenPos, lexer::TokenType::LBRACE).line);
 
     // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/48)
-    // Parse Statement Lists here instead of consuming everything and
-    // making a dummy result.
-    while (haveTokensLeft(tokenPos) && !tokenTypeIs(tokenPos, lexer::TokenType::RBRACE))
-        popToken(tokenPos);
-    assert(tokenTypeIs(tokenPos, lexer::TokenType::RBRACE)), popToken(tokenPos);
-
-    State stmtListResult = State(tokenPos, TNode(TNodeType::StatementList, -1));
-    if (stmtListResult.accepted) {
-        procedureNode.children.push_back(stmtListResult.tNode);
-        return State(stmtListResult.pos, procedureNode);
-    } else {
-        return stmtListResult;
+    // don't consume until RBRACE here
+    while (haveTokensLeft(tokenPos) && !tokenTypeIs(tokenPos, lexer::TokenType::RBRACE)) {
+        tokenPos++;
     }
+
+    assertTokenAndPop(tokenPos, lexer::TokenType::RBRACE);
+    logLine("success parseStatementList");
+    return State(tokenPos, statementList);
 }
 } // namespace backend

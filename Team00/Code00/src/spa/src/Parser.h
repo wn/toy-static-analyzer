@@ -8,14 +8,11 @@
 namespace backend {
 class State {
   public:
-    explicit State(int pos);
-    explicit State(int pos, TNode tNode);
-    // Used to check if parsing was successful
-    bool accepted;
-    // Created tNode, if accepted
+    explicit State(int tokenPos, TNode tNode);
+    // Created tNode
     TNode tNode;
     // ending position
-    int pos{ -1 };
+    int tokenPos{ -1 };
 };
 
 class Parser {
@@ -24,16 +21,21 @@ class Parser {
     // Generate AST from parser.
     TNode parse();
 
-  private:
     std::vector<lexer::Token> tokens;
-    // Helpers
-    bool haveTokensLeft(int pos);
-    bool tokenTypeIs(int pos, lexer::TokenType);
-    lexer::Token peekToken(int pos);
-    lexer::Token popToken(int pos);
+    // -- Helpers --
 
-    // Parser primitives
+    // Returns true if there are any tokens left in the
+    // Parser's vector of tokens. tokenPos is 0-indexed.
+    bool haveTokensLeft(int tokenPos) const;
+    bool tokenTypeIs(int tokenPos, lexer::TokenType);
+    lexer::Token peekToken(int tokenPos);
+    lexer::Token assertTokenAndPop(int& tokenPos, lexer::TokenType);
+
+    // -- Parser primitives --
     State parseProgram(int tokenPos);
     State parseProcedure(int tokenPos);
+
+    // Stmt
+    State parseStatementList(int tokenPos);
 };
 } // namespace backend
