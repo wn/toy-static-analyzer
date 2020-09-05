@@ -16,8 +16,7 @@ TNode generateProgramNodeFromStatement(const std::string& name, const TNode& nod
     TNode stmtNode(TNodeType::StatementList, 1);
     stmtNode.addChild(node);
 
-    TNode procNode(TNodeType::Procedure, 1);
-    procNode.name = name;
+    TNode procNode(TNodeType::Procedure, 1, name);
     procNode.addChild(stmtNode);
 
     TNode progNode(TNodeType::Program, -1);
@@ -25,18 +24,24 @@ TNode generateProgramNodeFromStatement(const std::string& name, const TNode& nod
     return progNode;
 }
 
-TEST_CASE("Test parseEmptyProcedure") {
+
+TEST_CASE("Test parseStatementList fails on 0 statements") {
     Parser parser = GenerateParserFromTokens("procedure p{}");
+    REQUIRE_THROWS_WITH(parser.parse(), "expect NAME, got RBRACE");
+}
+
+TEST_CASE("Test parseAssign") {
+    Parser parser = GenerateParserFromTokens("procedure p{y = 1 + 1;}");
     TNode result = parser.parse();
 
-    TNode stmtNode(TNodeType::StatementList, 1);
-    TNode procNode(TNodeType::Procedure, 1);
-    procNode.name = "p";
-    procNode.addChild(stmtNode);
+    TNode stmt(TNodeType::Assign, 1);
+    stmt.name = "y";
+    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/64):
+    stmt.addChild(TNode(TNodeType::INVALID));
+    stmt.addChild(TNode(TNodeType::INVALID));
+    stmt.addChild(TNode(TNodeType::INVALID));
 
-    TNode progNode(TNodeType::Program, -1);
-    progNode.addChild(procNode);
-    require(result == progNode);
+    require(result == generateProgramNodeFromStatement("p", stmt));
 }
 } // namespace testparser
 } // namespace backend

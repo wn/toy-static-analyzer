@@ -37,5 +37,7 @@ class Parser {
 
     // Stmt
     State parseStatementList(int tokenPos);
+    State parseStatement(int tokenPos);
+    State parseAssign(int tokenPos);
 };
 } // namespace backend
