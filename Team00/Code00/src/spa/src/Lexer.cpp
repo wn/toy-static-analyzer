@@ -27,14 +27,6 @@ std::string prettyPrintType(TokenType t) {
         { MULT, "MULT" },
         { DIV, "DIV" },
         { MOD, "MOD" },
-        { PROCEDURE, "PROCEDURE" },
-        { READ, "READ" },
-        { PRINT, "PRINT" },
-        { WHILE, "WHILE" },
-        { CALL, "CALL" },
-        { IF, "IF" },
-        { THEN, "THEN" },
-        { ELSE, "ELSE" },
         { NAME, "NAME" },
         { INTEGER, "INTEGER" },
     };
@@ -58,11 +50,7 @@ std::vector<std::pair<TokenType, std::string>> rules = {
 
     { PLUS, "^(\\+)" },        { MINUS, "^(-)" },
     { MULT, "^(\\*)" },        { DIV, "^(\\/)" },
-    { MOD, "^(%)" },           { PROCEDURE, "^(procedure)" },
-    { READ, "^(read)" },       { PRINT, "^(print)" },
-    { WHILE, "^(while)" },     { CALL, "^(call)" },
-    { IF, "^(if)" },           { THEN, "^(then)" },
-    { ELSE, "^(else)" },       { NAME, "^([a-zA-Z]\\w*)\\b" },
+    { MOD, "^(%)" },           { NAME, "^([a-zA-Z]\\w*)\\b" },
     { INTEGER, "^(\\d+)\\b" },
 };
 

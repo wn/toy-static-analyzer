@@ -30,6 +30,11 @@ TEST_CASE("Test parseStatementList fails on 0 statements") {
     REQUIRE_THROWS_WITH(parser.parse(), "expect NAME, got RBRACE");
 }
 
+TEST_CASE("Test procedure with name 'procedure'") {
+    Parser parser = GenerateParserFromTokens("procedure procedure {y = 1 + 1;}");
+    REQUIRE_NOTHROW(parser.parse());
+}
+
 TEST_CASE("Test parseAssign") {
     Parser parser = GenerateParserFromTokens("procedure p{y = 1 + 1;}");
     TNode result = parser.parse();

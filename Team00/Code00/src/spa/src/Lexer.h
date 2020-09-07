@@ -33,16 +33,6 @@ enum TokenType {
     DIV,
     MOD,
 
-    // Language Constructs
-    PROCEDURE,
-    READ,
-    PRINT,
-    WHILE,
-    CALL,
-    IF,
-    THEN,
-    ELSE,
-
     // Words, which have value in them.
     NAME,
     INTEGER,
