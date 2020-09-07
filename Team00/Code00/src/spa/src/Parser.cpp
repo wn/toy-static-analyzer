@@ -28,7 +28,7 @@ lexer::Token Parser::assertNameTokenAndPop(int& tokenPos, const std::string& nam
         throw std::runtime_error("expect " + lexer::prettyPrintType(lexer::TokenType::NAME) + " with value \"" +
                                  name + "\", got " + lexer::prettyPrintType(tokens[tokenPos].type));
     }
-    lexer::Token tok(std::move(peekToken(tokenPos)));
+    const lexer::Token& tok(std::move(peekToken(tokenPos)));
     if (tok.nameValue.empty() || tok.nameValue != name) {
         throw std::runtime_error("expect " + lexer::prettyPrintType(lexer::TokenType::NAME) +
                                  " with value \"" + name + "\", got \"" + name + "\" instead");
@@ -44,7 +44,7 @@ lexer::Token Parser::assertTokenAndPop(int& tokenPos, lexer::TokenType type) {
         throw std::runtime_error("expect " + lexer::prettyPrintType(type) + ", got " +
                                  lexer::prettyPrintType(tokens[tokenPos].type));
     }
-    lexer::Token tok(std::move(peekToken(tokenPos)));
+    const lexer::Token& tok(std::move(peekToken(tokenPos)));
     tokenPos++;
     return tok;
 }
@@ -104,17 +104,58 @@ State Parser::parseStatementList(int tokenPos) {
 
 State Parser::parseStatement(int tokenPos) {
     logLine("start parseStatement");
+    if (tokenTypeIs(tokenPos, lexer::TokenType::NAME) && peekToken(tokenPos).nameValue == constants::IF) {
+        return parseIf(tokenPos);
+    }
     // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/48)
     // Implement call, print, read. If any of these is called, code will default to parseAssign.
     logLine("Successfully parsed a statement for a statementlist.");
     return parseAssign(tokenPos);
 }
 
+State Parser::parseIf(int tokenPos) {
+    logLine("start parseIf");
+    TNode ifElseNode(TNodeType::IfElse, assertNameTokenAndPop(tokenPos, constants::IF).line);
+
+    const State& conditionalExpressionResult = parseCondition(tokenPos);
+    tokenPos = conditionalExpressionResult.tokenPos;
+
+    assertNameTokenAndPop(tokenPos, constants::THEN);
+
+    const State& thenStatementListResult = parseStatementList(tokenPos);
+    tokenPos = thenStatementListResult.tokenPos;
+    ifElseNode.addChild(thenStatementListResult.tNode);
+
+    assertNameTokenAndPop(tokenPos, constants::ELSE);
+
+    const State& elseStatementListResult = parseStatementList(tokenPos);
+    tokenPos = elseStatementListResult.tokenPos;
+    ifElseNode.addChild(thenStatementListResult.tNode);
+    logLine("success parseIf");
+    return State(tokenPos, ifElseNode);
+}
+
+State Parser::parseCondition(int tokenPos) {
+    logLine("start parseCondition");
+    assertTokenAndPop(tokenPos, lexer::TokenType::LPAREN);
+
+    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/49)
+    // We are not parsing an expression here, as we should
+    while (haveTokensLeft(tokenPos) && !tokenTypeIs(tokenPos, lexer::TokenType::RPAREN)) {
+        tokenPos++;
+    }
+
+    assertTokenAndPop(tokenPos, lexer::TokenType::RPAREN);
+    logLine("success parseCondition");
+    return State(tokenPos, TNode(TNodeType::INVALID, -1));
+}
+
 State Parser::parseAssign(int tokenPos) {
     logLine("start parseAssign");
 
-    lexer::Token nameToken(std::move(assertTokenAndPop(tokenPos, lexer::TokenType::NAME)));
-    TNode assignNode(TNodeType::Assign, nameToken.line, nameToken.nameValue);
+    const lexer::Token& nameToken = assertTokenAndPop(tokenPos, lexer::TokenType::NAME);
+    TNode assignNode(TNodeType::Assign, nameToken.line);
+    assignNode.name = nameToken.nameValue;
 
     assertTokenAndPop(tokenPos, lexer::TokenType::SINGLE_EQ);
 

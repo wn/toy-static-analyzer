@@ -24,7 +24,6 @@ TNode generateProgramNodeFromStatement(const std::string& name, const TNode& nod
     return progNode;
 }
 
-
 TEST_CASE("Test parseStatementList fails on 0 statements") {
     Parser parser = GenerateParserFromTokens("procedure p{}");
     REQUIRE_THROWS_WITH(parser.parse(), "expect NAME, got RBRACE");
@@ -33,6 +32,24 @@ TEST_CASE("Test parseStatementList fails on 0 statements") {
 TEST_CASE("Test procedure with name 'procedure'") {
     Parser parser = GenerateParserFromTokens("procedure procedure {y = 1 + 1;}");
     REQUIRE_NOTHROW(parser.parse());
+}
+
+TEST_CASE("Test parseIf") {
+    Parser parser =
+    GenerateParserFromTokens("procedure p{ if (xoxo == 1) then {x=2;} else {x=2;}}");
+    REQUIRE_NOTHROW(parser.parse());
+
+    // No "then"
+    parser = GenerateParserFromTokens("procedure p{ if (xoxo == 1) {x=2;} else {x=2;}}");
+    REQUIRE_THROWS_WITH(parser.parse(), "expect NAME with value \"then\", got LBRACE");
+
+    // No "else"
+    parser = GenerateParserFromTokens("procedure p{ if (xoxo == 1) then {x=2;} {x=2;}}");
+    REQUIRE_THROWS_WITH(parser.parse(), "expect NAME with value \"else\", got LBRACE");
+
+    // empty statement list
+    parser = GenerateParserFromTokens("procedure p{ if (xoxo == 1) then {} else {x=2;}}");
+    REQUIRE_THROWS_WITH(parser.parse(), "expect NAME, got RBRACE");
 }
 
 TEST_CASE("Test parseAssign") {

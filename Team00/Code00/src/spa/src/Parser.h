@@ -50,6 +50,8 @@ class Parser {
     // Stmt
     State parseStatementList(int tokenPos);
     State parseStatement(int tokenPos);
+    State parseIf(int tokenPos);
+    State parseCondition(int tokenPos);
     State parseAssign(int tokenPos);
 };
 } // namespace backend
