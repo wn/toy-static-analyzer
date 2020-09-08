@@ -55,6 +55,13 @@ bool Parser::tokenTypeIs(int tokenPos, lexer::TokenType type) {
     return tokens[tokenPos].type == type;
 }
 
+bool Parser::tokenHasName(int tokenPos, const std::string& name) {
+    if (!haveTokensLeft(tokenPos))
+        throw std::runtime_error("no more tokens left when trying to tokenHasName");
+    const lexer::Token& token = peekToken(tokenPos);
+    return token.type == lexer::TokenType::NAME && token.nameValue == name;
+}
+
 TNode Parser::parse() {
     logLine("Parser: Parsing program");
     TNode result(std::move(parseProgram(0).tNode));
@@ -104,8 +111,11 @@ State Parser::parseStatementList(int tokenPos) {
 
 State Parser::parseStatement(int tokenPos) {
     logLine("start parseStatement");
-    if (tokenTypeIs(tokenPos, lexer::TokenType::NAME) && peekToken(tokenPos).nameValue == constants::IF) {
+    if (tokenHasName(tokenPos, constants::IF)) {
         return parseIf(tokenPos);
+    }
+    if (tokenHasName(tokenPos, constants::WHILE)) {
+        return parseWhile(tokenPos);
     }
     // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/48)
     // Implement call, print, read. If any of these is called, code will default to parseAssign.
@@ -133,6 +143,22 @@ State Parser::parseIf(int tokenPos) {
     ifElseNode.addChild(thenStatementListResult.tNode);
     logLine("success parseIf");
     return State(tokenPos, ifElseNode);
+}
+
+State Parser::parseWhile(int tokenPos) {
+    logLine("start parseWhile");
+    TNode whileNode(TNodeType::While, assertNameTokenAndPop(tokenPos, constants::WHILE).line);
+
+    const State& condResult = parseCondition(tokenPos);
+    tokenPos = condResult.tokenPos;
+    whileNode.addChild(condResult.tNode);
+
+    const State& stmtListResult = parseStatementList(tokenPos);
+    tokenPos = stmtListResult.tokenPos;
+    whileNode.addChild(stmtListResult.tNode);
+
+    logLine("success parseWhile");
+    return State(tokenPos, whileNode);
 }
 
 State Parser::parseCondition(int tokenPos) {

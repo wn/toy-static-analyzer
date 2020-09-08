@@ -39,6 +39,7 @@ class Parser {
     // Parser's vector of tokens. tokenPos is 0-indexed.
     bool haveTokensLeft(int tokenPos) const;
     bool tokenTypeIs(int tokenPos, lexer::TokenType);
+    bool tokenHasName(int tokenPos, const std::string& name);
     lexer::Token peekToken(int tokenPos);
     lexer::Token assertTokenAndPop(int& tokenPos, lexer::TokenType);
     lexer::Token assertNameTokenAndPop(int& tokenPos, const std::string& name);
@@ -51,6 +52,7 @@ class Parser {
     State parseStatementList(int tokenPos);
     State parseStatement(int tokenPos);
     State parseIf(int tokenPos);
+    State parseWhile(int tokenPos);
     State parseCondition(int tokenPos);
     State parseAssign(int tokenPos);
 };
