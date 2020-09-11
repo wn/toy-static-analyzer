@@ -2,6 +2,7 @@
 #define AUTOTESTER_LOGGER_H
 
 #include <iostream>
+#include <string>
 
 // Global Helpers
 #define DEBUG 1

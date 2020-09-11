@@ -1,6 +1,7 @@
 #include "Logger.h"
 
 #include <iostream>
+#include <string>
 
 // Logs a value with a newline suffix
 void logLine(const std::string& s) {
