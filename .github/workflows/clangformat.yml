@@ -19,5 +19,5 @@ jobs:
     - name: clang-format lint
       uses: DoozyX/clang-format-lint-action@v0.8
       with:
-        source: './Team00/Code00/src'
+        source: './Team24/Code24/src'
         extensions: 'cpp,h'
