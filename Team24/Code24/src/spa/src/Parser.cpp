@@ -56,7 +56,7 @@ bool Parser::tokenHasName(int tokenPos, const std::string& name) {
 
 TNode Parser::parse() {
     logLine("Parser: Parsing program");
-    TNode result(std::move(parseProgram(0).tNode));
+    TNode result = parseProgram(0).tNode;
     logLine("Parser: Parsed program completed.");
     return result;
 }
@@ -65,7 +65,7 @@ State Parser::parseProgram(int tokenPos) {
     logLine("start parseProgram");
     TNode programNode(TNodeType::Program);
     while (haveTokensLeft(tokenPos)) {
-        State procState(std::move(parseProcedure(tokenPos)));
+        State procState = parseProcedure(tokenPos);
         programNode.addChild(procState.tNode);
         tokenPos = procState.tokenPos;
     }
@@ -79,7 +79,7 @@ State Parser::parseProcedure(int tokenPos) {
                         /* line no */ assertNameTokenAndPop(tokenPos, constants::PROCEDURE).line);
     procedureNode.name = assertTokenAndPop(tokenPos, lexer::TokenType::NAME).nameValue;
 
-    State stmtListResult(std::move(parseStatementList(tokenPos)));
+    State stmtListResult = parseStatementList(tokenPos);
     procedureNode.children.push_back(stmtListResult.tNode);
     logLine("success parseProcedure");
     return State(stmtListResult.tokenPos, procedureNode);
@@ -91,7 +91,7 @@ State Parser::parseStatementList(int tokenPos) {
                         assertTokenAndPop(tokenPos, lexer::TokenType::LBRACE).line);
 
     do {
-        State statementResult(std::move(parseStatement(tokenPos)));
+        State statementResult = parseStatement(tokenPos);
         statementList.addChild(statementResult.tNode);
         tokenPos = statementResult.tokenPos;
     } while (haveTokensLeft(tokenPos) && !tokenTypeIs(tokenPos, lexer::TokenType::RBRACE));
