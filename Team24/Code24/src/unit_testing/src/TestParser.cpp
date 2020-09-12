@@ -16,7 +16,8 @@ TNode generateProgramNodeFromStatement(const std::string& name, const TNode& nod
     TNode stmtNode(TNodeType::StatementList, 1);
     stmtNode.addChild(node);
 
-    TNode procNode(TNodeType::Procedure, 1, name);
+    TNode procNode(TNodeType::Procedure, 1);
+    procNode.name = name;
     procNode.addChild(stmtNode);
 
     TNode progNode(TNodeType::Program, -1);
@@ -47,11 +48,11 @@ TEST_CASE("Test parseIf") {
 
     // No "then"
     parser = GenerateParserFromTokens("procedure p{ if (xoxo == 1) {x=2;} else {x=2;}}");
-    REQUIRE_THROWS_WITH(parser.parse(), "expect NAME with value \"then\", got LBRACE");
+    REQUIRE_THROWS_WITH(parser.parse(), "expect NAME, got LBRACE");
 
     // No "else"
     parser = GenerateParserFromTokens("procedure p{ if (xoxo == 1) then {x=2;} {x=2;}}");
-    REQUIRE_THROWS_WITH(parser.parse(), "expect NAME with value \"else\", got LBRACE");
+    REQUIRE_THROWS_WITH(parser.parse(), "expect NAME, got LBRACE");
 
     // empty statement list
     parser = GenerateParserFromTokens("procedure p{ if (xoxo == 1) then {} else {x=2;}}");

@@ -19,7 +19,6 @@ enum TNodeType {
     While,
 
     // Expressions
-    NotEq,
     And,
     Or,
     Greater,
@@ -49,11 +48,11 @@ std::string getTNodeTypeString(TNodeType t);
 class TNode {
   public:
     // Some TNode don't need line number.
-    TNode(TNodeType type, std::vector<TNode> children, int line = -1, const std::string& name = "")
+    explicit TNode(TNodeType type, std::vector<TNode> children, int line = -1)
     : type(type), children(std::move(children)), line(line) {
     }
-    explicit TNode(TNodeType type, int line = -1, const std::string& name = "")
-    : type(type), children(std::vector<TNode>()), line(line), name(name) {
+    explicit TNode(TNodeType type, int line = -1)
+    : type(type), children(std::vector<TNode>()), line(line) {
     }
     TNodeType type;
     std::vector<TNode> children;
@@ -61,6 +60,8 @@ class TNode {
 
     // For variables and procedures
     std::string name;
+    // For constants
+    int constant;
 
     void addChild(const TNode& c);
     std::string toString() const;

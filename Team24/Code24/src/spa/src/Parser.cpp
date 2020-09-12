@@ -22,30 +22,22 @@ lexer::Token Parser::peekToken(int tokenPos) {
 }
 
 lexer::Token Parser::assertNameTokenAndPop(int& tokenPos, const std::string& name) {
-    if (!haveTokensLeft(tokenPos))
-        throw std::runtime_error("no more tokens left when trying to assertNameTokenAndPop");
-    if (tokens[tokenPos].type != lexer::TokenType::NAME) {
+    const lexer::Token& tok = assertTokenAndPop(tokenPos, lexer::TokenType::NAME);
+    if (tok.nameValue != name) {
         throw std::runtime_error("expect " + lexer::prettyPrintType(lexer::TokenType::NAME) + " with value \"" +
-                                 name + "\", got " + lexer::prettyPrintType(tokens[tokenPos].type));
+                                 name + "\", got " + lexer::prettyPrintType(lexer::TokenType::NAME) +
+                                 " with value\"" + tok.nameValue + "\" instead");
     }
-    const lexer::Token& tok(std::move(peekToken(tokenPos)));
-    if (tok.nameValue.empty() || tok.nameValue != name) {
-        throw std::runtime_error("expect " + lexer::prettyPrintType(lexer::TokenType::NAME) +
-                                 " with value \"" + name + "\", got \"" + name + "\" instead");
-    }
-    tokenPos++;
     return tok;
 }
 
 lexer::Token Parser::assertTokenAndPop(int& tokenPos, lexer::TokenType type) {
-    if (!haveTokensLeft(tokenPos))
-        throw std::runtime_error("no more tokens left when trying to assertTokenAndPop");
-    if (tokens[tokenPos].type != type) {
-        throw std::runtime_error("expect " + lexer::prettyPrintType(type) + ", got " +
-                                 lexer::prettyPrintType(tokens[tokenPos].type));
-    }
-    const lexer::Token& tok(std::move(peekToken(tokenPos)));
+    const lexer::Token& tok = peekToken(tokenPos);
     tokenPos++;
+    if (tok.type != type) {
+        throw std::runtime_error("expect " + lexer::prettyPrintType(type) + ", got " +
+                                 lexer::prettyPrintType(tok.type));
+    }
     return tok;
 }
 
@@ -84,8 +76,8 @@ State Parser::parseProgram(int tokenPos) {
 State Parser::parseProcedure(int tokenPos) {
     logLine("start parseProcedure");
     TNode procedureNode(TNodeType::Procedure,
-                        /* line no */ assertNameTokenAndPop(tokenPos, constants::PROCEDURE).line,
-                        /* name */ assertTokenAndPop(tokenPos, lexer::TokenType::NAME).nameValue);
+                        /* line no */ assertNameTokenAndPop(tokenPos, constants::PROCEDURE).line);
+    procedureNode.name = assertTokenAndPop(tokenPos, lexer::TokenType::NAME).nameValue;
 
     State stmtListResult(std::move(parseStatementList(tokenPos)));
     procedureNode.children.push_back(stmtListResult.tNode);

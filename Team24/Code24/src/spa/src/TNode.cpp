@@ -21,8 +21,6 @@ std::string getTNodeTypeString(TNodeType t) {
         return "Read";
     case TNodeType::While:
         return "While";
-    case TNodeType::NotEq:
-        return "NotEq";
     case TNodeType::And:
         return "And";
     case TNodeType::Or:
