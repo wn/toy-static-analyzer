@@ -15,4 +15,5 @@ TNode.* @wn @remo5000
 # Owners for any files in a docs directory. Includes nested
 # files.
 docs/  @jeffkwoh @huichun66
+Tests24/ @eleenyang
 
