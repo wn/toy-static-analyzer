@@ -5,3 +5,4 @@
 **/.idea/
 **/out.xml
 **/cmake-build-debug/
+**/cmake-build-release/
