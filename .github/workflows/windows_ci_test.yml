@@ -1,0 +1,49 @@
+name: Windows CI
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+# If you are doing triggering your workflow from pushes or merging more than twice a day on average,
+# please execute your workflow on a schedule instead.
+# Comment the above 7 lines, and uncomment the following 3 lines
+# on:
+#   schedule:
+#     - cron: "0 09,23 * * *"
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  run-tests-on-windows:
+    runs-on: windows-latest
+    timeout-minutes: 3
+    strategy:
+      fail-fast: true
+      matrix:
+        build-type: [Release, Debug]
+        #        test-target: [unit_testing, integration_testing]
+        
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build Project
+        run: |
+          cd Team24/Code24
+          mkdir build
+          cd build
+          cmake -A Win32 ..
+          cmake --build . --target unit_testing --config ${{ matrix.build-type }}
+          cmake --build . --target integration_testing --config ${{ matrix.build-type }}
+          cmake --build . --target autotester --config ${{ matrix.build-type }}
+          ls -R
+          cd ../..
+      
+      - name: Run unit tests
+        run: ./Team24/Code24/build/src/unit_testing/${{ matrix.build-type }}/unit_testing.exe
+
+      - name: Run integration tests
+        run: ./Team24/Code24/build/src/integration_testing/${{ matrix.build-type }}/integration_testing.exe
