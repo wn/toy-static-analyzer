@@ -26,7 +26,6 @@ jobs:
       fail-fast: true
       matrix:
         build-type: [Release, Debug]
-        #        test-target: [unit_testing, integration_testing]
         
     steps:
       - uses: actions/checkout@v2
@@ -39,11 +38,28 @@ jobs:
           cmake --build . --target unit_testing --config ${{ matrix.build-type }}
           cmake --build . --target integration_testing --config ${{ matrix.build-type }}
           cmake --build . --target autotester --config ${{ matrix.build-type }}
-          ls -R
           cd ../..
+
+      # Print after build to check the built files. 
+      - name: Print directories recursively (for debugging)
+        run: ls -R
       
       - name: Run unit tests
         run: ./Team24/Code24/build/src/unit_testing/${{ matrix.build-type }}/unit_testing.exe
 
       - name: Run integration tests
         run: ./Team24/Code24/build/src/integration_testing/${{ matrix.build-type }}/integration_testing.exe
+      
+      # TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/130):
+      # Add script to configure which queries and source code to run autotester
+      # with on CI.
+      - name: Run autotester tests
+        run: |
+          cd Team24/Tests24
+          ../Code24/build/src/autotester/${{ matrix.build-type }}/autotester.exe ./trivial_source.txt ./Sample_queries.txt output.xml
+      
+      # After the auto tester is run, print out the directories to check where
+      # the output `xml` file is.
+      - name: Print directories recursively (for debugging)
+        run: ls -R
+
