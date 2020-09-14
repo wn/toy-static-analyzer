@@ -1,5 +1,6 @@
+#pragma once
+
 #include <map>
-#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -56,12 +57,12 @@ class TNode {
     }
     TNodeType type;
     std::vector<TNode> children;
-    int line;
+    int line{ 0 };
 
     // For variables and procedures
     std::string name;
     // For constants
-    int constant;
+    int constant{ -1 };
 
     void addChild(const TNode& c);
     std::string toString() const;

@@ -1,4 +1,6 @@
 #include "TNode.h"
+#include <Logger.h>
+#include <sstream>
 
 namespace backend {
 std::string getTNodeTypeString(TNodeType t) {
@@ -64,14 +66,14 @@ std::string TNode::toString() const {
 }
 
 std::string TNode::toStringHelper(int tabs) const {
-    std::string name = getTNodeTypeString(type);
+    std::string nodeName = getTNodeTypeString(type);
     std::ostringstream stringStream;
 
     for (int i = 0; i < tabs; ++i)
         stringStream << " ";
-    stringStream << name << " " << name;
+    stringStream << nodeName;
     if (line >= 0) {
-        stringStream << " @ " << line;
+        stringStream << " @ " << line << "(" << name << ", " << constant << ")";
     }
     stringStream << " : [\n";
 
@@ -86,7 +88,16 @@ std::string TNode::toStringHelper(int tabs) const {
 }
 
 bool TNode::operator==(const TNode& rhs) const {
-    if (type != rhs.type || line != rhs.line || name != rhs.name) {
+    if (type != rhs.type || line != rhs.line || name != rhs.name || constant != rhs.constant) {
+        // Helpful to resolve test.
+        logLine("type not equal: " + getTNodeTypeString(type) + " : " + getTNodeTypeString(rhs.type),
+                type != rhs.type);
+        logLine("type line not equal: " + std::to_string(line) + " : " + std::to_string(rhs.line),
+                line != rhs.line);
+        logLine("name not equal: " + name + " : " + rhs.name, name != rhs.name);
+        logLine("constant not equal: " + std::to_string(constant) + " : " + std::to_string(rhs.constant),
+                constant != rhs.constant);
+        logLine();
         return false;
     }
     if (children.size() != rhs.children.size()) {

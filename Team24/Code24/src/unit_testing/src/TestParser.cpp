@@ -1,4 +1,5 @@
 #include "Parser.h"
+#include <sstream>
 
 #include "catch.hpp"
 namespace backend {
