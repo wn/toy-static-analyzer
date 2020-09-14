@@ -9,31 +9,60 @@
 #include "TNode.h"
 
 namespace backend {
-int PKB::setProcToAST(PROC p, TNode* r) {
+int PKB::setProcToAST(PROCEDURE p, TNode* r) {
     return 0;
 }
 
-TNode* PKB::getRootAST(PROC p) {
+TNode* PKB::getRootAST(PROCEDURE p) {
     return nullptr;
 }
 
-STATEMENTS PKB::getPreFollows(STATEMENT s) {
-    return STATEMENTS();
+STATEMENT_NUMBER_LIST PKB::getAllStatements() {
+    return STATEMENT_NUMBER_LIST();
 }
 
-STATEMENTS PKB::getPostFollows(STATEMENT s) {
-    return STATEMENTS();
+VARIABLE_LIST PKB::getAllVariables() {
+    return VARIABLE_LIST();
 }
 
-STATEMENTS PKB::getAncestors(STATEMENT s) {
-    return STATEMENTS();
+PROCEDURE_LIST PKB::getAllProcedures() {
+    return PROCEDURE_LIST();
 }
 
-STATEMENTS PKB::getDescendents(STATEMENT s) {
-    return STATEMENTS();
+STATEMENT_NUMBER_LIST PKB::getStatementsFollowedBy(STATEMENT_NUMBER s) {
+    return STATEMENT_NUMBER_LIST();
 }
 
-STATEMENTS PKB::getStatementsInSameBlock(STATEMENT s) {
-    return STATEMENTS();
+STATEMENT_NUMBER_LIST PKB::getStatementsFollowed() {
+    return STATEMENT_NUMBER_LIST();
 }
+
+STATEMENT_NUMBER_LIST PKB::getStatementsThatFollows(STATEMENT_NUMBER s) {
+    return STATEMENT_NUMBER_LIST();
+}
+
+STATEMENT_NUMBER_LIST PKB::getStatementsFollows() {
+    return STATEMENT_NUMBER_LIST();
+}
+
+STATEMENT_NUMBER_LIST PKB::getAncestors(STATEMENT_NUMBER s) {
+    return STATEMENT_NUMBER_LIST();
+}
+
+STATEMENT_NUMBER_LIST PKB::getStatementsThatHaveAncestors() {
+    return STATEMENT_NUMBER_LIST();
+}
+
+STATEMENT_NUMBER_LIST PKB::getDescendants(STATEMENT_NUMBER statementNumber) {
+    return STATEMENT_NUMBER_LIST();
+}
+
+STATEMENT_NUMBER_LIST PKB::getStatementsThatHaveDescendants() {
+    return STATEMENT_NUMBER_LIST();
+}
+
+STATEMENT_NUMBER_LIST PKB::getStatementsInSameBlock(STATEMENT_NUMBER s) {
+    return STATEMENT_NUMBER_LIST();
+}
+
 } // namespace backend
