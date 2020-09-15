@@ -101,18 +101,22 @@ State Parser::parseStatementList(int tokenPos) {
     return State(tokenPos, statementList);
 }
 
+// stmt: read | print | call | while | if | assign
 State Parser::parseStatement(int tokenPos) {
-    logLine("start parseStatement");
-    if (tokenHasName(tokenPos, constants::IF)) {
-        return parseIf(tokenPos);
-    }
-    if (tokenHasName(tokenPos, constants::WHILE)) {
+    logLine("~~in parseStatement~~");
+    if (tokenHasName(tokenPos, constants::READ)) {
+        return parseRead(tokenPos);
+    } else if (tokenHasName(tokenPos, constants::PRINT)) {
+        return parsePrint(tokenPos);
+    } else if (tokenHasName(tokenPos, constants::CALL)) {
+        return parseCall(tokenPos);
+    } else if (tokenHasName(tokenPos, constants::WHILE)) {
         return parseWhile(tokenPos);
+    } else if (tokenHasName(tokenPos, constants::IF)) {
+        return parseIf(tokenPos);
+    } else {
+        return parseAssign(tokenPos);
     }
-    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/48)
-    // Implement call, print, read. If any of these is called, code will default to parseAssign.
-    logLine("Successfully parsed a statement for a statementlist.");
-    return parseAssign(tokenPos);
 }
 
 State Parser::parseIf(int tokenPos) {
@@ -398,5 +402,44 @@ State Parser::parseAssign(int tokenPos) {
 
     logLine("success parseAssign");
     return State(tokenPos, assignNode);
+}
+
+// read: ‘read’ var_name’;’
+State Parser::parseRead(int tokenPos) {
+    const lexer::Token& token = assertNameTokenAndPop(tokenPos, constants::READ);
+    TNode readNode(Read, token.line);
+
+    const State& varState = parseVarName(tokenPos);
+    tokenPos = varState.tokenPos;
+
+    readNode.addChild(varState.tNode);
+    assertTokenAndPop(tokenPos, lexer::TokenType::SEMICOLON);
+    return State(tokenPos, readNode);
+}
+
+// print: ‘print’ var_name’;’
+State Parser::parsePrint(int tokenPos) {
+    const lexer::Token& token = assertNameTokenAndPop(tokenPos, constants::PRINT);
+    TNode printNode(Print, token.line);
+
+    const State& varState = parseVarName(tokenPos);
+    tokenPos = varState.tokenPos;
+
+    printNode.addChild(varState.tNode);
+    assertTokenAndPop(tokenPos, lexer::TokenType::SEMICOLON);
+    return State(tokenPos, printNode);
+}
+
+// call: ‘call’ proc_name ‘;’
+State Parser::parseCall(int tokenPos) {
+    const lexer::Token& token = assertNameTokenAndPop(tokenPos, constants::CALL);
+    TNode callNode(Call, token.line);
+
+    const State& varState = parseVarName(tokenPos);
+    tokenPos = varState.tokenPos;
+
+    callNode.addChild(varState.tNode);
+    assertTokenAndPop(tokenPos, lexer::TokenType::SEMICOLON);
+    return State(tokenPos, callNode);
 }
 } // namespace backend

@@ -652,5 +652,59 @@ TEST_CASE("Test parseAssign wrong LHS") {
     Parser parser = GenerateParserFromTokens("procedure p{x + y = y + 1;}");
     REQUIRE_THROWS_WITH(parser.parse(), "expect SINGLE_EQ, got PLUS");
 }
+
+TEST_CASE("Test read") {
+    Parser parser = GenerateParserFromTokens("procedure p{read x;}");
+    TNode result = parser.parse();
+
+    // We expect our node to look like:
+    //         read
+    //           |
+    //           x
+    TNode x(Variable, 1);
+    x.name = "x";
+    TNode readNode(Read, 1);
+    readNode.addChild(x);
+
+    require(result == generateProgramNodeFromStatement("p", readNode));
+
+    Parser parser_err = GenerateParserFromTokens("procedure p{read x + y;}");
+    REQUIRE_THROWS_WITH(parser_err.parse(), "expect SEMICOLON, got PLUS");
+}
+
+TEST_CASE("Test print") {
+    Parser parser = GenerateParserFromTokens("procedure p{print x;}");
+    TNode result = parser.parse();
+
+    // We expect our node to look like:
+    //         print
+    //           |
+    //           x
+    TNode x(Variable, 1);
+    x.name = "x";
+    TNode printNode(Print, 1);
+    printNode.addChild(x);
+
+    require(result == generateProgramNodeFromStatement("p", printNode));
+
+    Parser parser_err = GenerateParserFromTokens("procedure p{print x + y;}");
+    REQUIRE_THROWS_WITH(parser_err.parse(), "expect SEMICOLON, got PLUS");
+}
+
+TEST_CASE("Test call") {
+    Parser parser = GenerateParserFromTokens("procedure p{call x;}");
+    TNode result = parser.parse();
+
+    // We expect our node to look like:
+    //         call
+    //           |
+    //           x
+    TNode x(Variable, 1);
+    x.name = "x";
+    TNode callNode(Call, 1);
+    callNode.addChild(x);
+
+    require(result == generateProgramNodeFromStatement("p", callNode));
+}
 } // namespace testparser
 } // namespace backend

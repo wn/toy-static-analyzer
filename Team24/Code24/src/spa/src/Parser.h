@@ -64,5 +64,9 @@ class Parser {
     State parseFactor(int tokenPos);
     State parseConstValue(int tokenPos);
     State parseVarName(int tokenPos);
+
+    State parseRead(int tokenPos);
+    State parsePrint(int tokenPos);
+    State parseCall(int tokenPos);
 };
 } // namespace backend
