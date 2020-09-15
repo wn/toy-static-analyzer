@@ -29,6 +29,12 @@ jobs:
         
     steps:
       - uses: actions/checkout@v2
+
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8 #install the python needed
+
       - name: Build Project
         run: |
           cd Team24/Code24
@@ -49,15 +55,15 @@ jobs:
 
       - name: Run integration tests
         run: ./Team24/Code24/build/src/integration_testing/${{ matrix.build-type }}/integration_testing.exe
-      
+
       # TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/130):
       # Add script to configure which queries and source code to run autotester
       # with on CI.
       - name: Run autotester tests
         run: |
           cd Team24/Tests24
-          ../Code24/build/src/autotester/${{ matrix.build-type }}/autotester.exe ./trivial_source.txt ./Sample_queries.txt output.xml
-      
+          python ../../autotester_ci.py ../Code24/build/src/autotester/${{ matrix.build-type }}/autotester.exe
+
       # After the auto tester is run, print out the directories to check where
       # the output `xml` file is.
       - name: Print directories recursively (for debugging)
