@@ -55,5 +55,14 @@ class Parser {
     State parseWhile(int tokenPos);
     State parseCondition(int tokenPos);
     State parseAssign(int tokenPos);
+
+    // cond
+    State parseRelExpr(int tokenPos);
+    State parseRelFactor(int tokenPos);
+    State parseExpr(int tokenPos);
+    State parseTerm(int tokenPos);
+    State parseFactor(int tokenPos);
+    State parseConstValue(int tokenPos);
+    State parseVarName(int tokenPos);
 };
 } // namespace backend

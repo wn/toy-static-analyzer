@@ -20,6 +20,7 @@ enum TNodeType {
     While,
 
     // Expressions
+    Not,
     And,
     Or,
     Greater,
@@ -45,7 +46,6 @@ enum TNodeType {
 
 std::string getTNodeTypeString(TNodeType t);
 
-
 class TNode {
   public:
     // Some TNode don't need line number.
@@ -61,7 +61,8 @@ class TNode {
 
     // For variables and procedures
     std::string name;
-    // For constants
+    // We set constant as -1 by default as we are guaranteed by SIMPLE
+    // that constant >= 0.
     int constant{ -1 };
 
     void addChild(const TNode& c);
