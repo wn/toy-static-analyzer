@@ -1,11 +1,10 @@
 #include "TestWrapper.h"
 #include <Lexer.h>
+#include <Logger.h>
+#include <PKB.h>
 #include <Parser.h>
 #include <fstream>
-#include <ios>
 #include <iterator>
-
-#define DEBUG 1
 
 // implementation code of WrapperFactory - do NOT modify the next 5 lines
 AbstractWrapper* WrapperFactory::wrapper = 0;
@@ -26,8 +25,14 @@ TestWrapper::TestWrapper() {
 void TestWrapper::parse(std::string filename) {
     std::ifstream inputFileStream;
     inputFileStream.open(filename);
+
     backend::TNode ast = backend::Parser(backend::lexer::tokenize(inputFileStream)).parse();
-    DEBUG&& std::cout << "AST:" << std::endl << ast.toString() << std::endl; // for debugging
+    logLine("AST:");
+    logTNode(ast);
+
+    backend::PKB pkb(ast);
+
+    // call queries on the PKB after this
 }
 
 // method to evaluating a query

@@ -1,9 +1,12 @@
 #pragma once
 
 #include <iostream>
-#include <stdio.h>
 #include <string>
 #include <vector>
+
+#include "DesignExtractor.h"
+#include "PKB.h"
+#include "Parser.h"
 
 typedef std::string PROCEDURE;
 typedef std::vector<std::string> PROCEDURE_LIST;
@@ -19,9 +22,12 @@ class VarTable; // no need to #include "VarTable.h" as all I need is pointer
 
 class PKB {
   public:
-    static VarTable* varTable;
-    static int setProcToAST(PROCEDURE p, TNode* r);
-    static TNode* getRootAST(PROCEDURE p);
+    explicit PKB(const TNode& ast);
+    /* API for follows */
+    // Given s, return all s' such that follow*(s', s).
+    STATEMENT_NUMBER_LIST getPreFollows(STATEMENT_NUMBER s);
+    // Given s, return all s' such that follow*(s, s').
+    STATEMENT_NUMBER_LIST getPostFollows(STATEMENT_NUMBER s);
 
     /* -- MASS RETRIEVAL OF DESIGN ENTITIES -- */
 

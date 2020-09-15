@@ -1,20 +1,14 @@
-#include <Lexer.h>
-#include <fstream>
-#include <iostream>
-#include <stdio.h>
-#include <string>
-#include <vector>
-
 #include "PKB.h"
-#include "TNode.h"
+#include "DesignExtractor.h"
+#include "Logger.h"
 
 namespace backend {
-int PKB::setProcToAST(PROCEDURE p, TNode* r) {
-    return 0;
-}
 
-TNode* PKB::getRootAST(PROCEDURE p) {
-    return nullptr;
+PKB::PKB(const TNode& ast) {
+    logWord("PKB starting with ast");
+    logLine(ast.toString());
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto statementNumberToTNode = extractor::getStatementNumberToTNode(tNodeToStatementNumber);
 }
 
 STATEMENT_NUMBER_LIST PKB::getAllStatements() {

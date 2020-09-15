@@ -64,11 +64,11 @@ TNode Parser::parse() {
 State Parser::parseProgram(int tokenPos) {
     logLine("start parseProgram");
     TNode programNode(TNodeType::Program);
-    while (haveTokensLeft(tokenPos)) {
+    do {
         State procState = parseProcedure(tokenPos);
         programNode.addChild(procState.tNode);
         tokenPos = procState.tokenPos;
-    }
+    } while (haveTokensLeft(tokenPos));
     logLine("success parseProgram");
     return State(tokenPos, programNode);
 }
@@ -127,6 +127,7 @@ State Parser::parseIf(int tokenPos) {
     const State& conditionalExpressionResult = parseCondition(tokenPos);
     tokenPos = conditionalExpressionResult.tokenPos;
     assertTokenAndPop(tokenPos, lexer::TokenType::RPAREN);
+    ifElseNode.addChild(conditionalExpressionResult.tNode);
 
     assertNameTokenAndPop(tokenPos, constants::THEN);
 
@@ -138,7 +139,7 @@ State Parser::parseIf(int tokenPos) {
 
     const State& elseStatementListResult = parseStatementList(tokenPos);
     tokenPos = elseStatementListResult.tokenPos;
-    ifElseNode.addChild(thenStatementListResult.tNode);
+    ifElseNode.addChild(elseStatementListResult.tNode);
     logLine("success parseIf");
     return State(tokenPos, ifElseNode);
 }

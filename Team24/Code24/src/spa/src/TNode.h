@@ -1,9 +1,11 @@
 #pragma once
 
 #include <map>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
+
 
 namespace backend {
 enum TNodeType {
@@ -48,16 +50,16 @@ std::string getTNodeTypeString(TNodeType t);
 
 class TNode {
   public:
+    // Required for accessing TNode keys in a hashmap
+    TNode() = default;
     // Some TNode don't need line number.
-    explicit TNode(TNodeType type, std::vector<TNode> children, int line = -1)
-    : type(type), children(std::move(children)), line(line) {
+    explicit TNode(TNodeType type, int line = 0) : type(type), line(line) {
     }
-    explicit TNode(TNodeType type, int line = -1)
-    : type(type), children(std::vector<TNode>()), line(line) {
-    }
-    TNodeType type;
+
+    TNodeType type{ TNodeType::INVALID };
     std::vector<TNode> children;
-    int line{ 0 };
+    int hashInteger{ TNode::getNewUniqueIdentifier() };
+    int line;
 
     // For variables and procedures
     std::string name;
@@ -67,9 +69,27 @@ class TNode {
 
     void addChild(const TNode& c);
     std::string toString() const;
+    std::string toShortString() const;
     bool operator==(const TNode& s) const;
 
+
+    bool isStatementNode() const;
+
+    friend std::ostream& operator<<(std::ostream& os, const backend::TNode& t);
+
   private:
+    // Used to generate a Unique ID for a new AST. Used for hashing.
+    static int uniqueIdentifier;
+    static int getNewUniqueIdentifier();
+
     std::string toStringHelper(int tabs) const;
 };
 } // namespace backend
+
+namespace std {
+template <> struct std::hash<backend::TNode> {
+    std::size_t operator()(backend::TNode const& tNode) const noexcept {
+        return std::hash<long long>{}(tNode.hashInteger);
+    }
+};
+} // namespace std

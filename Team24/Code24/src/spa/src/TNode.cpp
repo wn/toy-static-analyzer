@@ -1,5 +1,6 @@
 #include "TNode.h"
 #include <Logger.h>
+#include <set>
 #include <sstream>
 
 namespace backend {
@@ -67,6 +68,14 @@ std::string TNode::toString() const {
     return toStringHelper(0);
 }
 
+std::string TNode::toShortString() const {
+    std::string typeString = getTNodeTypeString(type);
+    std::ostringstream stringStream;
+    stringStream << typeString << " " << name;
+    stringStream << " @ " << line;
+    return stringStream.str();
+}
+
 std::string TNode::toStringHelper(int tabs) const {
     std::string nodeName = getTNodeTypeString(type);
     std::ostringstream stringStream;
@@ -74,9 +83,7 @@ std::string TNode::toStringHelper(int tabs) const {
     for (int i = 0; i < tabs; ++i)
         stringStream << " ";
     stringStream << nodeName;
-    if (line >= 0) {
-        stringStream << " @ " << line << "(" << name << ", " << constant << ")";
-    }
+    stringStream << " @ " << line << "(" << name << ", " << constant << ")";
     stringStream << " : [\n";
 
     for (const auto& child : children) {
@@ -116,5 +123,23 @@ bool TNode::operator==(const TNode& rhs) const {
 
 void TNode::addChild(const TNode& c) {
     children.emplace_back(c);
+}
+
+bool TNode::isStatementNode() const {
+    std::set<TNodeType> statementTypes{
+        TNodeType::Assign, TNodeType::Call, TNodeType::IfElse,
+        TNodeType::Print,  TNodeType::Read, TNodeType::While,
+    };
+    return statementTypes.count(type);
+}
+
+int TNode::uniqueIdentifier = 0;
+int TNode::getNewUniqueIdentifier() {
+    TNode::uniqueIdentifier += 1;
+    return TNode::uniqueIdentifier;
+}
+std::ostream& operator<<(std::ostream& os, const TNode& t) {
+    os << t.toString();
+    return os;
 }
 } // namespace backend

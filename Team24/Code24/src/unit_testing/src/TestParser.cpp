@@ -1,132 +1,75 @@
 #include "Logger.h"
 #include "Parser.h"
+#include "TestParserHelpers.h"
+#include "catch.hpp"
 #include <sstream>
 
-#include "catch.hpp"
 namespace backend {
 namespace testparser {
-void require(bool b) {
-    REQUIRE(b);
-}
-
-Parser GenerateParserFromTokens(const std::string& expr) {
-    std::istringstream iStr(expr);
-    return Parser(lexer::tokenize(iStr));
-}
-
-TNode generateProgramNodeFromStatement(const std::string& name, const TNode& node) {
-    TNode stmtNode(TNodeType::StatementList, 1);
-    stmtNode.addChild(node);
-
-    TNode procNode(TNodeType::Procedure, 1);
-    procNode.name = "p";
-    procNode.addChild(stmtNode);
-
-    TNode progNode(TNodeType::Program, -1);
-    progNode.addChild(procNode);
-    return progNode;
-}
-
-// create an assign TNode for `y=y+1`.
-TNode generateMockAssignNode() {
-    TNode y(Variable, 1);
-    y.name = "y";
-
-    TNode constNode(Constant, 1);
-    constNode.constant = 1;
-
-    TNode plusNode(Plus);
-    plusNode.addChild(y);
-    plusNode.addChild(constNode);
-
-    TNode assignNode(Assign, 1);
-    assignNode.addChild(y);
-    assignNode.addChild(plusNode);
-
-    return assignNode;
-}
-
-// Procedure node name is p, statement within the body is `y=y+1`.
-TNode generateProgramNodeFromCondition(const TNode& node) {
-    TNode stmt = generateMockAssignNode();
-
-    TNode innerStmtNode(TNodeType::StatementList, 1);
-    innerStmtNode.addChild(stmt);
-
-    TNode whileNode(TNodeType::While, 1);
-    whileNode.addChild(node); // condition
-    whileNode.addChild(innerStmtNode); // add dummy assign tnode to while-loop
-    TNode stmtNode(TNodeType::StatementList, 1);
-    stmtNode.addChild(whileNode);
-
-    TNode procNode(TNodeType::Procedure, 1);
-    procNode.name = "p";
-    procNode.addChild(stmtNode);
-
-    TNode progNode(TNodeType::Program, -1);
-    progNode.addChild(procNode);
-    return progNode;
-}
 
 TEST_CASE("Test parseStatementList fails on 0 statements") {
-    Parser parser = GenerateParserFromTokens("procedure p{}");
+    Parser parser = testhelpers::GenerateParserFromTokens("procedure p{}");
     REQUIRE_THROWS_WITH(parser.parse(), "expect NAME, got RBRACE");
 }
 
 TEST_CASE("Test procedure with name 'procedure'") {
-    Parser parser = GenerateParserFromTokens("procedure procedure {y = 1 + 1;}");
+    Parser parser = testhelpers::GenerateParserFromTokens("procedure procedure {y = 1 + 1;}");
     REQUIRE_NOTHROW(parser.parse());
 }
 
 TEST_CASE("Test parseIf") {
     Parser parser =
-    GenerateParserFromTokens("procedure p{ if (xoxo == 1) then {x=2;} else {x=2;}}");
+    testhelpers::GenerateParserFromTokens("procedure p{ if (xoxo == 1) then {x=2;} else {x=2;}}");
     REQUIRE_NOTHROW(parser.parse());
 
-    parser = GenerateParserFromTokens("procedure p{ if () then {x=2;} else {x=2;}}");
+    parser = testhelpers::GenerateParserFromTokens("procedure p{ if () then {x=2;} else {x=2;}}");
     REQUIRE_THROWS_WITH(parser.parse(), "expect condition, none defined");
 
     // No "then"
-    parser = GenerateParserFromTokens("procedure p{ if (xoxo == 1) {x=2;} else {x=2;}}");
+    parser =
+    testhelpers::GenerateParserFromTokens("procedure p{ if (xoxo == 1) {x=2;} else {x=2;}}");
     REQUIRE_THROWS_WITH(parser.parse(), "expect NAME, got LBRACE");
 
     // No "else"
-    parser = GenerateParserFromTokens("procedure p{ if (xoxo == 1) then {x=2;} {x=2;}}");
+    parser =
+    testhelpers::GenerateParserFromTokens("procedure p{ if (xoxo == 1) then {x=2;} {x=2;}}");
     REQUIRE_THROWS_WITH(parser.parse(), "expect NAME, got LBRACE");
 
     // empty statement list
-    parser = GenerateParserFromTokens("procedure p{ if (xoxo == 1) then {} else {x=2;}}");
+    parser =
+    testhelpers::GenerateParserFromTokens("procedure p{ if (xoxo == 1) then {} else {x=2;}}");
     REQUIRE_THROWS_WITH(parser.parse(), "expect NAME, got RBRACE");
 }
 
 TEST_CASE("Test nested while and if statements") {
     // While inside If
-    Parser parser = GenerateParserFromTokens("procedure p{ if (xoxo == 1) "
-                                             "then {while (y==3) {x = 5;}} "
-                                             "else {while (y==3) {x = 5;}}}");
+    Parser parser = testhelpers::GenerateParserFromTokens("procedure p{ if (xoxo == 1) "
+                                                          "then {while (y==3) {x = 5;}} "
+                                                          "else {while (y==3) {x = 5;}}}");
     REQUIRE_NOTHROW(parser.parse());
 
     // If inside While
-    parser = GenerateParserFromTokens("procedure p{ while (xoxo == 1) "
-                                      "{if (y==3) then {z = 8;} else {y = 3;}}}");
+    parser = testhelpers::GenerateParserFromTokens("procedure p{ while (xoxo == 1) "
+                                                   "{if (y==3) then {z = 8;} else {y = 3;}}}");
     REQUIRE_NOTHROW(parser.parse());
 }
 
 
 TEST_CASE("Test parseWhile") {
-    Parser parser = GenerateParserFromTokens("procedure p{ while (xoxo == 1) {x=2;}}");
+    Parser parser = testhelpers::GenerateParserFromTokens("procedure p{ while (xoxo == 1) {x=2;}}");
     REQUIRE_NOTHROW(parser.parse());
 
-    parser = GenerateParserFromTokens("procedure p{ while () {x=2;}}");
+    parser = testhelpers::GenerateParserFromTokens("procedure p{ while () {x=2;}}");
     REQUIRE_THROWS_WITH(parser.parse(), "expect condition, none defined");
 
     // empty statement list
-    parser = GenerateParserFromTokens("procedure p{ while (xoxo == 1) {}}");
+    parser = testhelpers::GenerateParserFromTokens("procedure p{ while (xoxo == 1) {}}");
     REQUIRE_THROWS_WITH(parser.parse(), "expect NAME, got RBRACE");
 }
 
 TEST_CASE("Test Condition with <= math operator") {
-    Parser parser = GenerateParserFromTokens("procedure p{while (x + y * z <= 1){y = y + 1;}}");
+    Parser parser =
+    testhelpers::GenerateParserFromTokens("procedure p{while (x + y * z <= 1){y = y + 1;}}");
     TNode result = parser.parse();
 
     TNode y(Variable, 1);
@@ -148,11 +91,12 @@ TEST_CASE("Test Condition with <= math operator") {
     condNode.addChild(lCondLHSPlus);
     condNode.addChild(lCondRHSConst);
 
-    require(result == generateProgramNodeFromCondition(condNode));
+    REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 
 TEST_CASE("Test Condition with >= math operator") {
-    Parser parser = GenerateParserFromTokens("procedure p{while (x + y * z >= 1){y = y + 1;}}");
+    Parser parser =
+    testhelpers::GenerateParserFromTokens("procedure p{while (x + y * z >= 1){y = y + 1;}}");
     TNode result = parser.parse();
 
     TNode y(Variable, 1);
@@ -174,11 +118,12 @@ TEST_CASE("Test Condition with >= math operator") {
     condNode.addChild(lCondLHSPlus);
     condNode.addChild(lCondRHSConst);
 
-    require(result == generateProgramNodeFromCondition(condNode));
+    REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 
 TEST_CASE("Test Condition with > math operator") {
-    Parser parser = GenerateParserFromTokens("procedure p{while (x + y * z > 1){y = y + 1;}}");
+    Parser parser =
+    testhelpers::GenerateParserFromTokens("procedure p{while (x + y * z > 1){y = y + 1;}}");
     TNode result = parser.parse();
 
     TNode y(Variable, 1);
@@ -200,11 +145,12 @@ TEST_CASE("Test Condition with > math operator") {
     condNode.addChild(lCondLHSPlus);
     condNode.addChild(lCondRHSConst);
 
-    require(result == generateProgramNodeFromCondition(condNode));
+    REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 
 TEST_CASE("Test Condition with < math operator") {
-    Parser parser = GenerateParserFromTokens("procedure p{while (x + y * z < 1){y = y + 1;}}");
+    Parser parser =
+    testhelpers::GenerateParserFromTokens("procedure p{while (x + y * z < 1){y = y + 1;}}");
     TNode result = parser.parse();
 
     TNode y(Variable, 1);
@@ -226,11 +172,12 @@ TEST_CASE("Test Condition with < math operator") {
     condNode.addChild(lCondLHSPlus);
     condNode.addChild(lCondRHSConst);
 
-    require(result == generateProgramNodeFromCondition(condNode));
+    REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 
 TEST_CASE("Test Condition with == math operator") {
-    Parser parser = GenerateParserFromTokens("procedure p{while (x + y * z == 1){y = y + 1;}}");
+    Parser parser =
+    testhelpers::GenerateParserFromTokens("procedure p{while (x + y * z == 1){y = y + 1;}}");
     TNode result = parser.parse();
 
     TNode y(Variable, 1);
@@ -252,11 +199,12 @@ TEST_CASE("Test Condition with == math operator") {
     condNode.addChild(lCondLHSPlus);
     condNode.addChild(lCondRHSConst);
 
-    require(result == generateProgramNodeFromCondition(condNode));
+    REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 
 TEST_CASE("Test Condition with != math operator") {
-    Parser parser = GenerateParserFromTokens("procedure p{while (x + y * z != 1){y = y + 1;}}");
+    Parser parser =
+    testhelpers::GenerateParserFromTokens("procedure p{while (x + y * z != 1){y = y + 1;}}");
     TNode result = parser.parse();
 
     TNode y(Variable, 1);
@@ -278,11 +226,12 @@ TEST_CASE("Test Condition with != math operator") {
     condNode.addChild(lCondLHSPlus);
     condNode.addChild(lCondRHSConst);
 
-    require(result == generateProgramNodeFromCondition(condNode));
+    REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 
 TEST_CASE("Test Condition with AND operator") {
-    Parser parser = GenerateParserFromTokens("procedure p{while ((x < 1) && (y < 1)){y = y + 1;}}");
+    Parser parser =
+    testhelpers::GenerateParserFromTokens("procedure p{while ((x < 1) && (y < 1)){y = y + 1;}}");
     TNode result = parser.parse();
 
     TNode x(Variable, 1);
@@ -305,11 +254,12 @@ TEST_CASE("Test Condition with AND operator") {
     condNode.addChild(lCondLess);
     condNode.addChild(rCondLess);
 
-    require(result == generateProgramNodeFromCondition(condNode));
+    REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 
 TEST_CASE("Test Condition with OR operator") {
-    Parser parser = GenerateParserFromTokens("procedure p{while ((x < 1) || (y < 1)){y = y + 1;}}");
+    Parser parser =
+    testhelpers::GenerateParserFromTokens("procedure p{while ((x < 1) || (y < 1)){y = y + 1;}}");
     TNode result = parser.parse();
 
     TNode x(Variable, 1);
@@ -332,12 +282,12 @@ TEST_CASE("Test Condition with OR operator") {
     condNode.addChild(lCondLess);
     condNode.addChild(rCondLess);
 
-    require(result == generateProgramNodeFromCondition(condNode));
+    REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 
 TEST_CASE("Test Condition with NOT operator") {
     Parser parser =
-    GenerateParserFromTokens("procedure p{while (!((x < 1) || (y < 1))){y = y + 1;}}");
+    testhelpers::GenerateParserFromTokens("procedure p{while (!((x < 1) || (y < 1))){y = y + 1;}}");
     TNode result = parser.parse();
 
     TNode x(Variable, 1);
@@ -363,11 +313,11 @@ TEST_CASE("Test Condition with NOT operator") {
     TNode notNode(Not, 1);
     notNode.addChild(condNode);
 
-    require(result == generateProgramNodeFromCondition(notNode));
+    REQUIRE(result == testhelpers::generateProgramNodeFromCondition(notNode));
 }
 
 TEST_CASE("Test Condition with Triple operator") {
-    Parser parser = GenerateParserFromTokens(
+    Parser parser = testhelpers::GenerateParserFromTokens(
     "procedure p{while (!(((x < 1) || (y < 1)) && ((x < 1) || (y < 1)))){y = y + 1;}}");
     TNode result = parser.parse();
 
@@ -400,11 +350,12 @@ TEST_CASE("Test Condition with Triple operator") {
     TNode notNode(Not, 1);
     notNode.addChild(andNode);
 
-    require(result == generateProgramNodeFromCondition(notNode));
+    REQUIRE(result == testhelpers::generateProgramNodeFromCondition(notNode));
 }
 
 TEST_CASE("Test expr associativity + before *") {
-    Parser parser = GenerateParserFromTokens("procedure p{while (x + y * z <= 1){y = y + 1;}}");
+    Parser parser =
+    testhelpers::GenerateParserFromTokens("procedure p{while (x + y * z <= 1){y = y + 1;}}");
     TNode result = parser.parse();
 
 
@@ -435,11 +386,12 @@ TEST_CASE("Test expr associativity + before *") {
     condNode.addChild(lCondLHSPlus);
     condNode.addChild(lCondRHSConst);
 
-    require(result == generateProgramNodeFromCondition(condNode));
+    REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 
 TEST_CASE("Test expr associativity * before +") {
-    Parser parser = GenerateParserFromTokens("procedure p{while (x * y + z <= 1){y = y + 1;}}");
+    Parser parser =
+    testhelpers::GenerateParserFromTokens("procedure p{while (x * y + z <= 1){y = y + 1;}}");
     TNode result = parser.parse();
 
 
@@ -472,12 +424,13 @@ TEST_CASE("Test expr associativity * before +") {
     condNode.addChild(lCondRHSConst);
 
     std::cout << result.toString() << std::endl;
-    std::cout << generateProgramNodeFromCondition(condNode).toString() << std::endl;
-    require(result == generateProgramNodeFromCondition(condNode));
+    std::cout << testhelpers::generateProgramNodeFromCondition(condNode).toString() << std::endl;
+    REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 
 TEST_CASE("Test expr associativity * before *") {
-    Parser parser = GenerateParserFromTokens("procedure p{while (x * y * z <= 1){y = y + 1;}}");
+    Parser parser =
+    testhelpers::GenerateParserFromTokens("procedure p{while (x * y * z <= 1){y = y + 1;}}");
     TNode result = parser.parse();
 
 
@@ -510,12 +463,13 @@ TEST_CASE("Test expr associativity * before *") {
     condNode.addChild(lCondRHSConst);
 
     std::cout << result.toString() << std::endl;
-    std::cout << generateProgramNodeFromCondition(condNode).toString() << std::endl;
-    require(result == generateProgramNodeFromCondition(condNode));
+    std::cout << testhelpers::generateProgramNodeFromCondition(condNode).toString() << std::endl;
+    REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 
 TEST_CASE("Test expr associativity * before + with brackets") {
-    Parser parser = GenerateParserFromTokens("procedure p{while (x * (y + z) <= 1){y = y + 1;}}");
+    Parser parser =
+    testhelpers::GenerateParserFromTokens("procedure p{while (x * (y + z) <= 1){y = y + 1;}}");
     TNode result = parser.parse();
 
 
@@ -548,12 +502,13 @@ TEST_CASE("Test expr associativity * before + with brackets") {
     condNode.addChild(lCondRHSConst);
 
     std::cout << result.toString() << std::endl;
-    std::cout << generateProgramNodeFromCondition(condNode).toString() << std::endl;
-    require(result == generateProgramNodeFromCondition(condNode));
+    std::cout << testhelpers::generateProgramNodeFromCondition(condNode).toString() << std::endl;
+    REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 
 TEST_CASE("Test expr associativity + before * with brackets") {
-    Parser parser = GenerateParserFromTokens("procedure p{while ((x + y) * z <= 1){y = y + 1;}}");
+    Parser parser =
+    testhelpers::GenerateParserFromTokens("procedure p{while ((x + y) * z <= 1){y = y + 1;}}");
     TNode result = parser.parse();
 
 
@@ -586,12 +541,13 @@ TEST_CASE("Test expr associativity + before * with brackets") {
     condNode.addChild(lCondRHSConst);
 
     std::cout << result.toString() << std::endl;
-    std::cout << generateProgramNodeFromCondition(condNode).toString() << std::endl;
-    require(result == generateProgramNodeFromCondition(condNode));
+    std::cout << testhelpers::generateProgramNodeFromCondition(condNode).toString() << std::endl;
+    REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 
 TEST_CASE("Test expr useless brackets") {
-    Parser parser = GenerateParserFromTokens("procedure p{while ((x) <= (1)){y = y + 1;}}");
+    Parser parser =
+    testhelpers::GenerateParserFromTokens("procedure p{while ((x) <= (1)){y = y + 1;}}");
     TNode result = parser.parse();
 
     TNode x(Variable, 1);
@@ -604,19 +560,19 @@ TEST_CASE("Test expr useless brackets") {
     condNode.addChild(lCondRHSConst);
 
     std::cout << result.toString() << std::endl;
-    std::cout << generateProgramNodeFromCondition(condNode).toString() << std::endl;
-    require(result == generateProgramNodeFromCondition(condNode));
+    std::cout << testhelpers::generateProgramNodeFromCondition(condNode).toString() << std::endl;
+    REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 
 TEST_CASE("Test condition, throw properly") {
-    Parser parser = GenerateParserFromTokens("procedure p{while (+++){y = y + 1;}}");
+    Parser parser = testhelpers::GenerateParserFromTokens("procedure p{while (+++){y = y + 1;}}");
     REQUIRE_THROWS_WITH(parser.parse(), "Failed to parse conditions");
 }
 
 TEST_CASE("Test parseAssign") {
     // Note: since expr has been tested in parseCondition, we did not write extensive test for
     // the RHS of assign.
-    Parser parser = GenerateParserFromTokens("procedure p{x = y + 1;}");
+    Parser parser = testhelpers::GenerateParserFromTokens("procedure p{x = y + 1;}");
     TNode result = parser.parse();
 
 
@@ -645,16 +601,16 @@ TEST_CASE("Test parseAssign") {
     assignNode.addChild(x);
     assignNode.addChild(plusNode);
 
-    require(result == generateProgramNodeFromStatement("p", assignNode));
+    REQUIRE(result == testhelpers::generateProgramNodeFromStatement("p", assignNode));
 }
 
 TEST_CASE("Test parseAssign wrong LHS") {
-    Parser parser = GenerateParserFromTokens("procedure p{x + y = y + 1;}");
+    Parser parser = testhelpers::GenerateParserFromTokens("procedure p{x + y = y + 1;}");
     REQUIRE_THROWS_WITH(parser.parse(), "expect SINGLE_EQ, got PLUS");
 }
 
 TEST_CASE("Test read") {
-    Parser parser = GenerateParserFromTokens("procedure p{read x;}");
+    Parser parser = testhelpers::GenerateParserFromTokens("procedure p{read x;}");
     TNode result = parser.parse();
 
     // We expect our node to look like:
@@ -666,14 +622,14 @@ TEST_CASE("Test read") {
     TNode readNode(Read, 1);
     readNode.addChild(x);
 
-    require(result == generateProgramNodeFromStatement("p", readNode));
+    REQUIRE(result == testhelpers::generateProgramNodeFromStatement("p", readNode));
 
-    Parser parser_err = GenerateParserFromTokens("procedure p{read x + y;}");
+    Parser parser_err = testhelpers::GenerateParserFromTokens("procedure p{read x + y;}");
     REQUIRE_THROWS_WITH(parser_err.parse(), "expect SEMICOLON, got PLUS");
 }
 
 TEST_CASE("Test print") {
-    Parser parser = GenerateParserFromTokens("procedure p{print x;}");
+    Parser parser = testhelpers::GenerateParserFromTokens("procedure p{print x;}");
     TNode result = parser.parse();
 
     // We expect our node to look like:
@@ -685,14 +641,14 @@ TEST_CASE("Test print") {
     TNode printNode(Print, 1);
     printNode.addChild(x);
 
-    require(result == generateProgramNodeFromStatement("p", printNode));
+    REQUIRE(result == testhelpers::generateProgramNodeFromStatement("p", printNode));
 
-    Parser parser_err = GenerateParserFromTokens("procedure p{print x + y;}");
+    Parser parser_err = testhelpers::GenerateParserFromTokens("procedure p{print x + y;}");
     REQUIRE_THROWS_WITH(parser_err.parse(), "expect SEMICOLON, got PLUS");
 }
 
 TEST_CASE("Test call") {
-    Parser parser = GenerateParserFromTokens("procedure p{call x;}");
+    Parser parser = testhelpers::GenerateParserFromTokens("procedure p{call x;}");
     TNode result = parser.parse();
 
     // We expect our node to look like:
@@ -704,7 +660,7 @@ TEST_CASE("Test call") {
     TNode callNode(Call, 1);
     callNode.addChild(x);
 
-    require(result == generateProgramNodeFromStatement("p", callNode));
+    REQUIRE(result == testhelpers::generateProgramNodeFromStatement("p", callNode));
 }
 } // namespace testparser
 } // namespace backend
