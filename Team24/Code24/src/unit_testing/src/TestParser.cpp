@@ -27,14 +27,28 @@ TNode generateProgramNodeFromStatement(const std::string& name, const TNode& nod
     return progNode;
 }
 
-// Procedure node name is p
+// create an assign TNode for `y=y+1`.
+TNode generateMockAssignNode() {
+    TNode y(Variable, 1);
+    y.name = "y";
+
+    TNode constNode(Constant, 1);
+    constNode.constant = 1;
+
+    TNode plusNode(Plus);
+    plusNode.addChild(y);
+    plusNode.addChild(constNode);
+
+    TNode assignNode(Assign, 1);
+    assignNode.addChild(y);
+    assignNode.addChild(plusNode);
+
+    return assignNode;
+}
+
+// Procedure node name is p, statement within the body is `y=y+1`.
 TNode generateProgramNodeFromCondition(const TNode& node) {
-    TNode stmt(TNodeType::Assign, 1);
-    stmt.name = "y";
-    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/64):
-    stmt.addChild(TNode(TNodeType::INVALID));
-    stmt.addChild(TNode(TNodeType::INVALID));
-    stmt.addChild(TNode(TNodeType::INVALID));
+    TNode stmt = generateMockAssignNode();
 
     TNode innerStmtNode(TNodeType::StatementList, 1);
     innerStmtNode.addChild(stmt);
@@ -109,20 +123,6 @@ TEST_CASE("Test parseWhile") {
     // empty statement list
     parser = GenerateParserFromTokens("procedure p{ while (xoxo == 1) {}}");
     REQUIRE_THROWS_WITH(parser.parse(), "expect NAME, got RBRACE");
-}
-
-TEST_CASE("Test parseAssign") {
-    Parser parser = GenerateParserFromTokens("procedure p{y = 1 + 1;}");
-    TNode result = parser.parse();
-
-    TNode stmt(TNodeType::Assign, 1);
-    stmt.name = "y";
-    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/64):
-    stmt.addChild(TNode(TNodeType::INVALID));
-    stmt.addChild(TNode(TNodeType::INVALID));
-    stmt.addChild(TNode(TNodeType::INVALID));
-
-    require(result == generateProgramNodeFromStatement("p", stmt));
 }
 
 TEST_CASE("Test Condition with <= math operator") {
@@ -611,6 +611,46 @@ TEST_CASE("Test expr useless brackets") {
 TEST_CASE("Test condition, throw properly") {
     Parser parser = GenerateParserFromTokens("procedure p{while (+++){y = y + 1;}}");
     REQUIRE_THROWS_WITH(parser.parse(), "Failed to parse conditions");
+}
+
+TEST_CASE("Test parseAssign") {
+    // Note: since expr has been tested in parseCondition, we did not write extensive test for
+    // the RHS of assign.
+    Parser parser = GenerateParserFromTokens("procedure p{x = y + 1;}");
+    TNode result = parser.parse();
+
+
+    // We expect our node to look like:
+    //         :stmtlst
+    //            |
+    //         :assign
+    //          /  \
+    //         x    +
+    //             /  \
+    //            y    1
+
+    TNode x(Variable, 1);
+    x.name = "x";
+    TNode y(Variable, 1);
+    y.name = "y";
+
+    TNode constNode(Constant, 1);
+    constNode.constant = 1;
+
+    TNode plusNode(Plus);
+    plusNode.addChild(y);
+    plusNode.addChild(constNode);
+
+    TNode assignNode(Assign, 1);
+    assignNode.addChild(x);
+    assignNode.addChild(plusNode);
+
+    require(result == generateProgramNodeFromStatement("p", assignNode));
+}
+
+TEST_CASE("Test parseAssign wrong LHS") {
+    Parser parser = GenerateParserFromTokens("procedure p{x + y = y + 1;}");
+    REQUIRE_THROWS_WITH(parser.parse(), "expect SINGLE_EQ, got PLUS");
 }
 } // namespace testparser
 } // namespace backend

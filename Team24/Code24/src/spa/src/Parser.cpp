@@ -378,21 +378,21 @@ State Parser::parseConstValue(int tokenPos) {
     return State(tokenPos, node);
 }
 
+// assign: var_name ‘=’ expr ‘;’
 State Parser::parseAssign(int tokenPos) {
     logLine("start parseAssign");
 
-    const lexer::Token& nameToken = assertTokenAndPop(tokenPos, lexer::TokenType::NAME);
-    TNode assignNode(TNodeType::Assign, nameToken.line);
-    assignNode.name = nameToken.nameValue;
+    const State& lhsState = parseVarName(tokenPos);
+    tokenPos = lhsState.tokenPos;
+    const TNode& lhsNode = lhsState.tNode;
 
-    assertTokenAndPop(tokenPos, lexer::TokenType::SINGLE_EQ);
+    int eqLine = assertTokenAndPop(tokenPos, lexer::TokenType::SINGLE_EQ).line;
+    TNode assignNode(TNodeType::Assign, eqLine);
 
-    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/64):
-    while (haveTokensLeft(tokenPos) && !tokenTypeIs(tokenPos, lexer::TokenType::SEMICOLON)) {
-        TNode child(TNodeType::INVALID);
-        assignNode.addChild(child);
-        tokenPos++;
-    }
+    const State& exprState = parseExpr(tokenPos);
+    tokenPos = exprState.tokenPos;
+    assignNode.addChild(lhsNode);
+    assignNode.addChild(exprState.tNode);
 
     assertTokenAndPop(tokenPos, lexer::TokenType::SEMICOLON);
 
