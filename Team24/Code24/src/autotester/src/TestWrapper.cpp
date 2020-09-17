@@ -41,10 +41,6 @@ void TestWrapper::evaluate(std::string query, std::list<std::string>& results) {
     std::stringstream stream(query);
     std::vector<backend::lexer::Token> tokens = backend::lexer::tokenize(stream);
 
-    for (const auto& token : tokens) {
-        DEBUG&& std::cout << backend::lexer::prettyPrintType(token.type) << " ";
-    }
-
     // store the answers to the query in the results list (it is initially empty)
     // each result must be a string.
 }
