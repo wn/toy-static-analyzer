@@ -65,6 +65,26 @@ std::unordered_map<TNode, int> getTNodeToStatementNumber(const TNode& ast) {
     return tNodeToStatementNumber;
 }
 
+std::unordered_map<TNodeType, std::vector<TNode*>, EnumClassHash> getTNodeTypeToTNodes(TNode& ast) {
+    std::unordered_map<TNodeType, std::vector<TNode*>, EnumClassHash> typesToTNode;
+    std::vector<TNode*> toVisit;
+    toVisit.push_back(&ast);
+    while (toVisit.size() > 0) {
+        TNode* visiting = toVisit.back();
+        TNodeType type = visiting->type;
+        if (typesToTNode.find(type) == typesToTNode.end()) {
+            typesToTNode[type] = {};
+        }
+        typesToTNode[type].push_back(visiting);
+
+        toVisit.pop_back();
+        for (TNode& c : visiting->children) {
+            toVisit.push_back(&c);
+        }
+    }
+    return typesToTNode;
+}
+
 std::unordered_map<int, TNode> getStatementNumberToTNode(const std::unordered_map<TNode, int>& tNodeToStatementNumber) {
     std::unordered_map<int, TNode> statementNumberToTNode;
     for (const auto& p : tNodeToStatementNumber) {

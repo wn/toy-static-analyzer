@@ -2,6 +2,7 @@
 #include "Logger.h"
 #include "TestParserHelpers.h"
 #include "catch.hpp"
+
 namespace backend {
 namespace testextractor {
 
@@ -106,6 +107,29 @@ TEST_CASE("Test getTNodeToStatementNumber maps TNodes to their correct statement
 
     REQUIRE(statementNumberToTNode[6].type == TNodeType::Assign);
     REQUIRE(statementNumberToTNode[6] == statementList.children[2]);
+}
+
+TEST_CASE("Test getTNodeTypeToTNodes maps TNode to TNodeType correctly") {
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+
+    auto tNodeToStatementNumber = extractor::getTNodeTypeToTNodes(ast);
+    for (auto k : tNodeToStatementNumber) {
+        for (const TNode* i : k.second) {
+            REQUIRE(i->type == k.first);
+        }
+    }
+    REQUIRE(tNodeToStatementNumber[While].size() == 1);
+    REQUIRE(tNodeToStatementNumber[Program].size() == 1);
+    REQUIRE(tNodeToStatementNumber[Procedure].size() == 1);
+    REQUIRE(tNodeToStatementNumber[StatementList].size() == 4);
+    REQUIRE(tNodeToStatementNumber[Assign].size() == 4);
+    REQUIRE(tNodeToStatementNumber[Not].size() == 1);
+    REQUIRE(tNodeToStatementNumber[Equal].size() == 2);
+    REQUIRE(tNodeToStatementNumber[Plus].size() == 1);
+    REQUIRE(tNodeToStatementNumber[Variable].size() == 8);
+    REQUIRE(tNodeToStatementNumber[Constant].size() == 5);
+    REQUIRE(tNodeToStatementNumber[INVALID].size() == 0);
 }
 
 } // namespace testextractor
