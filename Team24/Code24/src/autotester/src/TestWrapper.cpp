@@ -5,6 +5,7 @@
 #include <Parser.h>
 #include <fstream>
 #include <iterator>
+#include <sstream>
 
 // implementation code of WrapperFactory - do NOT modify the next 5 lines
 AbstractWrapper* WrapperFactory::wrapper = 0;
@@ -37,8 +38,12 @@ void TestWrapper::parse(std::string filename) {
 
 // method to evaluating a query
 void TestWrapper::evaluate(std::string query, std::list<std::string>& results) {
-    // call your evaluator to evaluate the query here
-    // ...code to evaluate query...
+    std::stringstream stream(query);
+    std::vector<backend::lexer::Token> tokens = backend::lexer::tokenize(stream);
+
+    for (const auto& token : tokens) {
+        DEBUG&& std::cout << backend::lexer::prettyPrintType(token.type) << " ";
+    }
 
     // store the answers to the query in the results list (it is initially empty)
     // each result must be a string.

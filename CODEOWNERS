@@ -12,6 +12,9 @@ Lexer.* @wn @remo5000
 Parser.* @wn @remo5000
 TNode.* @wn @remo5000
 
+# QP
+TestLexerQPL.cpp @huichun66
+
 # Owners for any files in a docs directory. Includes nested
 # files.
 docs/  @jeffkwoh @huichun66

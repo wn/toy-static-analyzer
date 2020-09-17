@@ -12,6 +12,9 @@ std::string prettyPrintType(TokenType t) {
         { LPAREN, "LPAREN" },
         { RPAREN, "RPAREN" },
         { SEMICOLON, "SEMICOLON" },
+        { COMMA, "COMMA" },
+        { UNDERSCORE, "UNDERSCORE" },
+        { DOUBLE_QUOTE, "DOUBLE_QUOTE" },
         { SINGLE_EQ, "SINGLE_EQ" },
         { NOT, "NOT" },
         { ANDAND, "ANDAND" },
@@ -34,23 +37,36 @@ std::string prettyPrintType(TokenType t) {
 }
 
 std::vector<std::pair<TokenType, std::string>> rules = {
-    { LBRACE, "^\\{" },        { RBRACE, "^\\}" },
-    { LPAREN, "^\\(" },        { RPAREN, "^\\)" },
+    { LBRACE, "^\\{" },
+    { RBRACE, "^\\}" },
+    { LPAREN, "^\\(" },
+    { RPAREN, "^\\)" },
     { SEMICOLON, "^;" },
+    { COMMA, "^," },
+    { UNDERSCORE, "^(_)" },
+    { DOUBLE_QUOTE, "^(\")" },
 
+    { NEQ, "^(!=)" },
+    { NOT, "^(!)" },
 
-    { NEQ, "^(!=)" },          { NOT, "^(!)" },
+    { EQEQ, "^(==)" },
+    { SINGLE_EQ, "^(=)" },
 
-    { EQEQ, "^(==)" },         { SINGLE_EQ, "^(=)" },
+    { ANDAND, "^(&&)" },
+    { OROR, "^(\\|\\|)" },
+    { GTE, "^(>=)" },
+    { GT, "^(>)" },
 
-    { ANDAND, "^(&&)" },       { OROR, "^(\\|\\|)" },
-    { GTE, "^(>=)" },          { GT, "^(>)" },
+    { LTE, "^(<=)" },
+    { LT, "^(<)" },
 
-    { LTE, "^(<=)" },          { LT, "^(<)" },
+    { PLUS, "^(\\+)" },
+    { MINUS, "^(-)" },
+    { MULT, "^(\\*)" },
+    { DIV, "^(\\/)" },
+    { MOD, "^(%)" },
 
-    { PLUS, "^(\\+)" },        { MINUS, "^(-)" },
-    { MULT, "^(\\*)" },        { DIV, "^(\\/)" },
-    { MOD, "^(%)" },           { NAME, "^([a-zA-Z]\\w*)\\b" },
+    { NAME, "^([a-zA-Z]\\w*)\\b" },
     { INTEGER, "^(\\d+)\\b" },
 };
 

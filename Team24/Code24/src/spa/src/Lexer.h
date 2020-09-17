@@ -17,6 +17,9 @@ enum TokenType {
     LPAREN,
     RPAREN,
     SEMICOLON,
+    COMMA,
+    UNDERSCORE,
+    DOUBLE_QUOTE,
     SINGLE_EQ, // To prevent ambiguity
     NOT,
     ANDAND,
