@@ -1,7 +1,6 @@
 #include "DesignExtractor.h"
 #include "Logger.h"
 #include "TestParserHelpers.h"
-
 #include "catch.hpp"
 namespace backend {
 namespace testextractor {

@@ -1,10 +1,11 @@
+#include "Parser.h"
+
+#include "Logger.h"
+
 #include <iostream>
 #include <string>
 #include <utility>
 #include <vector>
-
-#include "Logger.h"
-#include "Parser.h"
 
 namespace backend {
 Parser::Parser(std::vector<lexer::Token> tokens) : tokens(std::move(tokens)) {

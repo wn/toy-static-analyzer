@@ -1,5 +1,4 @@
 #include "TNode.h"
-
 #include "catch.hpp"
 namespace backend {
 namespace testTNode {

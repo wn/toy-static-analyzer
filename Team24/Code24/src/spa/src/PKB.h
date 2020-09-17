@@ -1,12 +1,12 @@
 #pragma once
 
-#include <iostream>
-#include <string>
-#include <vector>
-
 #include "DesignExtractor.h"
 #include "PKB.h"
 #include "Parser.h"
+
+#include <iostream>
+#include <string>
+#include <vector>
 
 typedef std::string PROCEDURE;
 typedef std::vector<std::string> PROCEDURE_LIST;

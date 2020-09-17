@@ -1,6 +1,6 @@
+#include "Lexer.h"
 #include "catch.hpp"
 
-#include "Lexer.h"
 #include <sstream>
 #include <string>
 #include <vector>

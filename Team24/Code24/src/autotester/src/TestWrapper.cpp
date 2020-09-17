@@ -1,8 +1,10 @@
 #include "TestWrapper.h"
-#include <Lexer.h>
-#include <Logger.h>
-#include <PKB.h>
-#include <Parser.h>
+
+#include "Lexer.h"
+#include "Logger.h"
+#include "PKB.h"
+#include "Parser.h"
+
 #include <fstream>
 #include <iterator>
 #include <sstream>

@@ -1,7 +1,6 @@
 #ifndef QUERY_H
 #define QUERY_H
 
-#include <string>
 #include <unordered_map>
 #include <vector>
 

@@ -2,6 +2,7 @@
 #define AUTOTESTER_LOGGER_H
 
 #include "TNode.h"
+
 #include <string>
 
 // Logs a value with a newline suffix

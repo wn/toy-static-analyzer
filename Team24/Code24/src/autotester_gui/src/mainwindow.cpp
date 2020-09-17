@@ -1,12 +1,13 @@
 
 #include "mainwindow.h"
+
 #include "GUIWrapper.h"
 #include "ui_mainwindow.h"
+
 #include <QFileDialog>
 #include <QTextStream>
 #include <QtGui>
 #include <iostream>
-
 #include <list>
 
 using namespace std;
