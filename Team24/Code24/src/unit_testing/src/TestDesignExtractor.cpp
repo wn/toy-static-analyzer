@@ -132,5 +132,27 @@ TEST_CASE("Test getTNodeTypeToTNodes maps TNode to TNodeType correctly") {
     REQUIRE(tNodeToStatementNumber[INVALID].size() == 0);
 }
 
+TEST_CASE("Test getFollowRelationship") {
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+
+    std::unordered_map<int, int> actualFollowFollowed;
+    std::unordered_map<int, int> actualFollowedFollow;
+    std::tie(actualFollowFollowed, actualFollowedFollow) = extractor::getFollowRelationship(ast);
+    std::unordered_map<int, int> expectedFollowFollowed = { { 3, 1 }, { 6, 3 } };
+    std::unordered_map<int, int> expectedFollowedFollow = { { 1, 3 }, { 3, 6 } };
+
+    REQUIRE(actualFollowFollowed == expectedFollowFollowed);
+    REQUIRE(actualFollowedFollow == expectedFollowedFollow);
+}
+
+TEST_CASE("Test getValuesInMap") {
+    std::unordered_map<int, int> input = { { 1, 2 }, { 2, 3 }, { 3, 4 } };
+    std::vector<int> actual = extractor::getValuesInMap(input);
+
+    std::vector<int> expected = { 2, 3, 4 };
+    std::sort(actual.begin(), actual.end());
+    REQUIRE(actual == expected);
+}
 } // namespace testextractor
 } // namespace backend

@@ -1,3 +1,5 @@
+#include "DesignExtractor.h"
+
 #include "Logger.h"
 #include "TNode.h"
 
@@ -65,12 +67,12 @@ std::unordered_map<TNode, int> getTNodeToStatementNumber(const TNode& ast) {
     return tNodeToStatementNumber;
 }
 
-std::unordered_map<TNodeType, std::vector<TNode*>, EnumClassHash> getTNodeTypeToTNodes(TNode& ast) {
-    std::unordered_map<TNodeType, std::vector<TNode*>, EnumClassHash> typesToTNode;
-    std::vector<TNode*> toVisit;
+std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash> getTNodeTypeToTNodes(const TNode& ast) {
+    std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash> typesToTNode;
+    std::vector<const TNode*> toVisit;
     toVisit.push_back(&ast);
     while (toVisit.size() > 0) {
-        TNode* visiting = toVisit.back();
+        const TNode* visiting = toVisit.back();
         TNodeType type = visiting->type;
         if (typesToTNode.find(type) == typesToTNode.end()) {
             typesToTNode[type] = {};
@@ -78,7 +80,7 @@ std::unordered_map<TNodeType, std::vector<TNode*>, EnumClassHash> getTNodeTypeTo
         typesToTNode[type].push_back(visiting);
 
         toVisit.pop_back();
-        for (TNode& c : visiting->children) {
+        for (const TNode& c : visiting->children) {
             toVisit.push_back(&c);
         }
     }
@@ -91,6 +93,34 @@ std::unordered_map<int, TNode> getStatementNumberToTNode(const std::unordered_ma
         statementNumberToTNode[p.second] = p.first;
     }
     return statementNumberToTNode;
+}
+
+std::pair<std::unordered_map<int, int>, std::unordered_map<int, int>> getFollowRelationship(const TNode& ast) {
+    auto tNodeTypeToTNode = getTNodeTypeToTNodes(ast);
+    auto tNodeToStmtNo = getTNodeToStatementNumber(ast);
+    std::unordered_map<int, int> followerFollowedMap;
+    std::unordered_map<int, int> followedFollowerMap;
+
+    for (const TNode* stmtList : tNodeTypeToTNode[StatementList]) {
+        const std::vector<TNode>& children = stmtList->children;
+        for (int i = 1; i < children.size(); ++i) {
+            const TNode& curr = children[i];
+            const TNode& prev = children[i - 1];
+            int currStmtNo = tNodeToStmtNo[curr];
+            int prevStmtNo = tNodeToStmtNo[prev];
+            followedFollowerMap[prevStmtNo] = currStmtNo;
+            followerFollowedMap[currStmtNo] = prevStmtNo;
+        }
+    }
+    return { followerFollowedMap, followedFollowerMap };
+}
+
+std::vector<int> getValuesInMap(const std::unordered_map<int, int>& map) {
+    std::vector<int> result;
+    for (auto it = map.begin(); it != map.end(); ++it) {
+        result.push_back(it->second);
+    }
+    return result;
 }
 
 } // namespace extractor
