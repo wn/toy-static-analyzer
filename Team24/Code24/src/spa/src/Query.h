@@ -1,6 +1,7 @@
 #ifndef QUERY_H
 #define QUERY_H
 
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -18,6 +19,8 @@ struct Query {
 
     explicit Query() : declarationMap(), suchThatClauses(), patternClauses(), synonymsToReturn(){};
 };
+
+EntityType entityTypeFromString(const std::string& entityString);
 
 } // namespace qpbackend
 
