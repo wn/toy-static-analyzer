@@ -10,6 +10,9 @@ enum EntityType { STMT, READ, PRINT, CALL, WHILE, IF, ASSIGN, VARIABLE, CONSTANT
 
 enum RelationType { FOLLOWS, FOLLOWST, PARENT, PARENTT, USES, MODIFIES };
 
+typedef std::tuple<RelationType, std::string, std::string> RELATIONTUPLE;
+typedef std::tuple<std::string, std::string, std::string> PATTERNTUPLE;
+
 struct Query {
   public:
     std::unordered_map<std::string, EntityType> declarationMap;
@@ -18,10 +21,14 @@ struct Query {
     std::vector<std::tuple<std::string, std::string, std::string>> patternClauses;
 
     explicit Query() : declarationMap(), suchThatClauses(), patternClauses(), synonymsToReturn(){};
+    Query(const std::unordered_map<std::string, EntityType>& declarationMap,
+          const std::vector<std::string>& synonymsToReturn,
+          const std::vector<RELATIONTUPLE>& suchThatClauses,
+          const std::vector<PATTERNTUPLE>& patternClauses);
+
+    bool operator==(const Query& s) const;
 };
 
 EntityType entityTypeFromString(const std::string& entityString);
-
 } // namespace qpbackend
-
 #endif // QUERY_H
