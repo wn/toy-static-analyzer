@@ -1,5 +1,4 @@
-  
-name: Unit Tester
+name: Mac CI
 
 on:
   push:
@@ -7,14 +6,18 @@ on:
   pull_request:
     branches: [ master ]
 
-env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  BUILD_TYPE: Debug
+defaults:
+  run:
+    shell: bash
 
 jobs:
-  build:
+
+  run-tests-on-mac:
     # autotester.a lib provided does not conform to x64 archi, which is what github actions uses.
     runs-on: 	macos-latest
+    strategy:
+      matrix:
+        build-type: [Release]
 
     steps:
     - uses: actions/checkout@v2
@@ -25,16 +28,16 @@ jobs:
     - name: Configure CMake
       # Use a bash shell so we can use the same syntax for environment variable
       # access regardless of the host operating system
-      shell: bash
       working-directory: ${{runner.workspace}}/build
-      run: cmake $GITHUB_WORKSPACE/Team24/Code24/ -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+      run: cmake $GITHUB_WORKSPACE/Team24/Code24/ -DCMAKE_BUILD_TYPE=${{ matrix.build-type }}
 
     - name: Build
       working-directory: ${{runner.workspace}}/build
-      shell: bash
-      run: cmake --build . --config $BUILD_TYPE
+      run: cmake --build . --config ${{ matrix.build-type }}
 
-    - name: Test
-      working-directory: ${{runner.workspace}}/build
-      shell: bash
+    - name: Run unit tests
       run: ${{runner.workspace}}/build/src/unit_testing/unit_testing
+    
+    - name: Run integration tests
+      run: ${{runner.workspace}}/build/src/integration_testing/integration_testing
+
