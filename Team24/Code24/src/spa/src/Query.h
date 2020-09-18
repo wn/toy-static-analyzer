@@ -27,7 +27,10 @@ struct Query {
           const std::vector<PATTERNTUPLE>& patternClauses);
 
     bool operator==(const Query& s) const;
+    std::string toString() const;
 };
+
+bool isEntityString(const std::string& string);
 
 EntityType entityTypeFromString(const std::string& entityString);
 } // namespace qpbackend

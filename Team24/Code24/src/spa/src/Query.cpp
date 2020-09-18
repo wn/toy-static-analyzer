@@ -14,10 +14,14 @@ const std::map<std::string, EntityType> gEntityStringToTypeMap = {
     { "constant", EntityType::CONSTANT }, { "procedure", EntityType::PROCEDURE },
 };
 
+bool isEntityString(const std::string& string) {
+    return gEntityStringToTypeMap.find(string) != gEntityStringToTypeMap.end();
+}
+
 EntityType entityTypeFromString(const std::string& entityString) {
     auto result = gEntityStringToTypeMap.find(entityString);
     if (result == gEntityStringToTypeMap.end()) {
-        throw std::invalid_argument(entityString + " does not map to any EntityType.");
+        throw std::invalid_argument("Error:entityTypeFromString: " + entityString + " does not map to any EntityType.");
     }
     return result->second;
 }
@@ -37,5 +41,23 @@ Query::Query(const std::unordered_map<std::string, EntityType>& declarationMap,
     this->suchThatClauses = suchThatClauses;
     this->patternClauses = patternClauses;
 }
+
+// TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/157):
+// Complete this implementation for better debugging.
+std::string Query::toString() const {
+    std::string s = "Query {\nDeclaration map:";
+
+    for (const auto& kv : declarationMap) {
+        s += kv.first + " ";
+    }
+
+    s += "\nSynonyms to return:";
+    for (const auto& synonym : synonymsToReturn) {
+        s += synonym + " ";
+    }
+    s += "\n}";
+    return s;
+}
+
 
 } // namespace qpbackend
