@@ -2,7 +2,7 @@
 
 #include "Lexer.h"
 #include "Logger.h"
-#include "PKB.h"
+#include "PKBImplementation.h"
 #include "Parser.h"
 
 #include <fstream>
@@ -33,7 +33,7 @@ void TestWrapper::parse(std::string filename) {
     logLine("AST:");
     logTNode(ast);
 
-    backend::PKB pkb(ast);
+    backend::PKBImplementation pkb(ast);
 
     // call queries on the PKB after this
 }

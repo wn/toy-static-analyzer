@@ -83,7 +83,7 @@ class SingleQueryEvaluator {
 
 class QueryEvaluator {
   public:
-    explicit QueryEvaluator(PKB* pkb) : pkb(pkb) {
+    explicit QueryEvaluator(backend::PKB* pkb) : pkb(pkb) {
     }
 
     PKB* pkb;

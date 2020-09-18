@@ -1,7 +1,7 @@
 #pragma once
 
 #include "DesignExtractor.h"
-#include "PKB.h"
+#include "PKBImplementation.h"
 #include "Parser.h"
 
 #include <iostream>
@@ -16,18 +16,13 @@ typedef int STATEMENT_NUMBER;
 typedef std::vector<STATEMENT_NUMBER> STATEMENT_NUMBER_LIST;
 
 namespace backend {
-class TNode;
-
-class VarTable; // no need to #include "VarTable.h" as all I need is pointer
-
 class PKB {
   public:
-    explicit PKB(const TNode& ast);
     /* API for follows */
     // Given s, return all s' such that follow*(s', s).
-    STATEMENT_NUMBER_LIST getPreFollows(STATEMENT_NUMBER s);
+    virtual STATEMENT_NUMBER_LIST getPreFollows(STATEMENT_NUMBER s) = 0;
     // Given s, return all s' such that follow*(s, s').
-    STATEMENT_NUMBER_LIST getPostFollows(STATEMENT_NUMBER s);
+    virtual STATEMENT_NUMBER_LIST getPostFollows(STATEMENT_NUMBER s) = 0;
 
     /* -- MASS RETRIEVAL OF DESIGN ENTITIES -- */
 
@@ -36,13 +31,13 @@ class PKB {
     // - STATEMENT_NUMBER_LIST getAllAssignmentStatementsThatMatch(PATTERN p);
     // - STATEMENT_NUMBER_LIST getAllAssignmentStatementsFor(VARIABLE v);
     // when pattern matching as they are optimized.
-    STATEMENT_NUMBER_LIST getAllStatements();
+    virtual STATEMENT_NUMBER_LIST getAllStatements() = 0;
 
     // Retrieves all variables used in the SIMPLE program.
-    VARIABLE_LIST getAllVariables();
+    virtual VARIABLE_LIST getAllVariables() = 0;
 
     // Retrieves all procedures defined in the SIMPLE program.
-    PROCEDURE_LIST getAllProcedures();
+    virtual PROCEDURE_LIST getAllProcedures() = 0;
 
     /* -- FOLLOWS / FOLLOWS* -- */
 
@@ -57,15 +52,15 @@ class PKB {
     // Usage: To get s1 such that Follows(9, s1),
     // statements_after_statement_9 = getStatementsFollowedBy(9)
     // first_statement_after_statement_9 = statements_after_statement_9[0]
-    STATEMENT_NUMBER_LIST getStatementsFollowedBy(STATEMENT_NUMBER s);
+    virtual STATEMENT_NUMBER_LIST getStatementsFollowedBy(STATEMENT_NUMBER s) = 0;
     // Get all statements that are followed by some statement.
-    STATEMENT_NUMBER_LIST getStatementsFollowed();
+    virtual STATEMENT_NUMBER_LIST getStatementsFollowed() = 0;
 
     // Similarly, get all the statements that appear before.
     // More formally, for a given Statement s, return all s' such that Follow*(s, s').
-    STATEMENT_NUMBER_LIST getStatementsThatFollows(STATEMENT_NUMBER s);
+    virtual STATEMENT_NUMBER_LIST getStatementsThatFollows(STATEMENT_NUMBER s) = 0;
     // Get all statements that follow some statement.
-    STATEMENT_NUMBER_LIST getStatementsFollows();
+    virtual STATEMENT_NUMBER_LIST getStatementsFollows() = 0;
 
 
     /* -- PARENT / PARENT* -- */
@@ -83,15 +78,12 @@ class PKB {
     // Usage: To get the s1 such that Parent(s1, 9),
     // ancestors = getAncestors(9)
     // parent_of_9 = ancestors[0]
-    STATEMENT_NUMBER_LIST getAncestors(STATEMENT_NUMBER statementNumber);
-    STATEMENT_NUMBER_LIST getStatementsThatHaveAncestors();
+    virtual STATEMENT_NUMBER_LIST getAncestors(STATEMENT_NUMBER statementNumber) = 0;
+    virtual STATEMENT_NUMBER_LIST getStatementsThatHaveAncestors() = 0;
 
     // Similarly, get all the statements that are descendants
     // of the statement at this statement number.
-    STATEMENT_NUMBER_LIST getDescendants(STATEMENT_NUMBER statementNumber);
-    STATEMENT_NUMBER_LIST getStatementsThatHaveDescendants();
-
-  private:
-    STATEMENT_NUMBER_LIST getStatementsInSameBlock(STATEMENT_NUMBER s);
+    virtual STATEMENT_NUMBER_LIST getDescendants(STATEMENT_NUMBER statementNumber) = 0;
+    virtual STATEMENT_NUMBER_LIST getStatementsThatHaveDescendants() = 0;
 };
 } // namespace backend
