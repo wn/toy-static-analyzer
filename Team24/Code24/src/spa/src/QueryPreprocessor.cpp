@@ -24,6 +24,9 @@ State parseSelect(State state);
 State parseDeclarations(State state);
 STATESTATUSPAIR parseSingleDeclaration(State state);
 bool isValidDeclarationDelimiter(const TOKEN& token);
+State parseFilteringClauses(State state);
+STATESTATUSPAIR parseSingleSuchThatClause(State state);
+STATESTATUSPAIR parseSinglePatternClause(State state);
 
 // Helper methods
 
@@ -68,7 +71,7 @@ class State {
     // Tokens manipulation
 
     backend::lexer::Token popToken() {
-        if (tokenPos >= tokens.size()) {
+        if (!hasTokensLeftToParse()) {
             throw std::runtime_error(kQppErrorPrefix + "State::popToken: QueryPreprocessor has "
                                                        "not successfully parsed a Query yet, "
                                                        "but has run out of tokens to parse.");
@@ -76,6 +79,10 @@ class State {
         TOKEN tokenToReturn = tokens[tokenPos];
         tokenPos += 1;
         return tokenToReturn;
+    }
+
+    bool hasTokensLeftToParse() {
+        return tokenPos < tokens.size();
     }
 
     // Query struct manipulation
@@ -100,6 +107,7 @@ class State {
         query.synonymsToReturn.push_back(token.nameValue);
     }
 };
+
 // Parser / Business logic methods
 
 /**
@@ -123,9 +131,10 @@ State parseSelect(State state) {
 
     const TOKEN& synonymToken = state.popToken();
     state.addSynonymToReturn(synonymToken);
-    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/72): parse suchthat-cl
-    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/73): parse pattern-cl
-    return state;
+    if (!state.hasTokensLeftToParse()) {
+        return state;
+    }
+    return parseFilteringClauses(state);
 }
 
 /**
@@ -195,6 +204,34 @@ STATESTATUSPAIR parseSingleDeclaration(State state) {
  */
 bool isValidDeclarationDelimiter(const TOKEN& token) {
     return token.type == backend::lexer::SEMICOLON || token.type == backend::lexer::COMMA;
+}
+
+/**
+ * ([ suchthat-cl ] | [ pattern-cl ])*
+ */
+State parseFilteringClauses(State state) {
+    if (!state.hasTokensLeftToParse()) return state;
+    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/72): parse suchthat-cl
+    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/73): parse pattern-cl
+    throw std::logic_error("Function not implemented yet.");
+}
+
+/**
+ * suchthat-cl : ‘such that’ relRef
+ * relRef : Follows | FollowsT | Parent | ParentT | UsesS | UsesP | ModifiesS | ModifiesP
+ */
+STATESTATUSPAIR parseSingleSuchThatClause(State state) {
+    throw std::logic_error("Function not implemented yet.");
+}
+
+/**
+ * pattern-cl : ‘pattern’ syn-assign ‘(‘ entRef ‘,’ expression-spec ’)’
+ * syn-assign must be declared as synonym of assignment (design entity ‘assign’).
+ * entRef : synonym | ‘_’ | ‘"’ IDENT ‘"’
+ * expression-spec :  ‘"‘ expr’"’ | ‘_’ ‘"’ expr ‘"’ ‘_’ | ‘_’
+ */
+STATESTATUSPAIR parseSinglePatternClause(State state) {
+    throw std::logic_error("Function not implemented yet.");
 }
 
 // QueryPreprocessor API definitions.
