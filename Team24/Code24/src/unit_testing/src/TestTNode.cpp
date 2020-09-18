@@ -2,9 +2,6 @@
 #include "catch.hpp"
 namespace backend {
 namespace testTNode {
-void require(bool b) {
-    REQUIRE(b);
-}
 
 TEST_CASE("Test equality") {
     TNode root(TNodeType::While);
@@ -15,7 +12,7 @@ TEST_CASE("Test equality") {
     TNode s2(TNodeType::Assign);
     root2.addChild(s2);
 
-    require(root == root2);
+    REQUIRE(root == root2);
 }
 
 TEST_CASE("Test name inequality") {
@@ -29,9 +26,7 @@ TEST_CASE("Test name inequality") {
     s2.name = "xyz";
     root2.addChild(s2);
 
-    bool a = root == root2;
-
-    require(!(root == root2));
+    REQUIRE_FALSE(root == root2);
 }
 
 TEST_CASE("Test constant inequality") {
@@ -45,7 +40,7 @@ TEST_CASE("Test constant inequality") {
     s2.constant = 0;
     root2.addChild(s2);
 
-    require(!(root == root2));
+    REQUIRE_FALSE(root == root2);
 }
 } // namespace testTNode
 } // namespace backend
