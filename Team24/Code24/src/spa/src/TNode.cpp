@@ -106,8 +106,7 @@ bool TNode::operator==(const TNode& rhs) const {
         logLine("type line not equal: " + std::to_string(line) + " : " + std::to_string(rhs.line),
                 line != rhs.line);
         logLine("name not equal: " + name + " : " + rhs.name, name != rhs.name);
-        logLine("constant not equal: " + std::to_string(constant) + " : " + std::to_string(rhs.constant),
-                constant != rhs.constant);
+        logLine("constant not equal: " + constant + " : " + rhs.constant, constant != rhs.constant);
         logLine();
         return false;
     }

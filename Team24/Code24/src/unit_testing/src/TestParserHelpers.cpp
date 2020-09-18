@@ -33,7 +33,7 @@ TNode generateMockAssignNode() {
     y.name = "y";
 
     TNode constNode(Constant, 1);
-    constNode.constant = 1;
+    constNode.constant = "1";
 
     TNode plusNode(Plus);
     plusNode.addChild(y);

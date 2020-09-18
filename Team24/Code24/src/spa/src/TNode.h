@@ -69,15 +69,12 @@ class TNode {
 
     // For variables and procedures
     std::string name;
-    // We set constant as -1 by default as we are guaranteed by SIMPLE
-    // that constant >= 0.
-    int constant{ -1 };
 
     void addChild(const TNode& c);
     std::string toString() const;
     std::string toShortString() const;
     bool operator==(const TNode& s) const;
-
+    std::string constant;
 
     bool isStatementNode() const;
 
@@ -87,7 +84,6 @@ class TNode {
     // Used to generate a Unique ID for a new AST. Used for hashing.
     static int uniqueIdentifier;
     static int getNewUniqueIdentifier();
-
     std::string toStringHelper(int tabs) const;
 };
 } // namespace backend

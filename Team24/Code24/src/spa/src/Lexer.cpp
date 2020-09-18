@@ -101,7 +101,7 @@ std::vector<Token> tokenize(std::istream& stream) {
                     if (p.first == NAME) {
                         t.nameValue = match.str();
                     } else if (p.first == INTEGER) {
-                        t.integerValue = std::stoi(match.str());
+                        t.integerValue = match.str();
                     }
                     result.push_back(t);
 

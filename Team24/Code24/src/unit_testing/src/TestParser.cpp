@@ -86,7 +86,7 @@ TEST_CASE("Test Condition with <= math operator") {
     lCondLHSPlus.addChild(x);
     lCondLHSPlus.addChild(lCondLHSMultiply);
     TNode lCondRHSConst(Constant, 1);
-    lCondRHSConst.constant = 1;
+    lCondRHSConst.constant = "1";
 
     TNode condNode(LesserThanOrEqual, 1);
     condNode.addChild(lCondLHSPlus);
@@ -113,7 +113,7 @@ TEST_CASE("Test Condition with >= math operator") {
     lCondLHSPlus.addChild(x);
     lCondLHSPlus.addChild(lCondLHSMultiply);
     TNode lCondRHSConst(Constant, 1);
-    lCondRHSConst.constant = 1;
+    lCondRHSConst.constant = "1";
 
     TNode condNode(GreaterThanOrEqual, 1);
     condNode.addChild(lCondLHSPlus);
@@ -140,7 +140,7 @@ TEST_CASE("Test Condition with > math operator") {
     lCondLHSPlus.addChild(x);
     lCondLHSPlus.addChild(lCondLHSMultiply);
     TNode lCondRHSConst(Constant, 1);
-    lCondRHSConst.constant = 1;
+    lCondRHSConst.constant = "1";
 
     TNode condNode(Greater, 1);
     condNode.addChild(lCondLHSPlus);
@@ -167,7 +167,7 @@ TEST_CASE("Test Condition with < math operator") {
     lCondLHSPlus.addChild(x);
     lCondLHSPlus.addChild(lCondLHSMultiply);
     TNode lCondRHSConst(Constant, 1);
-    lCondRHSConst.constant = 1;
+    lCondRHSConst.constant = "1";
 
     TNode condNode(Lesser, 1);
     condNode.addChild(lCondLHSPlus);
@@ -194,7 +194,7 @@ TEST_CASE("Test Condition with == math operator") {
     lCondLHSPlus.addChild(x);
     lCondLHSPlus.addChild(lCondLHSMultiply);
     TNode lCondRHSConst(Constant, 1);
-    lCondRHSConst.constant = 1;
+    lCondRHSConst.constant = "1";
 
     TNode condNode(Equal, 1);
     condNode.addChild(lCondLHSPlus);
@@ -221,7 +221,7 @@ TEST_CASE("Test Condition with != math operator") {
     lCondLHSPlus.addChild(x);
     lCondLHSPlus.addChild(lCondLHSMultiply);
     TNode lCondRHSConst(Constant, 1);
-    lCondRHSConst.constant = 1;
+    lCondRHSConst.constant = "1";
 
     TNode condNode(NotEqual, 1);
     condNode.addChild(lCondLHSPlus);
@@ -238,7 +238,7 @@ TEST_CASE("Test Condition with AND operator") {
     TNode x(Variable, 1);
     x.name = "x";
     TNode oneLNode(Constant, 1);
-    oneLNode.constant = 1;
+    oneLNode.constant = "1";
     TNode lCondLess(Lesser, 1);
     lCondLess.addChild(x);
     lCondLess.addChild(oneLNode);
@@ -246,7 +246,7 @@ TEST_CASE("Test Condition with AND operator") {
     TNode y(Variable, 1);
     y.name = "y";
     TNode oneRNode(Constant, 1);
-    oneRNode.constant = 1;
+    oneRNode.constant = "1";
     TNode rCondLess(Lesser, 1);
     rCondLess.addChild(y);
     rCondLess.addChild(oneRNode);
@@ -266,7 +266,7 @@ TEST_CASE("Test Condition with OR operator") {
     TNode x(Variable, 1);
     x.name = "x";
     TNode oneLNode(Constant, 1);
-    oneLNode.constant = 1;
+    oneLNode.constant = "1";
     TNode lCondLess(Lesser, 1);
     lCondLess.addChild(x);
     lCondLess.addChild(oneLNode);
@@ -274,7 +274,7 @@ TEST_CASE("Test Condition with OR operator") {
     TNode y(Variable, 1);
     y.name = "y";
     TNode oneRNode(Constant, 1);
-    oneRNode.constant = 1;
+    oneRNode.constant = "1";
     TNode rCondLess(Lesser, 1);
     rCondLess.addChild(y);
     rCondLess.addChild(oneRNode);
@@ -294,7 +294,7 @@ TEST_CASE("Test Condition with NOT operator") {
     TNode x(Variable, 1);
     x.name = "x";
     TNode oneLNode(Constant, 1);
-    oneLNode.constant = 1;
+    oneLNode.constant = "1";
     TNode lCondLess(Lesser, 1);
     lCondLess.addChild(x);
     lCondLess.addChild(oneLNode);
@@ -302,7 +302,7 @@ TEST_CASE("Test Condition with NOT operator") {
     TNode y(Variable, 1);
     y.name = "y";
     TNode oneRNode(Constant, 1);
-    oneRNode.constant = 1;
+    oneRNode.constant = "1";
     TNode rCondLess(Lesser, 1);
     rCondLess.addChild(y);
     rCondLess.addChild(oneRNode);
@@ -325,7 +325,7 @@ TEST_CASE("Test Condition with Triple operator") {
     TNode x(Variable, 1);
     x.name = "x";
     TNode oneLNode(Constant, 1);
-    oneLNode.constant = 1;
+    oneLNode.constant = "1";
     TNode lCondLess(Lesser, 1);
     lCondLess.addChild(x);
     lCondLess.addChild(oneLNode);
@@ -333,7 +333,7 @@ TEST_CASE("Test Condition with Triple operator") {
     TNode y(Variable, 1);
     y.name = "y";
     TNode oneRNode(Constant, 1);
-    oneRNode.constant = 1;
+    oneRNode.constant = "1";
     TNode rCondLess(Lesser, 1);
     rCondLess.addChild(y);
     rCondLess.addChild(oneRNode);
@@ -381,7 +381,7 @@ TEST_CASE("Test expr associativity + before *") {
     lCondLHSPlus.addChild(x);
     lCondLHSPlus.addChild(lCondLHSMultiply);
     TNode lCondRHSConst(Constant, 1);
-    lCondRHSConst.constant = 1;
+    lCondRHSConst.constant = "1";
 
     TNode condNode(LesserThanOrEqual, 1);
     condNode.addChild(lCondLHSPlus);
@@ -421,7 +421,7 @@ TEST_CASE("Test expr associativity * before +") {
     TNode condNode(LesserThanOrEqual, 1);
     condNode.addChild(lCondLHSPlus);
     TNode lCondRHSConst(Constant, 1);
-    lCondRHSConst.constant = 1;
+    lCondRHSConst.constant = "1";
     condNode.addChild(lCondRHSConst);
 
     std::cout << result.toString() << std::endl;
@@ -460,7 +460,7 @@ TEST_CASE("Test expr associativity * before *") {
     TNode condNode(LesserThanOrEqual, 1);
     condNode.addChild(lCondLHSMultiply);
     TNode lCondRHSConst(Constant, 1);
-    lCondRHSConst.constant = 1;
+    lCondRHSConst.constant = "1";
     condNode.addChild(lCondRHSConst);
 
     std::cout << result.toString() << std::endl;
@@ -499,7 +499,7 @@ TEST_CASE("Test expr associativity * before + with brackets") {
     TNode condNode(LesserThanOrEqual, 1);
     condNode.addChild(lCondLHSMultiply);
     TNode lCondRHSConst(Constant, 1);
-    lCondRHSConst.constant = 1;
+    lCondRHSConst.constant = "1";
     condNode.addChild(lCondRHSConst);
 
     std::cout << result.toString() << std::endl;
@@ -538,7 +538,7 @@ TEST_CASE("Test expr associativity + before * with brackets") {
     TNode condNode(LesserThanOrEqual, 1);
     condNode.addChild(lCondLHSMultiply);
     TNode lCondRHSConst(Constant, 1);
-    lCondRHSConst.constant = 1;
+    lCondRHSConst.constant = "1";
     condNode.addChild(lCondRHSConst);
 
     std::cout << result.toString() << std::endl;
@@ -557,7 +557,7 @@ TEST_CASE("Test expr useless brackets") {
     TNode condNode(LesserThanOrEqual, 1);
     condNode.addChild(x);
     TNode lCondRHSConst(Constant, 1);
-    lCondRHSConst.constant = 1;
+    lCondRHSConst.constant = "1";
     condNode.addChild(lCondRHSConst);
 
     std::cout << result.toString() << std::endl;
@@ -592,7 +592,7 @@ TEST_CASE("Test parseAssign") {
     y.name = "y";
 
     TNode constNode(Constant, 1);
-    constNode.constant = 1;
+    constNode.constant = "1";
 
     TNode plusNode(Plus);
     plusNode.addChild(y);

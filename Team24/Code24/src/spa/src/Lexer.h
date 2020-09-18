@@ -51,7 +51,7 @@ struct Token {
 
     // Use only for NAME and INTEGER
     std::string nameValue;
-    int integerValue;
+    std::string integerValue;
 
     explicit Token(TokenType t) : type(t), line(), linePosition(), nameValue(), integerValue(){};
 };
