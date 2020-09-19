@@ -24,7 +24,7 @@ const char STRUCTURED_STATEMENT[] = "procedure MySpecialProc {"
 
 TEST_CASE("Test getTNodeToStatementNumber gets all statements") {
     Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
-    TNode ast(parser.parse());
+    const TNode ast(parser.parse());
     auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
 
     REQUIRE(tNodeToStatementNumber.size() == 6);
@@ -32,27 +32,29 @@ TEST_CASE("Test getTNodeToStatementNumber gets all statements") {
 
 TEST_CASE("Test getTNodeToStatementNumber copies TNodes properly") {
     Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
-    const TNode& ast(parser.parse());
+    TNode ast(parser.parse());
     auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
-    TNode procedureStatements = ast.children[0].children[0];
-    REQUIRE(procedureStatements.type == TNodeType::StatementList);
+    TNode* procedureStatements = &ast.children[0].children[0];
+    REQUIRE(procedureStatements->type == TNodeType::StatementList);
 
-    REQUIRE(procedureStatements.children.size() == 3);
+    REQUIRE(procedureStatements->children.size() == 3);
 
-    const TNode& whileNodeInAst = procedureStatements.children[0];
-    REQUIRE(whileNodeInAst.type == TNodeType::While);
-    const TNode& whileNodeInMap = tNodeToStatementNumber.find(whileNodeInAst)->first;
+    TNode* whileNodeInAst = &procedureStatements->children[0];
+    REQUIRE(whileNodeInAst != nullptr);
+    REQUIRE(TNodeType::While == TNodeType::While);
+    REQUIRE(whileNodeInAst->type == TNodeType::While);
+    const TNode* whileNodeInMap = tNodeToStatementNumber.find(whileNodeInAst)->first;
     REQUIRE(whileNodeInMap == whileNodeInAst);
 
-    const TNode& ifNodeInAst = procedureStatements.children[1];
+    TNode& ifNodeInAst = procedureStatements->children[1];
     REQUIRE(ifNodeInAst.type == TNodeType::IfElse);
-    const TNode& ifNodeInMap = tNodeToStatementNumber.find(ifNodeInAst)->first;
-    REQUIRE(ifNodeInMap == ifNodeInMap);
+    const TNode* ifNodeInMap = tNodeToStatementNumber.find(&ifNodeInAst)->first;
+    REQUIRE(ifNodeInMap == &ifNodeInAst);
 
-    const TNode& assignNodeInAst = procedureStatements.children[2];
+    TNode& assignNodeInAst = procedureStatements->children[2];
     REQUIRE(assignNodeInAst.type == TNodeType::Assign);
-    const TNode& assignNodeInMap = tNodeToStatementNumber.find(assignNodeInAst)->first;
-    REQUIRE(assignNodeInAst == assignNodeInMap);
+    const TNode* assignNodeInMap = tNodeToStatementNumber.find(&assignNodeInAst)->first;
+    REQUIRE(assignNodeInMap == &assignNodeInAst);
 }
 
 TEST_CASE("Test getStatementNumberToTNode creates a reverse map of getTNodeToStatementNumber") {
@@ -66,7 +68,7 @@ TEST_CASE("Test getStatementNumberToTNode creates a reverse map of getTNodeToSta
 
     for (auto& pair : statementNumberToTNode) {
         int statementNumber = pair.first;
-        TNode tNode = pair.second;
+        const TNode* tNode = pair.second;
 
         REQUIRE(tNodeToStatementNumber.find(tNode) != tNodeToStatementNumber.end());
         REQUIRE(tNodeToStatementNumber[tNode] == statementNumber);
@@ -79,34 +81,34 @@ TEST_CASE("Test getTNodeToStatementNumber maps TNodes to their correct statement
     auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
     auto statementNumberToTNode = extractor::getStatementNumberToTNode(tNodeToStatementNumber);
 
-    TNode statementList = ast.children[0].children[0];
-    REQUIRE(statementList.type == TNodeType::StatementList);
+    TNode* statementList = &ast.children[0].children[0];
+    REQUIRE(statementList->type == TNodeType::StatementList);
 
     REQUIRE(tNodeToStatementNumber.size() == 6);
 
     // While statement
-    TNode whileNodeInAst = statementList.children[0];
+    TNode& whileNodeInAst = statementList->children[0];
     REQUIRE(whileNodeInAst.type == TNodeType::While);
-    REQUIRE(statementNumberToTNode[1] == whileNodeInAst);
-    TNode whileNodeStatements = whileNodeInAst.children[1];
+    REQUIRE(statementNumberToTNode[1] == &whileNodeInAst);
+    TNode& whileNodeStatements = whileNodeInAst.children[1];
     REQUIRE(whileNodeStatements.type == TNodeType::StatementList);
-    REQUIRE(statementNumberToTNode[2] == whileNodeStatements.children[0]);
+    REQUIRE(statementNumberToTNode[2] == &whileNodeStatements.children[0]);
 
     // If-Then-Else statement
-    TNode ifNodeInAst = statementList.children[1];
+    TNode& ifNodeInAst = statementList->children[1];
     REQUIRE(ifNodeInAst.type == TNodeType::IfElse);
-    REQUIRE(statementNumberToTNode[3] == ifNodeInAst);
+    REQUIRE(statementNumberToTNode[3] == &ifNodeInAst);
     // If -> Then
-    TNode ifNodeThenStatements = ifNodeInAst.children[1];
+    TNode& ifNodeThenStatements = ifNodeInAst.children[1];
     REQUIRE(ifNodeThenStatements.type == TNodeType::StatementList);
-    REQUIRE(statementNumberToTNode[4] == ifNodeThenStatements.children[0]);
+    REQUIRE(statementNumberToTNode[4] == &ifNodeThenStatements.children[0]);
     // If -> Else
-    TNode ifNodeElseStatements = ifNodeInAst.children[2];
+    TNode& ifNodeElseStatements = ifNodeInAst.children[2];
     REQUIRE(ifNodeElseStatements.type == TNodeType::StatementList);
-    REQUIRE(statementNumberToTNode[5] == ifNodeElseStatements.children[0]);
+    REQUIRE(statementNumberToTNode[5] == &ifNodeElseStatements.children[0]);
 
-    REQUIRE(statementNumberToTNode[6].type == TNodeType::Assign);
-    REQUIRE(statementNumberToTNode[6] == statementList.children[2]);
+    REQUIRE(statementNumberToTNode[6]->type == TNodeType::Assign);
+    REQUIRE(statementNumberToTNode[6] == &statementList->children[2]);
 }
 
 TEST_CASE("Test getTNodeTypeToTNodes maps TNode to TNodeType correctly") {

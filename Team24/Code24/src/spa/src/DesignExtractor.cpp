@@ -11,31 +11,31 @@ using namespace std;
 namespace backend {
 namespace extractor {
 
-std::unordered_map<TNode, int> getTNodeToStatementNumber(const TNode& ast) {
+std::unordered_map<const TNode*, int> getTNodeToStatementNumber(const TNode& ast) {
     logLine("start getTNodeToStatementNumber");
     logWord("getTNodeToStatementNumber: ast is ");
     logLine(ast.toString());
 
-    std::unordered_map<TNode, int> tNodeToStatementNumber;
+    std::unordered_map<const TNode*, int> tNodeToStatementNumber;
     int currentStatementNumber = 1;
 
     // DFS through the AST and assign statement numbers.
     // Here, we implicitly assume that AST children are ordered by their
     // beginning line number in the source code. For example, we assume that the
     // "then" statement list is a child
-    std::stack<TNode> nodeStack;
-    nodeStack.push(ast);
+    std::stack<const TNode*> nodeStack;
+    nodeStack.push(&ast);
     while (!nodeStack.empty()) {
-        const TNode tNode = nodeStack.top();
+        const TNode* tNode = nodeStack.top();
         nodeStack.pop();
 
         logWord("Popped tNode from stack: ");
-        logLine(tNode.toShortString());
+        logLine(tNode->toShortString());
 
-        if (tNode.isStatementNode()) {
+        if (tNode->isStatementNode()) {
 
             logWord("Found Statement tNode");
-            logWord(tNode.toShortString());
+            logWord(tNode->toShortString());
             logWord(", assigning");
             logLine(currentStatementNumber);
             logWord("  Does this tNode already exist in the Hashmap?");
@@ -47,19 +47,19 @@ std::unordered_map<TNode, int> getTNodeToStatementNumber(const TNode& ast) {
 
 
         logWord(" number of children: ");
-        logLine(tNode.children.size());
+        logLine(tNode->children.size());
         // Iterate in the reverse direction to ensure that the top of the stack is the
         // "first" statement in the SIMPLE program
-        for (int childIndex = (int)tNode.children.size() - 1; childIndex >= 0; childIndex--) {
+        for (int childIndex = (int)tNode->children.size() - 1; childIndex >= 0; childIndex--) {
             logWord("  childindex ");
             logLine(childIndex);
 
-            const TNode& child = tNode.children[childIndex];
+            const TNode& child = tNode->children[childIndex];
 
             logWord("  Adding ");
             logLine(child.toShortString());
 
-            nodeStack.push(child);
+            nodeStack.push(&child);
         }
     }
 
@@ -87,8 +87,9 @@ std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash> getTNode
     return typesToTNode;
 }
 
-std::unordered_map<int, TNode> getStatementNumberToTNode(const std::unordered_map<TNode, int>& tNodeToStatementNumber) {
-    std::unordered_map<int, TNode> statementNumberToTNode;
+std::unordered_map<int, const TNode*>
+getStatementNumberToTNode(const std::unordered_map<const TNode*, int>& tNodeToStatementNumber) {
+    std::unordered_map<int, const TNode*> statementNumberToTNode;
     for (const auto& p : tNodeToStatementNumber) {
         statementNumberToTNode[p.second] = p.first;
     }
@@ -104,8 +105,8 @@ std::pair<std::unordered_map<int, int>, std::unordered_map<int, int>> getFollowR
     for (const TNode* stmtList : tNodeTypeToTNode[StatementList]) {
         const std::vector<TNode>& children = stmtList->children;
         for (int i = 1; i < children.size(); ++i) {
-            const TNode& curr = children[i];
-            const TNode& prev = children[i - 1];
+            const TNode* curr = &(children[i]);
+            const TNode* prev = &(children[i - 1]);
             int currStmtNo = tNodeToStmtNo[curr];
             int prevStmtNo = tNodeToStmtNo[prev];
             followedFollowerMap[prevStmtNo] = currStmtNo;
@@ -126,23 +127,22 @@ getParentRelationship(const TNode& ast) {
 
 
     for (const TNode* parent : tNodetypeToTNode[While]) {
-        int parentStmtNo = tNodeToStmtNo[*parent]; // we do not expect this to throw as parent has stmt_no.
+        int parentStmtNo = tNodeToStmtNo[parent]; // we do not expect this to throw as parent has stmt_no.
         if (parentChildrenMap.find(parentStmtNo) == parentChildrenMap.end()) {
             parentChildrenMap[parentStmtNo] = {};
         }
 
         // WHILE-tNode must have 2 children; cond and stmt-list
         const TNode& stmtLists = parent->children[1];
-        const std::vector<TNode> whileBody = stmtLists.children;
-        for (const TNode& stmt : whileBody) {
-            int childStmtNo = tNodeToStmtNo[stmt]; // we do not expect this to throw as child has stmt_no.
+        for (const TNode& stmt : stmtLists.children) {
+            int childStmtNo = tNodeToStmtNo[&stmt]; // we do not expect this to throw as child has stmt_no.
             childParentMap[childStmtNo] = parentStmtNo;
             parentChildrenMap[parentStmtNo].push_back(childStmtNo);
         }
     }
 
     for (const TNode* parent : tNodetypeToTNode[IfElse]) {
-        int parentStmtNo = tNodeToStmtNo[*parent]; // we do not expect this to throw as parent has stmt_no.
+        int parentStmtNo = tNodeToStmtNo[parent]; // we do not expect this to throw as parent has stmt_no.
         // If-else-tNode must have 2 children; cond, if-stmt-list and else-stmt-list
         if (parentChildrenMap.find(parentStmtNo) == parentChildrenMap.end()) {
             parentChildrenMap[parentStmtNo] = {};
@@ -150,18 +150,16 @@ getParentRelationship(const TNode& ast) {
 
         // if-stmts
         const TNode& ifStmtLists = parent->children[1];
-        const std::vector<TNode> ifBody = ifStmtLists.children;
-        for (const TNode& stmt : ifBody) {
-            int childStmtNo = tNodeToStmtNo[stmt]; // we do not expect this to throw as child has stmt_no.
+        for (const TNode& stmt : ifStmtLists.children) {
+            int childStmtNo = tNodeToStmtNo[&stmt]; // we do not expect this to throw as child has stmt_no.
             childParentMap[childStmtNo] = parentStmtNo;
             parentChildrenMap[parentStmtNo].push_back(childStmtNo);
         }
 
         // else-stmts
         const TNode& elseStmtLists = parent->children[2];
-        const std::vector<TNode> elseBody = elseStmtLists.children;
-        for (const TNode& stmt : elseBody) {
-            int childStmtNo = tNodeToStmtNo[stmt]; // we do not expect this to throw as child has stmt_no.
+        for (const TNode& stmt : elseStmtLists.children) {
+            int childStmtNo = tNodeToStmtNo[&stmt]; // we do not expect this to throw as child has stmt_no.
             childParentMap[childStmtNo] = parentStmtNo;
             parentChildrenMap[parentStmtNo].push_back(childStmtNo);
         }
