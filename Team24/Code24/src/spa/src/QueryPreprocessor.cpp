@@ -81,6 +81,14 @@ class State {
         return tokenToReturn;
     }
 
+    backend::lexer::Token popUntilNonWhitespaceToken() {
+        TOKEN token = popToken();
+        while (token.type == backend::lexer::WHITESPACE) {
+            token = popToken();
+        }
+        return token;
+    }
+
     bool hasTokensLeftToParse() {
         return tokenPos < tokens.size();
     }
@@ -117,7 +125,7 @@ State parseSelect(State state) {
     state = parseDeclarations(state);
     logLine(kQppLogInfoPrefix + "parseSelect: Query state after parsing declaration*" +
             state.getQuery().toString());
-    const TOKEN& selectToken = state.popToken();
+    const TOKEN& selectToken = state.popUntilNonWhitespaceToken();
     if (selectToken.type != backend::lexer::NAME || selectToken.nameValue != "Select") {
         // Irrecoverable syntax error, only 'Select' tokens come after declaration*. There is no
         // way to backtrack.
@@ -129,7 +137,7 @@ State parseSelect(State state) {
                                  " while parsing, when \"Select\" is expected instead.");
     }
 
-    const TOKEN& synonymToken = state.popToken();
+    const TOKEN& synonymToken = state.popUntilNonWhitespaceToken();
     state.addSynonymToReturn(synonymToken);
     if (!state.hasTokensLeftToParse()) {
         return state;
@@ -164,14 +172,14 @@ State parseDeclarations(State state) {
  * @return <state of parser, isStateInvalid> after attempting to parse a single declaration.
  */
 STATESTATUSPAIR parseSingleDeclaration(State state) {
-    const TOKEN& designEntity = state.popToken();
+    const TOKEN& designEntity = state.popUntilNonWhitespaceToken();
     if (designEntity.type != backend::lexer::NAME || !qpbackend::isEntityString(designEntity.nameValue)) {
         return STATESTATUSPAIR(state, false);
     }
     qpbackend::EntityType entityType = getEntityTypeFromToken(designEntity);
 
-    TOKEN synonym = state.popToken();
-    TOKEN delimiter = state.popToken();
+    TOKEN synonym = state.popUntilNonWhitespaceToken();
+    TOKEN delimiter = state.popUntilNonWhitespaceToken();
     logLine(kQppLogInfoPrefix + "parseSingleDeclaration:\n Synonym: " + synonym.nameValue +
             "\nDelimiter type:" + backend::lexer::prettyPrintType(delimiter.type));
     // Handles (‘,’ synonym)* ‘;’
@@ -187,8 +195,8 @@ STATESTATUSPAIR parseSingleDeclaration(State state) {
         if (delimiter.type == backend::lexer::SEMICOLON) {
             return STATESTATUSPAIR(state, true);
         }
-        synonym = state.popToken();
-        delimiter = state.popToken();
+        synonym = state.popUntilNonWhitespaceToken();
+        delimiter = state.popUntilNonWhitespaceToken();
     }
 
     // Encountered an invalid delimiter, return <state, false> to signal this is an invalid state.

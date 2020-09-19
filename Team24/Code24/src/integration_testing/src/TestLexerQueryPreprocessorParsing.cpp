@@ -14,7 +14,7 @@ namespace backend {
 void requireParsingInvalidQPLQueryToReturnEmptyQuery(const std::string& s) {
     std::stringstream queryString = std::stringstream(s);
 
-    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenize(queryString);
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
 
     REQUIRE(qpbackend::Query() == querypreprocessor::parseTokens(lexerTokens));
 }
@@ -27,7 +27,7 @@ TEST_CASE("Test selects clause without pattern or such that clause") {
     qpbackend::Query expectedQuery =
     qpbackend::Query({ { "v", qpbackend::EntityType::VARIABLE } }, { "v" }, {}, {});
 
-    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenize(queryString);
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
 
     REQUIRE(expectedQuery == actualQuery);
@@ -56,7 +56,7 @@ TEST_CASE("Test keywords are not reserved") {
     queryString << " Select pattern";
     qpbackend::Query expectedQuery = qpbackend::Query(expectedDeclarationMap, { "pattern" }, {}, {});
 
-    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenize(queryString);
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
 
     REQUIRE(expectedQuery == actualQuery);
@@ -71,7 +71,7 @@ TEST_CASE("Test multiple declarations, single synonym each") {
                                                         { "s", qpbackend::EntityType::STMT } },
                                                       { "v" }, {}, {});
 
-    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenize(queryString);
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
 
     REQUIRE(expectedQuery == actualQuery);
@@ -89,7 +89,7 @@ TEST_CASE("Test multiple declarations, multiple synonyms") {
                                                         { "s", qpbackend::EntityType::STMT } },
                                                       { "v" }, {}, {});
 
-    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenize(queryString);
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
 
     REQUIRE(expectedQuery == actualQuery);
@@ -103,7 +103,7 @@ TEST_CASE("Test declaring stmt") {
     qpbackend::Query expectedQuery =
     qpbackend::Query({ { "v", qpbackend::EntityType::STMT } }, { "v" }, {}, {});
 
-    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenize(queryString);
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
 
     REQUIRE(expectedQuery == actualQuery);
@@ -114,7 +114,7 @@ TEST_CASE("Test declaring read") {
     qpbackend::Query expectedQuery =
     qpbackend::Query({ { "v", qpbackend::EntityType::READ } }, { "v" }, {}, {});
 
-    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenize(queryString);
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
 
     REQUIRE(expectedQuery == actualQuery);
@@ -125,7 +125,7 @@ TEST_CASE("Test declaring print") {
     qpbackend::Query expectedQuery =
     qpbackend::Query({ { "v", qpbackend::EntityType::PRINT } }, { "v" }, {}, {});
 
-    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenize(queryString);
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
 
     REQUIRE(expectedQuery == actualQuery);
@@ -136,7 +136,7 @@ TEST_CASE("Test declaring call") {
     qpbackend::Query expectedQuery =
     qpbackend::Query({ { "v", qpbackend::EntityType::CALL } }, { "v" }, {}, {});
 
-    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenize(queryString);
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
 
     REQUIRE(expectedQuery == actualQuery);
@@ -147,7 +147,7 @@ TEST_CASE("Test declaring while") {
     qpbackend::Query expectedQuery =
     qpbackend::Query({ { "v", qpbackend::EntityType::WHILE } }, { "v" }, {}, {});
 
-    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenize(queryString);
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
 
     REQUIRE(expectedQuery == actualQuery);
@@ -158,7 +158,7 @@ TEST_CASE("Test declaring if") {
     qpbackend::Query expectedQuery =
     qpbackend::Query({ { "v", qpbackend::EntityType::IF } }, { "v" }, {}, {});
 
-    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenize(queryString);
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
 
     REQUIRE(expectedQuery == actualQuery);
@@ -169,7 +169,7 @@ TEST_CASE("Test declaring assign") {
     qpbackend::Query expectedQuery =
     qpbackend::Query({ { "v", qpbackend::EntityType::ASSIGN } }, { "v" }, {}, {});
 
-    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenize(queryString);
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
 
     REQUIRE(expectedQuery == actualQuery);
@@ -180,7 +180,7 @@ TEST_CASE("Test declaring variable") {
     qpbackend::Query expectedQuery =
     qpbackend::Query({ { "v", qpbackend::EntityType::VARIABLE } }, { "v" }, {}, {});
 
-    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenize(queryString);
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
 
     REQUIRE(expectedQuery == actualQuery);
@@ -191,7 +191,7 @@ TEST_CASE("Test declaring constant") {
     qpbackend::Query expectedQuery =
     qpbackend::Query({ { "v", qpbackend::EntityType::CONSTANT } }, { "v" }, {}, {});
 
-    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenize(queryString);
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
 
     REQUIRE(expectedQuery == actualQuery);
@@ -202,7 +202,7 @@ TEST_CASE("Test declaring procedure") {
     qpbackend::Query expectedQuery =
     qpbackend::Query({ { "v", qpbackend::EntityType::PROCEDURE } }, { "v" }, {}, {});
 
-    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenize(queryString);
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
 
     REQUIRE(expectedQuery == actualQuery);

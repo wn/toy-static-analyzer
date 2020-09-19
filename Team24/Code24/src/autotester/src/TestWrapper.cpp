@@ -41,7 +41,7 @@ void TestWrapper::parse(std::string filename) {
 // method to evaluating a query
 void TestWrapper::evaluate(std::string query, std::list<std::string>& results) {
     std::stringstream stream(query);
-    std::vector<backend::lexer::Token> tokens = backend::lexer::tokenize(stream);
+    std::vector<backend::lexer::Token> tokens = backend::lexer::tokenizeWithWhitespace(stream);
 
     // store the answers to the query in the results list (it is initially empty)
     // each result must be a string.
