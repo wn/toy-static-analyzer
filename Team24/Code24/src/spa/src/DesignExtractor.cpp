@@ -115,10 +115,67 @@ std::pair<std::unordered_map<int, int>, std::unordered_map<int, int>> getFollowR
     return { followerFollowedMap, followedFollowerMap };
 }
 
-std::vector<int> getValuesInMap(const std::unordered_map<int, int>& map) {
+
+std::pair<std::unordered_map<int, int>, std::unordered_map<int, std::vector<int>>>
+getParentRelationship(const TNode& ast) {
+    auto tNodetypeToTNode = getTNodeTypeToTNodes(ast);
+    auto tNodeToStmtNo = getTNodeToStatementNumber(ast);
+
+    std::unordered_map<int, int> childParentMap;
+    std::unordered_map<int, std::vector<int>> parentChildrenMap;
+
+
+    for (const TNode* parent : tNodetypeToTNode[While]) {
+        int parentStmtNo = tNodeToStmtNo[*parent]; // we do not expect this to throw as parent has stmt_no.
+        if (parentChildrenMap.find(parentStmtNo) == parentChildrenMap.end()) {
+            parentChildrenMap[parentStmtNo] = {};
+        }
+
+        // WHILE-tNode must have 2 children; cond and stmt-list
+        const TNode& stmtLists = parent->children[1];
+        const std::vector<TNode> whileBody = stmtLists.children;
+        for (const TNode& stmt : whileBody) {
+            int childStmtNo = tNodeToStmtNo[stmt]; // we do not expect this to throw as child has stmt_no.
+            childParentMap[childStmtNo] = parentStmtNo;
+            parentChildrenMap[parentStmtNo].push_back(childStmtNo);
+        }
+    }
+
+    for (const TNode* parent : tNodetypeToTNode[IfElse]) {
+        int parentStmtNo = tNodeToStmtNo[*parent]; // we do not expect this to throw as parent has stmt_no.
+        // If-else-tNode must have 2 children; cond, if-stmt-list and else-stmt-list
+        if (parentChildrenMap.find(parentStmtNo) == parentChildrenMap.end()) {
+            parentChildrenMap[parentStmtNo] = {};
+        }
+
+        // if-stmts
+        const TNode& ifStmtLists = parent->children[1];
+        const std::vector<TNode> ifBody = ifStmtLists.children;
+        for (const TNode& stmt : ifBody) {
+            int childStmtNo = tNodeToStmtNo[stmt]; // we do not expect this to throw as child has stmt_no.
+            childParentMap[childStmtNo] = parentStmtNo;
+            parentChildrenMap[parentStmtNo].push_back(childStmtNo);
+        }
+
+        // else-stmts
+        const TNode& elseStmtLists = parent->children[2];
+        const std::vector<TNode> elseBody = elseStmtLists.children;
+        for (const TNode& stmt : elseBody) {
+            int childStmtNo = tNodeToStmtNo[stmt]; // we do not expect this to throw as child has stmt_no.
+            childParentMap[childStmtNo] = parentStmtNo;
+            parentChildrenMap[parentStmtNo].push_back(childStmtNo);
+        }
+    }
+    return { childParentMap, parentChildrenMap };
+}
+
+std::vector<int> getVisitedPathFromStart(int start, const std::unordered_map<int, int>& relation) {
     std::vector<int> result;
-    for (auto it = map.begin(); it != map.end(); ++it) {
-        result.push_back(it->second);
+    auto it = relation.find(start);
+    while (it != relation.end()) {
+        int next = it->second;
+        result.push_back(next);
+        it = relation.find(next);
     }
     return result;
 }

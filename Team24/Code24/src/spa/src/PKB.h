@@ -13,12 +13,6 @@ typedef std::vector<STATEMENT_NUMBER> STATEMENT_NUMBER_LIST;
 namespace backend {
 class PKB {
   public:
-    /* API for follows */
-    // Given s, return all s' such that follow*(s', s).
-    virtual STATEMENT_NUMBER_LIST getPreFollows(STATEMENT_NUMBER s) const = 0;
-    // Given s, return all s' such that follow*(s, s').
-    virtual STATEMENT_NUMBER_LIST getPostFollows(STATEMENT_NUMBER s) const = 0;
-
     /* -- MASS RETRIEVAL OF DESIGN ENTITIES -- */
 
     // Retrieves all statements in the SIMPLE program.

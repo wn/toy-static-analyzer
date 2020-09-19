@@ -139,20 +139,50 @@ TEST_CASE("Test getFollowRelationship") {
     std::unordered_map<int, int> actualFollowFollowed;
     std::unordered_map<int, int> actualFollowedFollow;
     std::tie(actualFollowFollowed, actualFollowedFollow) = extractor::getFollowRelationship(ast);
-    std::unordered_map<int, int> expectedFollowFollowed = { { 3, 1 }, { 6, 3 } };
-    std::unordered_map<int, int> expectedFollowedFollow = { { 1, 3 }, { 3, 6 } };
+    std::vector<std::pair<int, int>> actualFollowFollowedVector = { { 3, 1 }, { 6, 3 } };
+    std::vector<std::pair<int, int>> actualFollowedFollowVector = { { 1, 3 }, { 3, 6 } };
+    std::vector<std::pair<int, int>> expectedFollowFollowedVector = { { 3, 1 }, { 6, 3 } };
+    std::vector<std::pair<int, int>> expectedFollowedFollowVector = { { 1, 3 }, { 3, 6 } };
 
-    REQUIRE(actualFollowFollowed == expectedFollowFollowed);
-    REQUIRE(actualFollowedFollow == expectedFollowedFollow);
+    REQUIRE(actualFollowFollowedVector == expectedFollowFollowedVector);
+    REQUIRE(actualFollowedFollowVector == expectedFollowedFollowVector);
 }
 
-TEST_CASE("Test getValuesInMap") {
+TEST_CASE("Test getKeysInMap") {
+    std::unordered_map<int, int> input = { { 1, 1 }, { 2, 2 }, { 3, 3 } };
+    std::vector<int> actual = extractor::getKeysInMap(input);
+
+    std::vector<int> expected = { 1, 2, 3 };
+    std::sort(actual.begin(), actual.end());
+    REQUIRE(actual == expected);
+}
+
+TEST_CASE("Test getVisitedPathFromStart") {
     std::unordered_map<int, int> input = { { 1, 2 }, { 2, 3 }, { 3, 4 } };
-    std::vector<int> actual = extractor::getValuesInMap(input);
+    std::vector<int> actual = extractor::getVisitedPathFromStart(1, input);
 
     std::vector<int> expected = { 2, 3, 4 };
     std::sort(actual.begin(), actual.end());
     REQUIRE(actual == expected);
+}
+
+TEST_CASE("Test getParentRelationship") {
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+
+    std::unordered_map<int, std::vector<int>> actualParentChildren;
+    std::unordered_map<int, int> actualChildParent;
+    std::tie(actualChildParent, actualParentChildren) = extractor::getParentRelationship(ast);
+    std::vector<std::pair<int, int>> actualChildParentVector(actualChildParent.begin(),
+                                                             actualChildParent.end());
+    std::vector<std::pair<int, std::vector<int>>> actualParentChildrenVector(actualParentChildren.begin(),
+                                                                             actualParentChildren.end());
+
+    std::vector<std::pair<int, std::vector<int>>> expectedParentChildren = { { 1, { 2 } }, { 3, { 4, 5 } } };
+    std::vector<std::pair<int, int>> expectedChildParent = { { 2, 1 }, { 4, 3 }, { 5, 3 } };
+
+    REQUIRE(actualParentChildrenVector == expectedParentChildren);
+    REQUIRE(actualChildParentVector == expectedChildParent);
 }
 } // namespace testextractor
 } // namespace backend

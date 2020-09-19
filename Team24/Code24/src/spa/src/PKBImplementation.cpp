@@ -4,6 +4,7 @@
 #include "Logger.h"
 
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace backend {
@@ -14,9 +15,13 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
     auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
     auto statementNumberToTNode = extractor::getStatementNumberToTNode(tNodeToStatementNumber);
 
-    std::tie(followedFollowRelation, followFollowedRelation) = extractor::getFollowRelationship(ast);
-    allStatementsThatFollows = extractor::getValuesInMap(followFollowedRelation);
-    allStatementsThatAreFollowed = extractor::getValuesInMap(followedFollowRelation);
+    std::tie(followFollowedRelation, followedFollowRelation) = extractor::getFollowRelationship(ast);
+    allStatementsThatFollows = extractor::getKeysInMap<>(followFollowedRelation);
+    allStatementsThatAreFollowed = extractor::getKeysInMap<>(followedFollowRelation);
+
+    std::tie(childrenParentRelation, parentChildrenRelation) = extractor::getParentRelationship(ast);
+    allStatementsThatHaveAncestors = extractor::getKeysInMap<>(childrenParentRelation);
+    allStatementsThatHaveDescendants = extractor::getKeysInMap<>(parentChildrenRelation);
 }
 
 STATEMENT_NUMBER_LIST PKBImplementation::getAllStatements() const {
@@ -31,44 +36,15 @@ PROCEDURE_LIST PKBImplementation::getAllProcedures() const {
     return PROCEDURE_LIST();
 }
 
-STATEMENT_NUMBER_LIST PKBImplementation::getAncestors(STATEMENT_NUMBER s) const {
-    return STATEMENT_NUMBER_LIST();
-}
-
-STATEMENT_NUMBER_LIST PKBImplementation::getStatementsThatHaveAncestors() const {
-    return STATEMENT_NUMBER_LIST();
-}
-
-STATEMENT_NUMBER_LIST PKBImplementation::getDescendants(STATEMENT_NUMBER statementNumber) const {
-    return STATEMENT_NUMBER_LIST();
-}
-
-STATEMENT_NUMBER_LIST PKBImplementation::getStatementsThatHaveDescendants() const {
-    return STATEMENT_NUMBER_LIST();
-}
-
+/** -------------------------- FOLLOWS ---------------------------- **/
 // TODO(weineng) optimize in the future.
 STATEMENT_NUMBER_LIST PKBImplementation::getStatementsThatFollows(STATEMENT_NUMBER s) const {
-    STATEMENT_NUMBER_LIST result;
-    auto it = followedFollowRelation.find(s);
-    while (it != followedFollowRelation.end()) {
-        int next = it->second;
-        result.push_back(next);
-        it = followedFollowRelation.find(next);
-    }
-    return result;
+    return extractor::getVisitedPathFromStart(s, followedFollowRelation);
 }
 
 // TODO(weineng) optimize in the future.
 STATEMENT_NUMBER_LIST PKBImplementation::getStatementsFollowedBy(STATEMENT_NUMBER s) const {
-    STATEMENT_NUMBER_LIST result;
-    auto it = followFollowedRelation.find(s);
-    while (it != followFollowedRelation.end()) {
-        int next = it->second;
-        result.push_back(next);
-        it = followFollowedRelation.find(next);
-    }
-    return result;
+    return extractor::getVisitedPathFromStart(s, followFollowedRelation);
 }
 
 STATEMENT_NUMBER_LIST PKBImplementation::getAllStatementsThatFollows() const {
@@ -79,12 +55,37 @@ STATEMENT_NUMBER_LIST PKBImplementation::getAllStatementsThatAreFollowed() const
     return allStatementsThatAreFollowed;
 }
 
-STATEMENT_NUMBER_LIST PKBImplementation::getPreFollows(STATEMENT_NUMBER s) const {
-    return STATEMENT_NUMBER_LIST();
+/** -------------------------- PARENTS ---------------------------- **/
+STATEMENT_NUMBER_LIST PKBImplementation::getAncestors(STATEMENT_NUMBER s) const {
+    return extractor::getVisitedPathFromStart(s, childrenParentRelation);
 }
 
-STATEMENT_NUMBER_LIST PKBImplementation::getPostFollows(STATEMENT_NUMBER s) const {
-    return STATEMENT_NUMBER_LIST();
+STATEMENT_NUMBER_LIST PKBImplementation::getStatementsThatHaveAncestors() const {
+    return allStatementsThatHaveAncestors;
+}
+
+STATEMENT_NUMBER_LIST PKBImplementation::getDescendants(STATEMENT_NUMBER statementNumber) const {
+    std::unordered_set<int> visited;
+    std::vector<int> toVisit = { statementNumber };
+    while (toVisit.size() > 0) {
+        int visiting = toVisit.back();
+        toVisit.pop_back();
+        if (visited.find(visiting) != visited.end()) {
+            continue;
+        }
+        visited.insert(visiting);
+        auto it = parentChildrenRelation.find(visiting);
+        if (it == parentChildrenRelation.end()) {
+            continue;
+        }
+        toVisit.insert(toVisit.end(), it->second.begin(), it->second.end());
+    }
+    visited.erase(statementNumber);
+    return std::vector<int>(visited.begin(), visited.end());
+}
+
+STATEMENT_NUMBER_LIST PKBImplementation::getStatementsThatHaveDescendants() const {
+    return allStatementsThatHaveDescendants;
 }
 
 } // namespace backend
