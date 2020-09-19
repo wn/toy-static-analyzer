@@ -1,5 +1,6 @@
 #include "Query.h"
 
+#include <algorithm>
 #include <map>
 #include <stdexcept>
 #include <string>
@@ -14,6 +15,12 @@ const std::map<std::string, EntityType> kEntityStringToTypeMap = {
     { "constant", EntityType::CONSTANT }, { "procedure", EntityType::PROCEDURE },
 };
 
+const std::vector<std::pair<std::string, RelationType>> kRelationStringRelationTypePairs = {
+    { "Follows", RelationType::FOLLOWS }, { "Follows*", RelationType::FOLLOWST },
+    { "Parent", RelationType::PARENT },   { "Parent*", RelationType::PARENTT },
+    { "Uses", RelationType::USES },       { "Modifies", RelationType::MODIFIES },
+};
+
 bool isEntityString(const std::string& string) {
     return kEntityStringToTypeMap.find(string) != kEntityStringToTypeMap.end();
 }
@@ -24,6 +31,22 @@ EntityType entityTypeFromString(const std::string& entityString) {
         throw std::invalid_argument("Error:entityTypeFromString: " + entityString + " does not map to any EntityType.");
     }
     return result->second;
+}
+
+bool isRelationString(const std::string& string) {
+    return std::any_of(kRelationStringRelationTypePairs.begin(), kRelationStringRelationTypePairs.end(),
+                       [&](const std::pair<std::string, RelationType>& pair) {
+                           return pair.first == string;
+                       });
+}
+
+RelationType relationTypeFromString(const std::string& relationString) {
+    for (const auto& relationStringRelationTypePair : kRelationStringRelationTypePairs) {
+        if (relationStringRelationTypePair.first == relationString) {
+            return relationStringRelationTypePair.second;
+        }
+    }
+    throw std::invalid_argument("Error:relationTypeFromString: " + relationString + " does not map to any EntityType.");
 }
 
 bool Query::operator==(const Query& s) const {

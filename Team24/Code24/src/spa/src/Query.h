@@ -33,5 +33,10 @@ struct Query {
 bool isEntityString(const std::string& string);
 
 EntityType entityTypeFromString(const std::string& entityString);
+
+bool isRelationString(const std::string& string);
+
+RelationType relationTypeFromString(const std::string& relationString);
+
 } // namespace qpbackend
 #endif // QUERY_H
