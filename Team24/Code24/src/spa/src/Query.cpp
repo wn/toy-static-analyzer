@@ -6,7 +6,7 @@
 
 namespace qpbackend {
 
-const std::map<std::string, EntityType> gEntityStringToTypeMap = {
+const std::map<std::string, EntityType> kEntityStringToTypeMap = {
     { "stmt", EntityType::STMT },         { "read", EntityType::READ },
     { "print", EntityType::PRINT },       { "call", EntityType::CALL },
     { "while", EntityType::WHILE },       { "if", EntityType::IF },
@@ -15,12 +15,12 @@ const std::map<std::string, EntityType> gEntityStringToTypeMap = {
 };
 
 bool isEntityString(const std::string& string) {
-    return gEntityStringToTypeMap.find(string) != gEntityStringToTypeMap.end();
+    return kEntityStringToTypeMap.find(string) != kEntityStringToTypeMap.end();
 }
 
 EntityType entityTypeFromString(const std::string& entityString) {
-    auto result = gEntityStringToTypeMap.find(entityString);
-    if (result == gEntityStringToTypeMap.end()) {
+    auto result = kEntityStringToTypeMap.find(entityString);
+    if (result == kEntityStringToTypeMap.end()) {
         throw std::invalid_argument("Error:entityTypeFromString: " + entityString + " does not map to any EntityType.");
     }
     return result->second;
