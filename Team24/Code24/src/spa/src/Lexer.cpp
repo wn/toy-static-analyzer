@@ -32,43 +32,46 @@ std::string prettyPrintType(TokenType t) {
         { MOD, "MOD" },
         { NAME, "NAME" },
         { INTEGER, "INTEGER" },
+        { WHITESPACE, "WHITESPACE" },
     };
     return m[t];
 }
 
-std::vector<std::pair<TokenType, std::string>> rules = {
-    { LBRACE, "^\\{" },
-    { RBRACE, "^\\}" },
-    { LPAREN, "^\\(" },
-    { RPAREN, "^\\)" },
-    { SEMICOLON, "^;" },
-    { COMMA, "^," },
-    { UNDERSCORE, "^(_)" },
-    { DOUBLE_QUOTE, "^(\")" },
+std::vector<std::pair<TokenType, std::string>> rules = { { LBRACE, "^\\{" },
+                                                         { RBRACE, "^\\}" },
+                                                         { LPAREN, "^\\(" },
+                                                         { RPAREN, "^\\)" },
+                                                         { SEMICOLON, "^;" },
+                                                         { COMMA, "^," },
+                                                         { UNDERSCORE, "^(_)" },
+                                                         { DOUBLE_QUOTE, "^(\")" },
 
-    { NEQ, "^(!=)" },
-    { NOT, "^(!)" },
+                                                         { NEQ, "^(!=)" },
+                                                         { NOT, "^(!)" },
 
-    { EQEQ, "^(==)" },
-    { SINGLE_EQ, "^(=)" },
+                                                         { EQEQ, "^(==)" },
+                                                         { SINGLE_EQ, "^(=)" },
 
-    { ANDAND, "^(&&)" },
-    { OROR, "^(\\|\\|)" },
-    { GTE, "^(>=)" },
-    { GT, "^(>)" },
+                                                         { ANDAND, "^(&&)" },
+                                                         { OROR, "^(\\|\\|)" },
+                                                         { GTE, "^(>=)" },
+                                                         { GT, "^(>)" },
 
-    { LTE, "^(<=)" },
-    { LT, "^(<)" },
+                                                         { LTE, "^(<=)" },
+                                                         { LT, "^(<)" },
 
-    { PLUS, "^(\\+)" },
-    { MINUS, "^(-)" },
-    { MULT, "^(\\*)" },
-    { DIV, "^(\\/)" },
-    { MOD, "^(%)" },
+                                                         { PLUS, "^(\\+)" },
+                                                         { MINUS, "^(-)" },
+                                                         { MULT, "^(\\*)" },
+                                                         { DIV, "^(\\/)" },
+                                                         { MOD, "^(%)" },
 
-    { NAME, "^([a-zA-Z]\\w*)\\b" },
-    { INTEGER, "^(\\d+)\\b" },
-};
+                                                         { NAME, "^([a-zA-Z]\\w*)\\b" },
+                                                         // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/173):
+                                                         // Integers cannot be '00001' Which is permissible by this rule.
+                                                         { INTEGER, "^(\\d+)\\b" },
+
+                                                         { WHITESPACE, "^(\\s+)" } };
 
 
 std::vector<std::string> splitLines(std::istream& stream) {
@@ -80,7 +83,8 @@ std::vector<std::string> splitLines(std::istream& stream) {
     return result;
 }
 
-std::vector<Token> tokenize(std::istream& stream) {
+
+std::vector<Token> tokenize(std::istream& stream, bool willLexWithWhitespace) {
     std::vector<Token> result;
 
     int lineNumber = 1;
@@ -92,6 +96,9 @@ std::vector<Token> tokenize(std::istream& stream) {
         while (!line.empty()) {
             bool matchedSomething = false;
             for (auto const& p : rules) {
+                if (p.first == WHITESPACE && !willLexWithWhitespace) {
+                    continue;
+                }
                 std::smatch match;
                 if (std::regex_search(line, match, std::regex(p.second))) {
 
@@ -128,6 +135,16 @@ std::vector<Token> tokenize(std::istream& stream) {
     }
     return result;
 }
+
+// Public API definition
+
+std::vector<Token> tokenize(std::istream& stream) {
+    return tokenize(stream, false);
+};
+
+std::vector<Token> tokenizeWithWhitespace(std::istream& stream) {
+    return tokenize(stream, true);
+};
 
 } // namespace lexer
 } // namespace backend

@@ -39,6 +39,9 @@ enum TokenType {
     // Words, which have value in them.
     NAME,
     INTEGER,
+
+    // Only used in QPL
+    WHITESPACE,
 };
 
 std::string prettyPrintType(TokenType t);
@@ -57,5 +60,7 @@ struct Token {
 };
 
 std::vector<Token> tokenize(std::istream& stream);
+
+std::vector<Token> tokenizeWithWhitespace(std::istream& stream);
 } // namespace lexer
 } // namespace backend
