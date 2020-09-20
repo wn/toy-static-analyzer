@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <map>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 
@@ -33,6 +34,15 @@ EntityType entityTypeFromString(const std::string& entityString) {
     return result->second;
 }
 
+std::string stringFromEntityType(EntityType entityType) {
+    for (const auto& entityStringTypePair : kEntityStringToTypeMap) {
+        if (entityStringTypePair.second == entityType) {
+            return entityStringTypePair.first;
+        }
+    }
+    return "UNKNOWN ENTITY TYPE";
+}
+
 bool isRelationString(const std::string& string) {
     return std::any_of(kRelationStringRelationTypePairs.begin(), kRelationStringRelationTypePairs.end(),
                        [&](const std::pair<std::string, RelationType>& pair) {
@@ -47,6 +57,15 @@ RelationType relationTypeFromString(const std::string& relationString) {
         }
     }
     throw std::invalid_argument("Error:relationTypeFromString: " + relationString + " does not map to any EntityType.");
+}
+
+std::string stringFromRelationType(RelationType relationType) {
+    for (const auto& relationTypePair : kRelationStringRelationTypePairs) {
+        if (relationTypePair.second == relationType) {
+            return relationTypePair.first;
+        }
+    }
+    return "UNKNOWN RELATION TYPE";
 }
 
 bool Query::operator==(const Query& s) const {
@@ -68,19 +87,35 @@ Query::Query(const std::unordered_map<std::string, EntityType>& declarationMap,
 // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/157):
 // Complete this implementation for better debugging.
 std::string Query::toString() const {
-    std::string s = "Query {\nDeclaration map:";
+    std::stringstream stringstream;
+    stringstream << "Query {\nDeclaration map:";
 
     for (const auto& kv : declarationMap) {
-        s += kv.first + " ";
+        stringstream << "{" << kv.first << ", " << stringFromEntityType(kv.second) << "} ";
     }
 
-    s += "\nSynonyms to return:";
+    stringstream << "\nSynonyms to return:";
     for (const auto& synonym : synonymsToReturn) {
-        s += synonym + " ";
+        stringstream << synonym + " ";
     }
-    s += "\n}";
-    return s;
+
+    stringstream << "\nSuch that clauses: ";
+    RelationType relationType;
+    std::string arg1;
+    std::string arg2;
+    for (const auto& suchThatClause : suchThatClauses) {
+        std::tie(relationType, arg1, arg2) = suchThatClause;
+        stringstream << "{" << stringFromRelationType(relationType) << ", " << arg1 << ", " << arg2 << "} ";
+    }
+
+    stringstream << "\n}";
+    return stringstream.str();
 }
 
+// Allow for Query struct expansion in Catch framework's error message generation.
+std::ostream& operator<<(std::ostream& os, Query const& value) {
+    os << value.toString();
+    return os;
+}
 
 } // namespace qpbackend

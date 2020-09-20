@@ -30,6 +30,9 @@ struct Query {
     std::string toString() const;
 };
 
+// Allow for Query struct expansion in Catch framework's error message generation.
+std::ostream& operator<<(std::ostream& os, Query const& value);
+
 bool isEntityString(const std::string& string);
 
 EntityType entityTypeFromString(const std::string& entityString);
