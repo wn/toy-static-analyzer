@@ -25,7 +25,12 @@ State parseDeclarations(State state);
 STATESTATUSPAIR parseSingleDeclaration(State state);
 bool isValidDeclarationDelimiter(const TOKEN& token);
 State parseFilteringClauses(State state);
+// Declarations for such that clauses
 STATESTATUSPAIR parseSingleSuchThatClause(State state);
+STATESTATUSPAIR parseRelRef(State state);
+STATESTATUSPAIR parseRelationStmtStmt(State state, qpbackend::RelationType relationType);
+STATESTATUSPAIR parseRelationStmtEntOrEntEnt(State state, qpbackend::RelationType relationType);
+// Declarations for patten clauses
 STATESTATUSPAIR parseSinglePatternClause(State state);
 
 // Helper methods
@@ -69,6 +74,10 @@ class State {
     }
 
     // Tokens manipulation
+
+    TOKEN peekToken() {
+        return tokens[tokenPos];
+    }
 
     backend::lexer::Token popToken() {
         if (!hasTokensLeftToParse()) {
@@ -226,9 +235,74 @@ State parseFilteringClauses(State state) {
 
 /**
  * suchthat-cl : ‘such that’ relRef
- * relRef : Follows | FollowsT | Parent | ParentT | UsesS | UsesP | ModifiesS | ModifiesP
+ * @return <state of parser, isStateInvalid>
  */
 STATESTATUSPAIR parseSingleSuchThatClause(State state) {
+    TOKEN suchToken = state.popUntilNonWhitespaceToken();
+    if (suchToken.type != backend::lexer::NAME && suchToken.nameValue != "such") {
+        return STATESTATUSPAIR(state, false);
+    }
+    TOKEN thatToken = state.popUntilNonWhitespaceToken();
+    if (thatToken.type != backend::lexer::NAME && thatToken.nameValue != "that") {
+        return STATESTATUSPAIR(state, false);
+    }
+    return parseRelRef(state);
+}
+
+/**
+ * relRef : Follows | FollowsT | Parent | ParentT | UsesS | UsesP | ModifiesS | ModifiesP
+ * @return <state of parser, isStateInvalid>
+ */
+STATESTATUSPAIR parseRelRef(State state) {
+    std::stringstream stringstream;
+    TOKEN keywordToken = state.popUntilNonWhitespaceToken();
+    if (keywordToken.type != backend::lexer::NAME) {
+        return STATESTATUSPAIR(state, false);
+    }
+    stringstream << keywordToken.nameValue;
+    // A "*" may immediately follow the keyword
+    if (state.peekToken().type == backend::lexer::TokenType::MULT) {
+        state.popToken();
+        stringstream << "*";
+    }
+    std::string possibleRelationString = stringstream.str();
+    if (!qpbackend::isRelationString(possibleRelationString)) {
+        return STATESTATUSPAIR(state, false);
+    }
+    qpbackend::RelationType relationType = qpbackend::relationTypeFromString(possibleRelationString);
+    switch (relationType) {
+    case qpbackend::FOLLOWS:
+    case qpbackend::FOLLOWST:
+    case qpbackend::PARENT:
+    case qpbackend::PARENTT:
+        return parseRelationStmtStmt(state, relationType);
+    case qpbackend::USES:
+    case qpbackend::MODIFIES:
+        return parseRelationStmtEntOrEntEnt(state, relationType);
+    default:
+        return STATESTATUSPAIR(state, false);
+    }
+}
+
+/**
+ * Follows : ... ‘(’ stmtRef ‘,’ stmtRef ‘)’
+ * FollowsT : ... ‘(’ stmtRef ‘,’ stmtRef ‘)’
+ * Parent : ... ‘(’ stmtRef ‘,’ stmtRef ‘)’
+ * ParentT : ... ‘(’ stmtRef ‘,’ stmtRef ‘)’
+ * @return <state of parser, isStateInvalid>
+ */
+STATESTATUSPAIR parseRelationStmtStmt(State state, qpbackend::RelationType relationType) {
+    throw std::logic_error("Function not implemented yet.");
+};
+
+/**
+ * UsesS : ... ‘(’ stmtRef ‘,’ entRef ‘)’
+ * UsesP : ... ‘(’ entRef ‘,’ entRef ‘)’
+ * ModifiesS : ... ‘(’ stmtRef ‘,’ entRef ‘)’
+ * ModifiesP : ... ‘(’ entRef ‘,’ entRef ‘)’
+ * @return <state of parser, isStateInvalid>
+ */
+STATESTATUSPAIR parseRelationStmtEntOrEntEnt(State state, qpbackend::RelationType relationType) {
     throw std::logic_error("Function not implemented yet.");
 }
 
