@@ -76,6 +76,10 @@ class State {
     // Tokens manipulation
 
     TOKEN peekToken() {
+        if (!hasTokensLeftToParse()) {
+            throw std::runtime_error(kQppErrorPrefix +
+                                     "State::peekToken: There are no more tokens left to peek.");
+        }
         return tokens[tokenPos];
     }
 
@@ -96,6 +100,14 @@ class State {
             token = popToken();
         }
         return token;
+    }
+
+    bool popIfCurrentTokenIsWhitespaceToken() {
+        if (!hasTokensLeftToParse() || peekToken().type != backend::lexer::WHITESPACE) {
+            return false;
+        }
+        popToken();
+        return true;
     }
 
     bool hasTokensLeftToParse() {
@@ -228,9 +240,25 @@ bool isValidDeclarationDelimiter(const TOKEN& token) {
  */
 State parseFilteringClauses(State state) {
     if (!state.hasTokensLeftToParse()) return state;
-    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/72): parse suchthat-cl
-    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/73): parse pattern-cl
-    throw std::logic_error("Function not implemented yet.");
+    State tempState = state;
+    bool isParseSuchThatValid = true;
+    bool isParsePatternValid = true;
+    while (state.hasTokensLeftToParse() && (isParseSuchThatValid || isParsePatternValid)) {
+        std::tie(tempState, isParseSuchThatValid) = parseSingleSuchThatClause(state);
+        if (isParseSuchThatValid) {
+            state = tempState;
+        }
+        std::tie(tempState, isParsePatternValid) = parseSinglePatternClause(state);
+        if (isParsePatternValid) {
+            state = tempState;
+        }
+        state.popIfCurrentTokenIsWhitespaceToken();
+    }
+    if (!isParsePatternValid && !isParseSuchThatValid) {
+        throw std::runtime_error(
+        kQppErrorPrefix + "parseFilteringClauses: Unable to parse such that or pattern clauses");
+    }
+    return state;
 }
 
 /**
@@ -253,6 +281,7 @@ STATESTATUSPAIR parseSingleSuchThatClause(State state) {
  * relRef : Follows | FollowsT | Parent | ParentT | UsesS | UsesP | ModifiesS | ModifiesP
  * @return <state of parser, isStateInvalid>
  */
+// TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/72): parse suchthat-cl
 STATESTATUSPAIR parseRelRef(State state) {
     std::stringstream stringstream;
     TOKEN keywordToken = state.popUntilNonWhitespaceToken();
@@ -312,7 +341,9 @@ STATESTATUSPAIR parseRelationStmtEntOrEntEnt(State state, qpbackend::RelationTyp
  * entRef : synonym | ‘_’ | ‘"’ IDENT ‘"’
  * expression-spec :  ‘"‘ expr’"’ | ‘_’ ‘"’ expr ‘"’ ‘_’ | ‘_’
  */
+// TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/73): parse pattern-cl
 STATESTATUSPAIR parseSinglePatternClause(State state) {
+    return STATESTATUSPAIR(state, false);
     throw std::logic_error("Function not implemented yet.");
 }
 
