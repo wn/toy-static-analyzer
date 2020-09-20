@@ -9,8 +9,9 @@
 #include <vector>
 
 // Constants
-std::string const kQppErrorPrefix = "Log[Error-QueryPreprocessor]: ";
-std::string const kQppLogInfoPrefix = "Log[INFO-QueryPreprocessor]: ";
+const std::string kQppErrorPrefix = "Log[Error-QueryPreprocessor]: ";
+const std::string kQppLogWarnPrefix = "Log[WARN-QueryPreprocessor]: ";
+const std::string kQppLogInfoPrefix = "Log[INFO-QueryPreprocessor]: ";
 
 namespace querypreprocessor {
 
@@ -30,6 +31,8 @@ STATESTATUSPAIR parseSingleSuchThatClause(State state);
 STATESTATUSPAIR parseRelRef(State state);
 STATESTATUSPAIR parseRelationStmtStmt(State state, qpbackend::RelationType relationType);
 STATESTATUSPAIR parseRelationStmtEntOrEntEnt(State state, qpbackend::RelationType relationType);
+std::string getStmtRefStringValue(const TOKEN& token);
+bool isStmtRefToken(const TOKEN& token);
 // Declarations for patten clauses
 STATESTATUSPAIR parseSinglePatternClause(State state);
 
@@ -90,6 +93,10 @@ class State {
                                                        "but has run out of tokens to parse.");
         }
         TOKEN tokenToReturn = tokens[tokenPos];
+        // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/185):
+        // Some tokens don't have name value or integer values. Handle pretty printing them.
+        logLine(kQppLogInfoPrefix + "Token position: " + std::to_string(tokenPos) + "|" +
+                tokenToReturn.nameValue + tokenToReturn.integerValue);
         tokenPos += 1;
         return tokenToReturn;
     }
@@ -134,6 +141,10 @@ class State {
         }
 
         query.synonymsToReturn.push_back(token.nameValue);
+    }
+
+    void addSuchThatClause(qpbackend::RelationType relationType, std::string arg1, std::string arg2) {
+        query.suchThatClauses.emplace_back(relationType, arg1, arg2);
     }
 };
 
@@ -321,7 +332,74 @@ STATESTATUSPAIR parseRelRef(State state) {
  * @return <state of parser, isStateInvalid>
  */
 STATESTATUSPAIR parseRelationStmtStmt(State state, qpbackend::RelationType relationType) {
-    throw std::logic_error("Function not implemented yet.");
+    TOKEN lParenToken = state.popUntilNonWhitespaceToken();
+    if (lParenToken.type != backend::lexer::LPAREN || !state.hasTokensLeftToParse()) {
+        logLine(kQppLogWarnPrefix +
+                "parseRelationStmtStmt: Expected more tokens but finished "
+                "consuming tokens or LPAREN token not found. Obtained " +
+                backend::lexer::prettyPrintType(lParenToken.type));
+        return STATESTATUSPAIR(state, false);
+    }
+    TOKEN stmt1Token = state.popUntilNonWhitespaceToken();
+    if (!isStmtRefToken(stmt1Token) || !state.hasTokensLeftToParse()) {
+        logLine(kQppLogWarnPrefix +
+                "parseRelationStmtStmt: Expected more tokens but finished "
+                "consuming tokens or STMT token not found. Obtained " +
+                backend::lexer::prettyPrintType(stmt1Token.type));
+        return STATESTATUSPAIR(state, false);
+    }
+    TOKEN commaToken = state.popUntilNonWhitespaceToken();
+    if (commaToken.type != backend::lexer::COMMA || !state.hasTokensLeftToParse()) {
+        logLine(kQppLogWarnPrefix +
+                "parseRelationStmtStmt: Expected more tokens but finished "
+                "consuming tokens or COMMA token not found. Obtained " +
+                backend::lexer::prettyPrintType(commaToken.type));
+        return STATESTATUSPAIR(state, false);
+    }
+    TOKEN stmt2Token = state.popUntilNonWhitespaceToken();
+    if (!isStmtRefToken(stmt2Token) || !state.hasTokensLeftToParse()) {
+        logLine(kQppLogWarnPrefix +
+                "parseRelationStmtStmt: Expected more tokens but finished "
+                "consuming tokens or STMT token not found. Obtained " +
+                backend::lexer::prettyPrintType(stmt2Token.type));
+        return STATESTATUSPAIR(state, false);
+    }
+    TOKEN rParenToken = state.popUntilNonWhitespaceToken();
+    if (rParenToken.type != backend::lexer::RPAREN) {
+        logLine(kQppLogWarnPrefix + "parseRelationStmtStmt: RPAREN token not found. Obtained " +
+                backend::lexer::prettyPrintType(rParenToken.type));
+        return STATESTATUSPAIR(state, false);
+    }
+    state.addSuchThatClause(relationType, getStmtRefStringValue(stmt1Token), getStmtRefStringValue(stmt2Token));
+    return STATESTATUSPAIR(state, true);
+}
+
+
+// Helper methods for stmtRef : synonym | ‘_’ | INTEGER
+
+std::string getStmtRefStringValue(const TOKEN& token) {
+    switch (token.type) {
+    case backend::lexer::INTEGER:
+        return token.integerValue;
+    case backend::lexer::UNDERSCORE:
+        return "_";
+    case backend::lexer::NAME:
+        return token.nameValue;
+    default:
+        throw std::invalid_argument(kQppErrorPrefix + "getStmtRefStringValue: A non StmtRef token is supplied of type:" +
+                                    backend::lexer::prettyPrintType(token.type));
+    }
+}
+
+bool isStmtRefToken(const TOKEN& token) {
+    switch (token.type) {
+    case backend::lexer::INTEGER:
+    case backend::lexer::UNDERSCORE:
+    case backend::lexer::NAME:
+        return true;
+    default:
+        return false;
+    }
 };
 
 /**
