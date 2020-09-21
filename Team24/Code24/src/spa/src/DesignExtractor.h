@@ -3,9 +3,43 @@
 #include "TNode.h"
 
 #include <unordered_map>
+#include <unordered_set>
 
 namespace backend {
 namespace extractor {
+
+/**
+ * Returns the Uses mapping of the program.
+ * @param tNodeTypeToTNodes
+ * @return a Map where the TNode keys are in the domain of the Uses relation, and they map to
+ * variables used by the TNode.
+ */
+std::unordered_map<const TNode*, std::unordered_set<std::string>>
+getUsesMapping(std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes);
+
+std::unordered_map<const TNode*, std::vector<const TNode*>>
+getProcedureToCallers(std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes);
+
+const TNode*
+getProcedureFromProcedureName(const std::string& procedureName,
+                              std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes);
+
+/**
+ * Returns one possible Topological ordering of the "called-by" graph.
+ *
+ * The call graph of a SIMPLE program is defined as the procedures being the vertices,
+ * and a directed edge indicating that one procedure calls another. The edge (p,q) means that
+ * procedure p contains at least one statement "call q;".
+ *
+ * The "called by" graph is the reverse graph of the call graph, meaning that the edge (q,p)
+ * exists instead of (p,q). This edge indicates that q was _called by_ p.
+ *
+ * @param tNodeTypeToTNodes
+ * @return a topological ordering of the "called-by" graph. The guarantees that when iterating
+ * through procedure k, all procedures called by procedure k have been iterated over.
+ */
+std::vector<const TNode*> getTopologicalOrderingOfCalledByGraph(
+std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes);
 
 std::unordered_map<const TNode*, int> getTNodeToStatementNumber(const TNode& ast);
 std::unordered_map<int, const TNode*>

@@ -21,7 +21,6 @@ const char STRUCTURED_STATEMENT[] = "procedure MySpecialProc {"
                                     "some_var = 23 + another_var;"
                                     "}";
 
-
 TEST_CASE("Test getTNodeToStatementNumber gets all statements") {
     Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
     const TNode ast(parser.parse());
@@ -115,23 +114,219 @@ TEST_CASE("Test getTNodeTypeToTNodes maps TNode to TNodeType correctly") {
     Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
     TNode ast(parser.parse());
 
-    auto tNodeToStatementNumber = extractor::getTNodeTypeToTNodes(ast);
-    for (auto k : tNodeToStatementNumber) {
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    for (auto k : tNodeTypeToTNodes) {
         for (const TNode* i : k.second) {
             REQUIRE(i->type == k.first);
         }
     }
-    REQUIRE(tNodeToStatementNumber[While].size() == 1);
-    REQUIRE(tNodeToStatementNumber[Program].size() == 1);
-    REQUIRE(tNodeToStatementNumber[Procedure].size() == 1);
-    REQUIRE(tNodeToStatementNumber[StatementList].size() == 4);
-    REQUIRE(tNodeToStatementNumber[Assign].size() == 4);
-    REQUIRE(tNodeToStatementNumber[Not].size() == 1);
-    REQUIRE(tNodeToStatementNumber[Equal].size() == 2);
-    REQUIRE(tNodeToStatementNumber[Plus].size() == 1);
-    REQUIRE(tNodeToStatementNumber[Variable].size() == 8);
-    REQUIRE(tNodeToStatementNumber[Constant].size() == 5);
-    REQUIRE(tNodeToStatementNumber[INVALID].size() == 0);
+    REQUIRE(tNodeTypeToTNodes[While].size() == 1);
+    REQUIRE(tNodeTypeToTNodes[Program].size() == 1);
+    REQUIRE(tNodeTypeToTNodes[Procedure].size() == 1);
+    REQUIRE(tNodeTypeToTNodes[StatementList].size() == 4);
+    REQUIRE(tNodeTypeToTNodes[Assign].size() == 4);
+    REQUIRE(tNodeTypeToTNodes[Not].size() == 1);
+    REQUIRE(tNodeTypeToTNodes[Equal].size() == 2);
+    REQUIRE(tNodeTypeToTNodes[Plus].size() == 1);
+    REQUIRE(tNodeTypeToTNodes[Variable].size() == 8);
+    REQUIRE(tNodeTypeToTNodes[Constant].size() == 5);
+    REQUIRE(tNodeTypeToTNodes[INVALID].size() == 0);
+}
+
+TEST_CASE("Test getProcedureFromProcedureName maps properly") {
+    std::string MULTIPLE_PROCEDURES = "procedure p { x = 1;} procedure q {y = 2;}";
+    Parser parser = testhelpers::GenerateParserFromTokens(MULTIPLE_PROCEDURES);
+    TNode ast(parser.parse());
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    REQUIRE(*extractor::getProcedureFromProcedureName("p", tNodeTypeToTNodes) == ast.children[0]);
+    REQUIRE(*extractor::getProcedureFromProcedureName("q", tNodeTypeToTNodes) == ast.children[1]);
+}
+
+TEST_CASE("Test getProcedureToCallers") {
+    const char program[] = "procedure p{call q;}"
+                           "procedure q{call r; call s;}"
+                           "procedure r{call s;}"
+                           "procedure s{x = 2;}"
+                           "procedure t{y = 1;}";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    TNode* p = &ast.children[0];
+    TNode* q = &ast.children[1];
+    TNode* r = &ast.children[2];
+    TNode* s = &ast.children[3];
+    TNode* t = &ast.children[4];
+
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    REQUIRE(tNodeTypeToTNodes[TNodeType::Procedure].size() == 5);
+    auto procedureToCallers = extractor::getProcedureToCallers(tNodeTypeToTNodes);
+
+    // Only q, r and s are ever called.
+    REQUIRE(procedureToCallers.size() == 3);
+
+    // s is called by r and q
+    REQUIRE(procedureToCallers.find(s) != procedureToCallers.end());
+    auto callers = procedureToCallers.find(s)->second;
+    REQUIRE(callers.size() == 2);
+    REQUIRE(std::find(callers.begin(), callers.end(), r) != callers.end());
+    REQUIRE(std::find(callers.begin(), callers.end(), q) != callers.end());
+
+    // r is called by q
+    REQUIRE(procedureToCallers.find(r) != procedureToCallers.end());
+    callers = procedureToCallers.find(r)->second;
+    REQUIRE(callers.size() == 1);
+    REQUIRE(std::find(callers.begin(), callers.end(), q) != callers.end());
+
+    // q is called by p
+    REQUIRE(procedureToCallers.find(q) != procedureToCallers.end());
+    callers = procedureToCallers.find(q)->second;
+    REQUIRE(callers.size() == 1);
+    REQUIRE(std::find(callers.begin(), callers.end(), p) != callers.end());
+}
+
+
+TEST_CASE("Test getTopologicalOrderingOfCalledByGraph") {
+    // We shuffle the procedures to ensure that their order of appearance in the program
+    // does not affect the topological order of their calls.
+    const char program[] = "procedure p{call q;}"
+                           "procedure s{x = 2;}"
+                           "procedure r{call s;}"
+                           "procedure q{call r; call s;}"
+                           "procedure t{y = 1;}";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    const TNode* p = &ast.children[0];
+    const TNode* q = &ast.children[3];
+    const TNode* r = &ast.children[2];
+    const TNode* s = &ast.children[1];
+    const TNode* t = &ast.children[4];
+
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto procedureReverseTopologicalOrder = extractor::getTopologicalOrderingOfCalledByGraph(tNodeTypeToTNodes);
+    std::vector<const TNode*> expectedOrdering = {
+        s, // s is called by r, does not make any calls.
+        r, // r calls s
+        q, // q calls r and s
+        p, // p calls q, and indirectly calls q,r,s
+        t // We can place t anywhere in the topological call order as it never calls/gets called.
+    };
+    REQUIRE(procedureReverseTopologicalOrder == expectedOrdering);
+}
+
+TEST_CASE("Test getUsesMapping with a single procedure") {
+    const char program[] = "procedure MySpecialProc {"
+                           "while (a == 1) {"
+                           "b = 1;"
+                           "while (c == 1) { d = 1; }"
+                           "if (e == 1) then { e = f; } else { f = 1; }"
+                           "}"
+                           "if (g == 1) then {"
+                           "h = 1;"
+                           "while (i == 1) { j = 1; }"
+                           "} else {"
+                           "k = 1;"
+                           "print l;"
+                           "}"
+                           "m = 23 + n;"
+                           "}";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto statementNumberToTNode = extractor::getStatementNumberToTNode(tNodeToStatementNumber);
+
+    std::unordered_map<const TNode*, std::unordered_set<std::string>> expectedUsesMappingForStatements;
+
+    // The procedure used every used variable in the program.
+    expectedUsesMappingForStatements[&ast.children[0]] = { "a", "c", "e", "f", "g", "i", "l", "n" };
+
+    // The first while loop, "while (a == 1) {...", uses a and everything it's children uses.
+    expectedUsesMappingForStatements[statementNumberToTNode[1]] = { "a", "c", "e", "f" };
+    // "b = 1;" uses nothing
+    expectedUsesMappingForStatements[statementNumberToTNode[2]] = {};
+    // "while (c == 1) { d = 1; }" uses c
+    expectedUsesMappingForStatements[statementNumberToTNode[3]] = { "c" };
+    expectedUsesMappingForStatements[statementNumberToTNode[4]] = {};
+    // "if (e == 1) then { e = f; } else { f = 1; }" uses e,f
+    expectedUsesMappingForStatements[statementNumberToTNode[5]] = { "e", "f" };
+    expectedUsesMappingForStatements[statementNumberToTNode[6]] = { "f" };
+    expectedUsesMappingForStatements[statementNumberToTNode[7]] = {};
+
+    // "if (g == 1) then {..."
+    expectedUsesMappingForStatements[statementNumberToTNode[8]] = { "g", "i", "l" };
+    // "h = 1;"
+    expectedUsesMappingForStatements[statementNumberToTNode[9]] = {};
+    // "while (i == 1) { j = 1; }"
+    expectedUsesMappingForStatements[statementNumberToTNode[10]] = { "i" };
+    expectedUsesMappingForStatements[statementNumberToTNode[11]] = {};
+    // "k = 1;"
+    expectedUsesMappingForStatements[statementNumberToTNode[12]] = {};
+    // "print l;"
+    expectedUsesMappingForStatements[statementNumberToTNode[13]] = { "l" };
+    // "m = 23 + n;"
+    expectedUsesMappingForStatements[statementNumberToTNode[14]] = { "n" };
+
+    auto usesMapping = extractor::getUsesMapping(tNodeTypeToTNodes);
+    REQUIRE(usesMapping.size() == 15);
+    for (auto& p : expectedUsesMappingForStatements) {
+        REQUIRE(usesMapping.count(p.first));
+        REQUIRE(p.second == usesMapping[p.first]);
+    }
+}
+
+TEST_CASE("Test getUsesMapping with multiple procedures") {
+    const char program[] = "procedure p { while (1 == 1) { call q; } b = ball;}"
+                           "procedure r { if (1 == 1) then {call s;} else {c = cat;} }"
+                           "procedure q { call r; call s; a = apple; }"
+                           "procedure s { d = dog; }";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto statementNumberToTNode = extractor::getStatementNumberToTNode(tNodeToStatementNumber);
+    TNode* p = &ast.children[0];
+    TNode* r = &ast.children[1];
+    TNode* q = &ast.children[2];
+    TNode* s = &ast.children[3];
+
+    std::unordered_map<const TNode*, std::unordered_set<std::string>> expectedUsesMappingForStatements;
+    expectedUsesMappingForStatements[s] = { "dog" };
+    // assign dog
+    expectedUsesMappingForStatements[statementNumberToTNode[10]] = { "dog" };
+
+    expectedUsesMappingForStatements[r] = { "cat", "dog" };
+    // if statement
+    expectedUsesMappingForStatements[statementNumberToTNode[4]] = { "cat", "dog" };
+    // call s
+    expectedUsesMappingForStatements[statementNumberToTNode[5]] = { "dog" };
+    // assign cat
+    expectedUsesMappingForStatements[statementNumberToTNode[6]] = { "cat" };
+
+    expectedUsesMappingForStatements[q] = { "apple", "cat", "dog" };
+    // call r
+    expectedUsesMappingForStatements[statementNumberToTNode[7]] = { "cat", "dog" };
+    // call s
+    expectedUsesMappingForStatements[statementNumberToTNode[8]] = { "dog" };
+    // assign apple
+    expectedUsesMappingForStatements[statementNumberToTNode[9]] = { "apple" };
+
+    expectedUsesMappingForStatements[p] = { "apple", "ball", "cat", "dog" };
+    // while container
+    expectedUsesMappingForStatements[statementNumberToTNode[1]] = { "apple", "cat", "dog" };
+    // call q
+    expectedUsesMappingForStatements[statementNumberToTNode[2]] = { "apple", "cat", "dog" };
+    // assign ball
+    expectedUsesMappingForStatements[statementNumberToTNode[3]] = { "ball" };
+
+    auto usesMapping = extractor::getUsesMapping(tNodeTypeToTNodes);
+    REQUIRE(usesMapping.size() == 14);
+    for (auto& p : expectedUsesMappingForStatements) {
+        REQUIRE(usesMapping.count(p.first));
+        REQUIRE(p.second == usesMapping[p.first]);
+    }
 }
 
 TEST_CASE("Test getFollowRelationship") {
