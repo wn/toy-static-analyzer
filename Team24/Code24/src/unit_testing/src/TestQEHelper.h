@@ -1,6 +1,10 @@
 #include "PKB.h"
 #include "TNode.h"
 
+#include <algorithm>
+#include <string>
+#include <vector>
+
 namespace qpbackend {
 namespace qetest {
 /**
@@ -54,5 +58,11 @@ class PKBMock : public backend::PKB {
     VARIABLE_NAME_LIST getVariablesModifiedBy(STATEMENT_NUMBER s) const;
     VARIABLE_NAME_LIST getVariablesModifiedBySomeStatement() const;
 };
+
+// convert string to a vector
+std::vector<std::string> convertStrToVector(std::string const& str);
+
+// For string representing two vectors
+bool checkIfVectorOfStringMatch(std::string const& str1, std::string const& str2);
 } // namespace qetest
 } // namespace qpbackend

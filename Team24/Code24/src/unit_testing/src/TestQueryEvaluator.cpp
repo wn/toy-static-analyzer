@@ -6,20 +6,21 @@
 namespace qpbackend {
 namespace qetest {
 
-TEST_CASE("Test argument type check provided by QEHelper") {
-    // test isWildcard : check if the string is a placeholde
+TEST_CASE("Test wildcard check in QEHelper") {
     REQUIRE(queryevaluator::isWildCard("_"));
     REQUIRE_FALSE(queryevaluator::isWildCard("\"_\""));
+}
 
-    // test isPosInt : check if the string is a positive integer
+TEST_CASE("Test positive integer check in QEHelper") {
     REQUIRE(queryevaluator::isPosInt("2"));
     REQUIRE(queryevaluator::isPosInt("235629472991"));
     REQUIRE_FALSE(queryevaluator::isPosInt("name123"));
     REQUIRE_FALSE(queryevaluator::isPosInt("123name"));
     REQUIRE_FALSE(queryevaluator::isPosInt("01"));
     REQUIRE_FALSE(queryevaluator::isPosInt("-1"));
+}
 
-    // test isName : check if the string is a valid entity name
+TEST_CASE("Test name check in QEHelper") {
     REQUIRE(queryevaluator::isName("\"v\""));
     REQUIRE(queryevaluator::isName("\"V2V34EF\""));
     REQUIRE_FALSE(queryevaluator::isName("v"));
@@ -28,76 +29,176 @@ TEST_CASE("Test argument type check provided by QEHelper") {
     REQUIRE_FALSE(queryevaluator::isName("\"proc_name\""));
 }
 
-TEST_CASE("Test with first sample source code") {
+TEST_CASE("Test without clauses") {
     PKBMock pkb(0);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    // select without clauses
-    Query query;
-    query.declarationMap = { { "s", STMT } };
-    query.synonymsToReturn = { "s" };
-    query.suchThatClauses = {};
-    query.patternClauses = {};
+    Query queryStmt = { { { "s", STMT } }, { "s" }, {}, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryStmt),
+                                       "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14"));
 
-    REQUIRE(qe.evaluateQuery(query) == "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14");
+    // select variables
+    Query queryVar = { { { "v", VARIABLE } }, { "v" }, {}, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryVar),
+                                       "count, cenX, cenY, x, y, flag, normSq"));
 
-    query.declarationMap = { { "v", VARIABLE } };
-    query.synonymsToReturn = { "v" };
-    query.suchThatClauses = {};
-    query.patternClauses = {};
+    // select procedures
+    Query queryProc = { { { "p", PROCEDURE } }, { "p" }, {}, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryProc), "computeCentroid"));
+}
 
-    REQUIRE(qe.evaluateQuery(query) == "count, cenX, cenY, x, y, flag, normSq");
+TEST_CASE("Test evaluation of Follows between synonyms") {
+    PKBMock pkb(0);
+    queryevaluator::QueryEvaluator qe(&pkb);
 
-    query.declarationMap = { { "p", PROCEDURE } };
-    query.synonymsToReturn = { "p" };
-    query.suchThatClauses = {};
-    query.patternClauses = {};
+    Query queryPre = { { { "s1", STMT }, { "s2", STMT } }, { "s1" }, { { FOLLOWS, "s1", "s2" } }, {} };
+    REQUIRE(
+    checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre), "1, 2, 3, 4, 5, 6, 7, 8, 10, 12"));
 
-    REQUIRE(qe.evaluateQuery(query) == "computeCentroid");
+    Query queryPost = { { { "s1", STMT }, { "s2", STMT } }, { "s2" }, { { FOLLOWS, "s1", "s2" } }, {} };
+    REQUIRE(
+    checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), "2, 3, 4, 5, 7, 8, 9, 10, 13, 14"));
+}
 
-    // select with Follows
-    query.declarationMap = { { "s", STMT } };
-    query.synonymsToReturn = { "s" };
-    query.suchThatClauses = { { FOLLOWS, "6", "s" } };
-    query.patternClauses = {};
+TEST_CASE("Test evaluation of Follows between entity and synonym") {
+    PKBMock pkb(0);
+    queryevaluator::QueryEvaluator qe(&pkb);
 
-    REQUIRE(qe.evaluateQuery(query) == "7");
+    Query queryPre = { { { "s", STMT } }, { "s" }, { { FOLLOWS, "6", "s" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre), "7"));
 
-    query.declarationMap = { { "s", STMT } };
-    query.synonymsToReturn = { "s" };
-    query.suchThatClauses = { { FOLLOWS, "s", "4" } };
-    query.patternClauses = {};
+    Query queryPost = { { { "s", STMT } }, { "s" }, { { FOLLOWS, "s", "4" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), "3"));
+}
 
-    REQUIRE(qe.evaluateQuery(query) == "3");
+TEST_CASE("Test evaluation of Follows between entities") {
+    PKBMock pkb(0);
+    queryevaluator::QueryEvaluator qe(&pkb);
 
-    // select with FollowsT
-    query.declarationMap = { { "s", STMT } };
-    query.synonymsToReturn = { "s" };
-    query.suchThatClauses = { { FOLLOWST, "14", "s" } };
-    query.patternClauses = {};
+    Query queryTrue = { { { "s", STMT } }, { "s" }, { { FOLLOWS, "7", "8" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryTrue),
+                                       "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14"));
 
-    REQUIRE(qe.evaluateQuery(query) == "");
+    Query queryFalse = { { { "s", STMT } }, { "s" }, { { FOLLOWS, "7", "9" } }, {} };
+    REQUIRE(qe.evaluateQuery(queryFalse).empty());
+}
 
-    query.declarationMap = { { "s", STMT } };
-    query.synonymsToReturn = { "s" };
-    query.suchThatClauses = { { FOLLOWST, "s", "1" } };
-    query.patternClauses = {};
+TEST_CASE("Test evaluation of Follows between synonym and wildcard") {
+    PKBMock pkb(0);
+    queryevaluator::QueryEvaluator qe(&pkb);
 
-    REQUIRE(qe.evaluateQuery(query) == "");
+    Query queryPre = { { { "s", STMT } }, { "s" }, { { FOLLOWS, "s", "_" } }, {} };
+    REQUIRE(
+    checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre), "1, 2, 3, 4, 5, 6, 7, 8, 10, 12"));
 
-    query.declarationMap = { { "s", STMT } };
-    query.synonymsToReturn = { "s" };
-    query.suchThatClauses = { { FOLLOWST, "s", "_" } };
-    query.patternClauses = {};
+    Query queryPost = { { { "s", STMT } }, { "s" }, { { FOLLOWS, "_", "s" } }, {} };
+    REQUIRE(
+    checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), "2, 3, 4, 5, 7, 8, 9, 10, 13, 14"));
+}
 
-    REQUIRE(qe.evaluateQuery(query) == "1, 2, 3, 4, 5, 6, 7, 8, 10, 12");
+TEST_CASE("Test evaluation of Follows between entity and wildcard") {
+    PKBMock pkb(0);
+    queryevaluator::QueryEvaluator qe(&pkb);
 
-    query.declarationMap = { { "s", STMT } };
-    query.synonymsToReturn = { "s" };
-    query.suchThatClauses = { { FOLLOWST, "_", "s" } };
-    query.patternClauses = {};
+    Query queryTrue = { { { "s", STMT } }, { "s" }, { { FOLLOWS, "7", "_" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryTrue),
+                                       "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14"));
 
-    REQUIRE(qe.evaluateQuery(query) == "2, 3, 4, 5, 7, 8, 9, 10, 13, 14");
+    Query queryFalse = { { { "s", STMT } }, { "s" }, { { FOLLOWS, "_", "6" } }, {} };
+    REQUIRE(qe.evaluateQuery(queryFalse).empty());
+}
+
+TEST_CASE("Test evaluation of Follows(_, _)") {
+    PKBMock pkb(0);
+    queryevaluator::QueryEvaluator qe(&pkb);
+    Query query = { { { "s", STMT } }, { "s" }, { { FOLLOWS, "_", "_" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query),
+                                       "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14"));
+}
+
+TEST_CASE("Test evaluation of Follows with invalid arguments") {
+    PKBMock pkb(0);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query query = { { { "s", STMT } }, { "s" }, { { FOLLOWS, "name1", "name2" } }, {} };
+    REQUIRE(qe.evaluateQuery(query).empty());
+}
+
+TEST_CASE("Test evaluation of Follows* between synonyms") {
+    PKBMock pkb(0);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryPre = { { { "s1", STMT }, { "s2", STMT } }, { "s1" }, { { FOLLOWST, "s1", "s2" } }, {} };
+    REQUIRE(
+    checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre), "1, 2, 3, 4, 5, 6, 7, 8, 10, 12"));
+
+    Query queryPost = { { { "s1", STMT }, { "s2", STMT } }, { "s2" }, { { FOLLOWST, "s1", "s2" } }, {} };
+    REQUIRE(
+    checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), "2, 3, 4, 5, 7, 8, 9, 10, 13, 14"));
+}
+
+TEST_CASE("Test evaluation of Follows* between entity and synonym") {
+    PKBMock pkb(0);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryPre = { { { "s", STMT } }, { "s" }, { { FOLLOWST, "6", "s" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre), "7, 8, 9"));
+
+    Query queryPost = { { { "s", STMT } }, { "s" }, { { FOLLOWST, "s", "9" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), "6, 7, 8"));
+}
+
+TEST_CASE("Test evaluation of Follows* between entities") {
+    PKBMock pkb(0);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryTrue = { { { "s", STMT } }, { "s" }, { { FOLLOWST, "7", "9" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryTrue),
+                                       "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14"));
+
+    Query queryFalse = { { { "s", STMT } }, { "s" }, { { FOLLOWST, "1", "9" } }, {} };
+    REQUIRE(qe.evaluateQuery(queryFalse).empty());
+}
+
+TEST_CASE("Test evaluation of Follows* between synonym and wildcard") {
+    PKBMock pkb(0);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryPre = { { { "s", STMT } }, { "s" }, { { FOLLOWST, "s", "_" } }, {} };
+    REQUIRE(
+    checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre), "1, 2, 3, 4, 5, 6, 7, 8, 10, 12"));
+
+    Query queryPost = { { { "s", STMT } }, { "s" }, { { FOLLOWST, "_", "s" } }, {} };
+    REQUIRE(
+    checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), "2, 3, 4, 5, 7, 8, 9, 10, 13, 14"));
+}
+
+TEST_CASE("Test evaluation of Follows* between entity and wildcard") {
+    PKBMock pkb(0);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryTrue = { { { "s", STMT } }, { "s" }, { { FOLLOWST, "7", "_" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryTrue),
+                                       "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14"));
+
+    Query queryFalse = { { { "s", STMT } }, { "s" }, { { FOLLOWST, "_", "6" } }, {} };
+    REQUIRE(qe.evaluateQuery(queryFalse).empty());
+}
+
+TEST_CASE("Test evaluation of Follows*(_, _)") {
+    PKBMock pkb(0);
+    queryevaluator::QueryEvaluator qe(&pkb);
+    Query query = { { { "s", STMT } }, { "s" }, { { FOLLOWST, "_", "_" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query),
+                                       "1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14"));
+}
+
+TEST_CASE("Test evaluation of Follows* with invalid arguments") {
+    PKBMock pkb(0);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query query = { { { "s", STMT } }, { "s" }, { { FOLLOWST, "name1", "name2" } }, {} };
+    REQUIRE(qe.evaluateQuery(query).empty());
 }
 
 } // namespace qetest

@@ -2,6 +2,31 @@
 
 namespace qpbackend {
 namespace qetest {
+std::vector<std::string> convertStrToVector(std::string const& str) {
+    std::vector<std::string> v;
+    std::string delimiter = ", ";
+    std::string remain = str;
+    std::string token;
+    size_t pos = 0;
+
+    while ((pos = remain.find(delimiter)) != std::string::npos) {
+        token = remain.substr(0, pos);
+        v.push_back(token);
+        remain.erase(0, pos + delimiter.length());
+    }
+
+    v.push_back(remain);
+    return v;
+}
+
+bool checkIfVectorOfStringMatch(std::string const& str1, std::string const& str2) {
+    std::vector<std::string> str1_vec = convertStrToVector(str1);
+    std::vector<std::string> str2_vec = convertStrToVector(str2);
+    std::sort(str1_vec.begin(), str1_vec.end());
+    std::sort(str2_vec.begin(), str2_vec.end());
+    return str1_vec == str2_vec;
+}
+
 STATEMENT_NUMBER_LIST PKBMock::getAllStatements() const {
     std::vector<int> statements;
     switch (test_idx) {
@@ -41,10 +66,38 @@ STATEMENT_NUMBER_LIST PKBMock::getPostFollows(STATEMENT_NUMBER s) const {
 STATEMENT_NUMBER_LIST PKBMock::getStatementsFollowedBy(STATEMENT_NUMBER s) const {
     std::vector<int> stmts;
     if (test_idx == 0) {
-        if (s == 6) {
+        switch (s) {
+        case 1:
+            stmts = { 2, 3, 4, 5, 10, 14 };
+            break;
+        case 2:
+            stmts = { 3, 4, 5, 10, 14 };
+            break;
+        case 3:
+            stmts = { 4, 5, 10, 14 };
+            break;
+        case 4:
+            stmts = { 5, 10, 14 };
+            break;
+        case 5:
+            stmts = { 10, 14 };
+            break;
+        case 10:
+            stmts = { 14 };
+            break;
+        case 6:
             stmts = { 7, 8, 9 };
-        }
-        if (s == 14) {
+            break;
+        case 7:
+            stmts = { 8, 9 };
+            break;
+        case 8:
+            stmts = { 9 };
+            break;
+        case 12:
+            stmts = { 13 };
+            break;
+        default:
             stmts = {};
         }
     }
@@ -62,10 +115,37 @@ STATEMENT_NUMBER_LIST PKBMock::getAllStatementsThatAreFollowed() const {
 STATEMENT_NUMBER_LIST PKBMock::getStatementsThatFollows(STATEMENT_NUMBER s) const {
     std::vector<int> stmts;
     if (test_idx == 0) {
-        if (s == 4) {
+        switch (s) {
+        case 2:
+            stmts = { 1 };
+            break;
+        case 3:
+            stmts = { 1, 2 };
+            break;
+        case 4:
             stmts = { 1, 2, 3 };
-        }
-        if (s == 1) {
+            break;
+        case 5:
+            stmts = { 1, 2, 3, 4 };
+            break;
+        case 10:
+            stmts = { 1, 2, 3, 4, 5 };
+            break;
+        case 14:
+            stmts = { 1, 2, 3, 4, 5, 10 };
+            break;
+        case 7:
+            stmts = { 6 };
+            break;
+        case 8:
+            stmts = { 6, 7 };
+            break;
+        case 9:
+            stmts = { 6, 7, 8 };
+            break;
+        case 13:
+            stmts = { 12 };
+        default:
             stmts = {};
         }
     }
