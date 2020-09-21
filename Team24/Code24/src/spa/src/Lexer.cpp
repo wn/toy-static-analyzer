@@ -2,6 +2,8 @@
 
 #include "Lexer.h"
 
+#include <cctype>
+
 namespace backend {
 namespace lexer {
 
@@ -69,7 +71,7 @@ std::vector<std::pair<TokenType, std::string>> rules = { { LBRACE, "^\\{" },
                                                          { NAME, "^([a-zA-Z]\\w*)\\b" },
                                                          // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/173):
                                                          // Integers cannot be '00001' Which is permissible by this rule.
-                                                         { INTEGER, "^(\\d+)\\b" },
+                                                         { INTEGER, "^(0|[1-9]\\d*)\\b" },
 
                                                          { WHITESPACE, "^(\\s+)" } };
 
@@ -95,10 +97,11 @@ std::vector<Token> tokenize(std::istream& stream, bool willLexWithWhitespace) {
         std::string originalLine = line.substr();
         while (!line.empty()) {
             bool matchedSomething = false;
+            if (!willLexWithWhitespace && !line.empty() && isspace(line[0])) {
+                line = line.substr(1);
+                continue;
+            }
             for (auto const& p : rules) {
-                if (p.first == WHITESPACE && !willLexWithWhitespace) {
-                    continue;
-                }
                 std::smatch match;
                 if (std::regex_search(line, match, std::regex(p.second))) {
 
@@ -126,10 +129,11 @@ std::vector<Token> tokenize(std::istream& stream, bool willLexWithWhitespace) {
                 }
             }
 
-            // No valid matches. Move on
+            // No valid matches.
             if (!matchedSomething) {
-                // TODO log the first few characters or something
-                line = line.substr(1);
+                throw std::runtime_error(
+                "Lexer: No rules available to parse the remaining line: <" + line +
+                "> at line: " + std::to_string(lineNumber));
             }
         }
     }

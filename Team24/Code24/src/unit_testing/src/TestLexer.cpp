@@ -25,6 +25,26 @@ std::string prettyTypeStr(const std::vector<backend::lexer::Token>& tokens) {
     return result;
 }
 
+TEST_CASE("Test valid integer") {
+    std::stringstream query = std::stringstream("00");
+    REQUIRE_THROWS(backend::lexer::tokenizeWithWhitespace(query));
+
+    std::stringstream query2 = std::stringstream("001");
+    REQUIRE_THROWS(backend::lexer::tokenizeWithWhitespace(query2));
+
+    std::stringstream query3 = std::stringstream("0");
+    REQUIRE_NOTHROW(backend::lexer::tokenizeWithWhitespace(query3));
+
+    std::stringstream query4 = std::stringstream("10");
+    REQUIRE_NOTHROW(backend::lexer::tokenizeWithWhitespace(query4));
+
+    std::stringstream query5 = std::stringstream("1");
+    REQUIRE_NOTHROW(backend::lexer::tokenizeWithWhitespace(query5));
+
+    std::stringstream query6 = std::stringstream("11");
+    REQUIRE_NOTHROW(backend::lexer::tokenizeWithWhitespace(query6));
+}
+
 TEST_CASE("Empty tokens test") {
     std::stringstream query = std::stringstream("");
     std::string expected = "";

@@ -41,8 +41,14 @@ void TestWrapper::parse(std::string filename) {
 
 // method to evaluating a query
 void TestWrapper::evaluate(std::string query, std::list<std::string>& results) {
+    std::vector<backend::lexer::Token> tokens;
     std::stringstream stream(query);
-    std::vector<backend::lexer::Token> tokens = backend::lexer::tokenizeWithWhitespace(stream);
+    try {
+        tokens = backend::lexer::tokenizeWithWhitespace(stream);
+    } catch (const std::exception& e) {
+        std::cout << "Invalid query syntax" << std::endl;
+        return;
+    }
     qpbackend::Query queryStruct = querypreprocessor::parseTokens(tokens);
     // store the answers to the query in the results list (it is initially empty)
     // each result must be a string.

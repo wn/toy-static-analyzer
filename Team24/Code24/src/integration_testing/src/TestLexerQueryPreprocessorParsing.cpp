@@ -587,7 +587,8 @@ TEST_CASE("Test declaration wrong case failure") {
 
 
 TEST_CASE("Test parsing nonsense failure") {
-    requireParsingInvalidQPLQueryToReturnEmptyQuery("adf;oij32!@d v");
+    std::stringstream queryString = std::stringstream("adf;oij32!@d v");
+    REQUIRE_THROWS(backend::lexer::tokenizeWithWhitespace(queryString));
 }
 
 TEST_CASE("Test parsing invalid variable name (Integer)") {
