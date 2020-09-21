@@ -15,12 +15,21 @@ enum SubRelationType {
     POSTFOLLOWST, // check a2, Follows*(a1, a2)
     PREFOLLOWS_WILD, // check a1, Follows(a1, _)
     POSTFOLLOWS_WILD, // check a2, Follows(_, a2)
+    PREPARENT, // check a1, Parents(a1, a2)
+    POSTPARENT, // check a2, Parents(a1, a2)
+    PREPARENTT, // check a1, Parents*(a1, a2)
+    POSTPARENTT, // check a2, Parents*(a1, a2)
+    PREPARENT_WILD, // check a1, Parents(a1, _)
+    POSTPARENT_WILD, // check a2, Parents(_, a2)
     INVALID // no suitable subrelation to evaluate
 };
 
 // type of argument used in relation, used for evaluation
 enum ArgType {
-    SYNONYM, // synonym name, e.g. "x", "v2", "ifs"
+    STMT_SYNONYM, // synonym name of a statement synonym
+    VAR_SYNONYM, // synonym name of a variable synonym
+    PROC_SYNONYM, // synonym name of a procedure synonym
+    CONST_SYNONYM, // synonym name of a procedure synonym
     NAME_ENTITY, // name of variable or procedure, e.g. "\"centroidX\"" "\"main\""
     NUM_ENTITY, // constant number or statement number of line number, e.g. "42"
     EXPR, // expression used in pattern, e.g. "_\"x+y*z\"_"

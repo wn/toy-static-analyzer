@@ -171,9 +171,12 @@ bool SingleQueryEvaluator::evaluateSuchThatClause(const backend::PKB* pkb,
         return false;
     }
 
-    if (arg_type_1 == SYNONYM) {
+    if (isSynonym(pkb, arg1)) {
         switch (arg_type_2) {
-        case SYNONYM:
+        case STMT_SYNONYM:
+        case VAR_SYNONYM:
+        case PROC_SYNONYM:
+        case CONST_SYNONYM:
             return evaluateSynonymSynonym(pkb, srt, arg1, arg2);
         case NUM_ENTITY:
             return evaluateEntitySynonym(pkb, srt, arg2, arg1); // swap the arguments as the called method required
@@ -187,7 +190,10 @@ bool SingleQueryEvaluator::evaluateSuchThatClause(const backend::PKB* pkb,
         }
     } else if (arg_type_1 == NUM_ENTITY || arg_type_1 == NAME_ENTITY) {
         switch (arg_type_2) {
-        case SYNONYM:
+        case STMT_SYNONYM:
+        case VAR_SYNONYM:
+        case PROC_SYNONYM:
+        case CONST_SYNONYM:
             return evaluateEntitySynonym(pkb, srt, arg1, arg2);
         case NUM_ENTITY:
             return evaluateEntityEntity(pkb, srt, arg1, arg2);
@@ -201,7 +207,10 @@ bool SingleQueryEvaluator::evaluateSuchThatClause(const backend::PKB* pkb,
         }
     } else if (arg_type_1 == WILDCARD) {
         switch (arg_type_2) {
-        case SYNONYM:
+        case STMT_SYNONYM:
+        case VAR_SYNONYM:
+        case PROC_SYNONYM:
+        case CONST_SYNONYM:
             return evaluateSynonymWildcard(pkb, srt, arg2);
         case NUM_ENTITY:
             return evaluateEntityWildcard(pkb, srt, arg2);
@@ -392,6 +401,28 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelation(const backe
         stmts = pkb->getStatementsThatFollows(std::stoi(arg));
         result = castToStrVector<STATEMENT_NUMBER>(stmts);
         break;
+    case PREPARENT:
+        stmts = pkb->getDescendants(std::stoi(arg));
+        for (const auto& child : stmts) {
+            if (std::stoi(arg) == (pkb->getAncestors(child)).at(0)) {
+                result.push_back(std::to_string(child));
+            }
+        }
+        break;
+    case POSTPARENT:
+        stmts = pkb->getAncestors(std::stoi(arg));
+        if (!stmts.empty()) {
+            result.push_back(std::to_string(stmts[0]));
+        }
+        break;
+    case PREPARENTT:
+        stmts = pkb->getDescendants(std::stoi(arg));
+        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        break;
+    case POSTPARENTT:
+        stmts = pkb->getAncestors(std::stoi(arg));
+        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        break;
     default:
         handleError("unknown sub-relation type");
     }
@@ -416,6 +447,15 @@ SingleQueryEvaluator::inquirePKBForRelationWildcard(const backend::PKB* pkb, Sub
     case POSTFOLLOWS_WILD:
         stmts = pkb->getAllStatementsThatFollows();
         result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        break;
+    case PREPARENT_WILD:
+        stmts = pkb->getStatementsThatHaveDescendants();
+        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        break;
+    case POSTPARENT_WILD:
+        stmts = pkb->getStatementsThatHaveAncestors();
+        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        break;
     default:
         handleError("unknown sub-relation type");
     }
@@ -451,7 +491,16 @@ ArgType SingleQueryEvaluator::getArgType(const backend::PKB* pkb, std::string co
     if (isWildCard(arg)) {
         return WILDCARD;
     } else if (isSynonym(pkb, arg)) {
-        return SYNONYM;
+        switch (query.declarationMap[arg]) {
+        case VARIABLE:
+            return VAR_SYNONYM;
+        case PROCEDURE:
+            return PROC_SYNONYM;
+        case CONSTANT:
+            return CONST_SYNONYM;
+        default:
+            return STMT_SYNONYM;
+        }
     } else if (isPosInt(arg)) {
         return NUM_ENTITY;
     } else if (isName(arg)) {
