@@ -1,6 +1,8 @@
 #ifndef TESTWRAPPER_H
 #define TESTWRAPPER_H
 
+#include "PKB.h"
+
 #include <iostream>
 #include <list>
 #include <string>
@@ -15,6 +17,9 @@ class TestWrapper : public AbstractWrapper {
 
     // destructor
     ~TestWrapper();
+
+    // PKB to store information of SIMPLE program
+    backend::PKB* pkb;
 
     // method for parsing the SIMPLE source
     virtual void parse(std::string filename);

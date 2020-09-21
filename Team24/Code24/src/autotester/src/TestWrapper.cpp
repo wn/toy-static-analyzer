@@ -4,6 +4,7 @@
 #include "Logger.h"
 #include "PKBImplementation.h"
 #include "Parser.h"
+#include "QueryEvaluator.h"
 #include "QueryPreprocessor.h"
 
 #include <fstream>
@@ -33,23 +34,23 @@ void TestWrapper::parse(std::string filename) {
     backend::TNode ast = backend::Parser(backend::lexer::tokenize(inputFileStream)).parse();
     logLine("AST:");
     logTNode(ast);
-
-    backend::PKBImplementation pkb(ast);
-
+    pkb = new backend::PKBImplementation(ast);
     // call queries on the PKB after this
 }
 
 // method to evaluating a query
 void TestWrapper::evaluate(std::string query, std::list<std::string>& results) {
-    std::vector<backend::lexer::Token> tokens;
     std::stringstream stream(query);
     try {
-        tokens = backend::lexer::tokenizeWithWhitespace(stream);
+        std::vector<backend::lexer::Token> tokens = backend::lexer::tokenizeWithWhitespace(stream);
+        qpbackend::Query queryStruct = querypreprocessor::parseTokens(tokens);
+        qpbackend::queryevaluator::QueryEvaluator queryEvaluator(pkb);
+        std::vector<std::string> queryResults = queryEvaluator.evaluateQuery(queryStruct);
+        std::copy(queryResults.begin(), queryResults.end(), std::back_inserter(results));
     } catch (const std::exception& e) {
-        std::cout << "Invalid query syntax" << std::endl;
+        std::cout << "Invalid query" << std::endl;
         return;
     }
-    qpbackend::Query queryStruct = querypreprocessor::parseTokens(tokens);
     // store the answers to the query in the results list (it is initially empty)
     // each result must be a string.
 }
