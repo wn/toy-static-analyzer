@@ -324,8 +324,124 @@ TEST_CASE("Test getUsesMapping with multiple procedures") {
     auto usesMapping = extractor::getUsesMapping(tNodeTypeToTNodes);
     REQUIRE(usesMapping.size() == 14);
     for (auto& p : expectedUsesMappingForStatements) {
-        REQUIRE(usesMapping.count(p.first));
-        REQUIRE(p.second == usesMapping[p.first]);
+        REQUIRE(usesMapping[p.first] == p.second);
+    }
+}
+
+TEST_CASE("Test getModifiesMapping with a single procedure") {
+    const char program[] = "procedure MySpecialProc {"
+                           "while (a == 1) {"
+                           "b = 1;"
+                           "while (c == 1) { d = 1; }"
+                           "if (e == 1) then { e = f; } else { f = 1; }"
+                           "}"
+                           "if (g == 1) then {"
+                           "h = 1;"
+                           "while (i == 1) { j = 1; }"
+                           "} else {"
+                           "k = 1;"
+                           "print l;"
+                           "}"
+                           "m = 23 + n;"
+                           "read o;"
+                           "}";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto statementNumberToTNode = extractor::getStatementNumberToTNode(tNodeToStatementNumber);
+
+    std::unordered_map<const TNode*, std::unordered_set<std::string>> expectedModifiesMappingForStatements;
+
+    // The procedure used every used variable in the program.
+    expectedModifiesMappingForStatements[&ast.children[0]] = { "b", "j", "d", "o", "e",
+                                                               "f", "h", "k", "m" };
+
+    // The first while loop, "while (a == 1) {...",
+    expectedModifiesMappingForStatements[statementNumberToTNode[1]] = { "b", "d", "e", "f" };
+    // "b = 1;" Modifies b
+    expectedModifiesMappingForStatements[statementNumberToTNode[2]] = { "b" };
+    // "while (c == 1) { d = 1; }" Modifies d
+    expectedModifiesMappingForStatements[statementNumberToTNode[3]] = { "d" };
+    expectedModifiesMappingForStatements[statementNumberToTNode[4]] = { "d" };
+    // "if (e == 1) then { e = f; } else { f = 1; }" Modifies e,f
+    expectedModifiesMappingForStatements[statementNumberToTNode[5]] = { "e", "f" };
+    expectedModifiesMappingForStatements[statementNumberToTNode[6]] = { "e" };
+    expectedModifiesMappingForStatements[statementNumberToTNode[7]] = { "f" };
+
+    // "if (g == 1) then {..."
+    expectedModifiesMappingForStatements[statementNumberToTNode[8]] = { "h", "j", "k" };
+    // "h = 1;"
+    expectedModifiesMappingForStatements[statementNumberToTNode[9]] = { "h" };
+    // "while (i == 1) { j = 1; }"
+    expectedModifiesMappingForStatements[statementNumberToTNode[10]] = { "j" };
+    expectedModifiesMappingForStatements[statementNumberToTNode[11]] = { "j" };
+    // "k = 1;"
+    expectedModifiesMappingForStatements[statementNumberToTNode[12]] = { "k" };
+    // "print l;"
+    expectedModifiesMappingForStatements[statementNumberToTNode[13]] = {};
+    // "m = 23 + n;"
+    expectedModifiesMappingForStatements[statementNumberToTNode[14]] = { "m" };
+    // "read o;"
+    expectedModifiesMappingForStatements[statementNumberToTNode[15]] = { "o" };
+
+    auto modifiesMapping = extractor::getModifiesMapping(tNodeTypeToTNodes);
+    REQUIRE(modifiesMapping.size() == 15);
+    for (auto& p : expectedModifiesMappingForStatements) {
+        REQUIRE(modifiesMapping[p.first] == p.second);
+    }
+}
+
+TEST_CASE("Test getModifiesMapping with multiple procedures") {
+    const char program[] = "procedure p { while (1 == 1) { call q; } b = ball;}"
+                           "procedure r { if (1 == 1) then {call s;} else {c = cat;} }"
+                           "procedure q { call r; call s; a = apple; }"
+                           "procedure s { d = dog; }";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto statementNumberToTNode = extractor::getStatementNumberToTNode(tNodeToStatementNumber);
+    TNode* p = &ast.children[0];
+    TNode* r = &ast.children[1];
+    TNode* q = &ast.children[2];
+    TNode* s = &ast.children[3];
+
+    std::unordered_map<const TNode*, std::unordered_set<std::string>> expectedModifiesMappingForStatements;
+    expectedModifiesMappingForStatements[s] = { "d" };
+    // assign dog
+    expectedModifiesMappingForStatements[statementNumberToTNode[10]] = { "d" };
+
+    expectedModifiesMappingForStatements[r] = { "d", "c" };
+    // if statement
+    expectedModifiesMappingForStatements[statementNumberToTNode[4]] = { "c", "d" };
+    // call s
+    expectedModifiesMappingForStatements[statementNumberToTNode[5]] = { "d" };
+    // assign cat
+    expectedModifiesMappingForStatements[statementNumberToTNode[6]] = { "c" };
+
+    expectedModifiesMappingForStatements[q] = { "a", "c", "d" };
+    // call r
+    expectedModifiesMappingForStatements[statementNumberToTNode[7]] = { "c", "d" };
+    // call s
+    expectedModifiesMappingForStatements[statementNumberToTNode[8]] = { "d" };
+    // assign apple
+    expectedModifiesMappingForStatements[statementNumberToTNode[9]] = { "a" };
+
+    expectedModifiesMappingForStatements[p] = { "a", "b", "c", "d" };
+    // while container
+    expectedModifiesMappingForStatements[statementNumberToTNode[1]] = { "a", "c", "d" };
+    // call q
+    expectedModifiesMappingForStatements[statementNumberToTNode[2]] = { "a", "c", "d" };
+    // assign ball
+    expectedModifiesMappingForStatements[statementNumberToTNode[3]] = { "b" };
+
+    auto ModifiesMapping = extractor::getModifiesMapping(tNodeTypeToTNodes);
+    REQUIRE(ModifiesMapping.size() == 14);
+    for (auto& p : expectedModifiesMappingForStatements) {
+        REQUIRE(p.second == ModifiesMapping[p.first]);
     }
 }
 

@@ -272,6 +272,88 @@ getUsesMapping(std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClas
     return usesMapping;
 }
 
+/**
+ * A DFS Helper that is used to compute the Modifies mapping.
+ * Prerequisite: any procedure(s) that currentNode calls must have been indexed, i.e. it must exist
+ * in the modifiesMapping.
+ * @param currentNode
+ * @param tNodeTypeToTNodes
+ * @param modifiesMapping a reference to the mapping, that will be updated with the Modifies
+ * information for the currentNode.
+ */
+void getModifiesMappingHelper(const TNode* currentNode,
+                              std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes,
+                              std::unordered_map<const TNode*, std::unordered_set<std::string>>& modifiesMapping) {
+    std::unordered_set<std::string> variablesUsedByCurrentTNode;
+
+    if (currentNode->type == TNodeType::Assign) {
+        std::string variableAssignedTo = currentNode->children.at(0).name;
+        variablesUsedByCurrentTNode.insert(variableAssignedTo);
+        logLine("adding Assigned var name (" + variableAssignedTo + ")");
+    } else if (currentNode->type == TNodeType::Read) {
+        std::string variableReadTo = currentNode->children.at(0).name;
+        variablesUsedByCurrentTNode.insert(variableReadTo);
+        logLine("adding Read var name (" + variableReadTo + ")");
+    } else if (currentNode->type == TNodeType::Call) {
+        // Retrieve the procedure name
+        const TNode* procNameNode = &(currentNode->children[0]);
+        auto calledProc = getProcedureFromProcedureName(procNameNode->name, tNodeTypeToTNodes);
+        // We expect the called procedure to have been indexed already
+        if (modifiesMapping.find(calledProc) == modifiesMapping.end()) {
+            throw std::runtime_error(
+            "Expected Procedure " + calledProc->toShortString() +
+            " to exist in the Modifies mapping, as it is called by the call statement " +
+            currentNode->toShortString());
+        }
+        // This call statement modifies all the variables used by the called procedure
+        variablesUsedByCurrentTNode.insert(modifiesMapping[calledProc].begin(),
+                                           modifiesMapping[calledProc].end());
+    } else {
+        // Accumulate the variables used by currentNode's children (if any), and add them to the variables used by the currentNode
+        for (auto& child : currentNode->children) {
+            getModifiesMappingHelper(&child, tNodeTypeToTNodes, modifiesMapping);
+            if (modifiesMapping.find(&child) != modifiesMapping.end()) {
+                variablesUsedByCurrentTNode.insert(modifiesMapping[&child].begin(),
+                                                   modifiesMapping[&child].end());
+            }
+        }
+    }
+
+    if (modifiesMapping.find(currentNode) != modifiesMapping.end()) {
+        throw std::runtime_error(
+        "Current node " + currentNode->toShortString() +
+        " has already been indexed, but every TNode should only be indexed once.");
+    }
+    modifiesMapping[currentNode] = std::unordered_set<std::string>(variablesUsedByCurrentTNode.begin(),
+                                                                   variablesUsedByCurrentTNode.end());
+}
+
+std::unordered_map<const TNode*, std::unordered_set<std::string>>
+getModifiesMapping(std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes) {
+    std::unordered_map<const TNode*, std::unordered_set<std::string>> modifiesMapping;
+    for (const auto procedure : getTopologicalOrderingOfCalledByGraph(tNodeTypeToTNodes)) {
+        logLine("Starting modifies for proc " + procedure->toShortString());
+        getModifiesMappingHelper(procedure, tNodeTypeToTNodes, modifiesMapping);
+    }
+
+    // Filter out TNodeTypes that should not have the Modifies relation.
+    // We do this because we want certain TNodes (e.g. StatementList) to retain Modifies
+    // information from their descendants, so that their ancestors can copy that information
+    // too.
+    std::vector<const TNode*> keysToDelete;
+    std::set<TNodeType> validTypesForModifies = { Assign, Read, IfElse, While, Call, Procedure };
+    for (auto& p : modifiesMapping) {
+        if (validTypesForModifies.find(p.first->type) == validTypesForModifies.end()) {
+            keysToDelete.push_back(p.first);
+        }
+    }
+
+    for (auto& keyToDelete : keysToDelete) {
+        modifiesMapping.erase(keyToDelete);
+    }
+
+    return modifiesMapping;
+}
 
 std::pair<std::unordered_map<int, int>, std::unordered_map<int, int>> getFollowRelationship(const TNode& ast) {
     auto tNodeTypeToTNode = getTNodeTypeToTNodes(ast);

@@ -17,6 +17,15 @@ namespace extractor {
 std::unordered_map<const TNode*, std::unordered_set<std::string>>
 getUsesMapping(std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes);
 
+/**
+ * Returns the Modifies mapping of the program.
+ * @param tNodeTypeToTNodes
+ * @return a Map where the TNode keys are in the domain of the Modifies relation, and they map to
+ * variables modified by the TNode.
+ */
+std::unordered_map<const TNode*, std::unordered_set<std::string>>
+getModifiesMapping(std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes);
+
 std::unordered_map<const TNode*, std::vector<const TNode*>>
 getProcedureToCallers(std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes);
 
