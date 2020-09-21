@@ -32,6 +32,12 @@ class Parser {
     explicit Parser(std::vector<lexer::Token> tokens);
     // Generate AST from parser.
     TNode parse();
+    /**
+     * generate a precedent adhering expression string that is enforced by brackets.
+     * @param exprStr - A raw expr string. E.g. 1+2*3.
+     * @return string with brackets to represent precedence. E.g. 1+2*3 -> (1+(2*3)).
+     */
+    static std::string parseExpr(const std::string& exprStr);
 
     std::vector<lexer::Token> tokens;
     // -- Helpers --

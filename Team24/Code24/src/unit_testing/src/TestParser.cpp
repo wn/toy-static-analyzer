@@ -663,5 +663,13 @@ TEST_CASE("Test call") {
 
     REQUIRE(result == testhelpers::generateProgramNodeFromStatement("p", callNode));
 }
+
+TEST_CASE("Test Parser::parseExpr") {
+    REQUIRE(Parser::parseExpr("1+y") == "(1+y)");
+    REQUIRE(Parser::parseExpr("1+2*3") == "(1+(2*3))");
+    REQUIRE(Parser::parseExpr("1*2+3") == "((1*2)+3)");
+    // TODO(weineng): Not available yet as our expr precedence has issue.
+    // REQUIRE(Parser::parseExpr("1+y     *z + 4*3") == "((1+(y*z))+(4*3))");
+}
 } // namespace testparser
 } // namespace backend

@@ -52,9 +52,6 @@ struct EnumClassHash {
     }
 };
 
-std::string getTNodeTypeString(TNodeType t);
-std::string getOperatorStringFromTNodeType(TNodeType t);
-
 class TNode {
   public:
     // Required for accessing TNode keys in a hashmap
@@ -87,6 +84,10 @@ class TNode {
     static int getNewUniqueIdentifier();
     std::string toStringHelper(int tabs) const;
 };
+
+std::string getTNodeTypeString(TNodeType t);
+std::string getOperatorStringFromTNodeType(TNodeType t);
+std::string getExprString(const TNode& tNode);
 } // namespace backend
 
 namespace std {

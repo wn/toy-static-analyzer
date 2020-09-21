@@ -2,6 +2,7 @@
 
 #include "DesignExtractor.h"
 #include "Logger.h"
+#include "Parser.h"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -73,7 +74,7 @@ STATEMENT_NUMBER_LIST PKBImplementation::getStatementsThatHaveAncestors() const 
 STATEMENT_NUMBER_LIST PKBImplementation::getDescendants(STATEMENT_NUMBER statementNumber) const {
     std::unordered_set<int> visited;
     std::vector<int> toVisit = { statementNumber };
-    while (toVisit.size() > 0) {
+    while (!toVisit.empty()) {
         int visiting = toVisit.back();
         toVisit.pop_back();
         if (visited.find(visiting) != visited.end()) {
@@ -144,6 +145,46 @@ VARIABLE_NAME_LIST PKBImplementation::getVariablesModifiedBy(STATEMENT_NUMBER s)
 }
 VARIABLE_NAME_LIST PKBImplementation::getVariablesModifiedBySomeStatement() const {
     return VARIABLE_NAME_LIST();
+}
+
+STATEMENT_NUMBER_LIST
+PKBImplementation::getAllAssignmentStatementsThatMatch(const std::string& assignee,
+                                                       const std::string& pattern,
+                                                       bool isSubExpr) const {
+    if (pattern.empty()) {
+        // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/191):
+        // return modifies(_, v);
+        return STATEMENT_NUMBER_LIST();
+    }
+
+    // Preprocess pattern using the parser, to set precedence.
+    std::string searchPattern = Parser::parseExpr(pattern);
+    if (patternsMap.find(searchPattern) == patternsMap.end()) {
+        return {};
+    }
+    std::vector<std::tuple<std::string, STATEMENT_NUMBER, bool>> candidateResult = patternsMap.at(searchPattern);
+    if (!assignee.empty()) {
+        // remove results that have a different assignee
+        auto res = std::remove_if(candidateResult.begin(), candidateResult.end(),
+                                  [&](const std::tuple<std::string, STATEMENT_NUMBER, bool>& x) {
+                                      return std::get<0>(x) != assignee;
+                                  });
+        candidateResult.erase(res, candidateResult.end());
+    }
+    if (!isSubExpr) {
+        // Remove results that are sub expressions
+        auto res = std::remove_if(candidateResult.begin(), candidateResult.end(),
+                                  [&](const std::tuple<std::string, STATEMENT_NUMBER, bool>& x) {
+                                      return std::get<2>(x);
+                                  });
+        candidateResult.erase(res, candidateResult.end());
+    }
+
+    STATEMENT_NUMBER_LIST result;
+    for (auto tup : candidateResult) {
+        result.push_back(std::get<1>(tup));
+    }
+    return result;
 }
 
 } // namespace backend

@@ -174,8 +174,35 @@ int TNode::getNewUniqueIdentifier() {
     TNode::uniqueIdentifier += 1;
     return TNode::uniqueIdentifier;
 }
+
 std::ostream& operator<<(std::ostream& os, const TNode& t) {
     os << t.toString();
     return os;
+}
+
+// Precondition: tNode is an operator (+, -, *, /, %) or a const/var.
+std::string getExprString(const TNode& tNode) {
+    if (tNode.children.size() == 0) {
+        // By validity of AST, if `visiting` is leaf node, it must be a const or a var.
+        if (tNode.type == Constant) {
+            return tNode.constant;
+        } else if (tNode.type == TNodeType::Variable) {
+            return tNode.name;
+        } else {
+            throw std::runtime_error(
+            "getExprString: leaf node should only be a constant or a variable. Got: " +
+            getTNodeTypeString(tNode.type));
+        }
+    }
+    // there should be 2 children for any operator.
+    const TNode& lhs = tNode.children.at(0);
+    const TNode& rhs = tNode.children.at(1);
+
+    std::string lhsString = getExprString(lhs);
+    std::string rhsString = getExprString(rhs);
+    std::string opString = getOperatorStringFromTNodeType(tNode.type);
+
+    std::string result = "(" + lhsString + opString + rhsString + ")";
+    return result;
 }
 } // namespace backend

@@ -272,5 +272,11 @@ VARIABLE_NAME_LIST PKBMock::getVariablesModifiedBySomeStatement() const {
     return VARIABLE_NAME_LIST();
 }
 
+STATEMENT_NUMBER_LIST
+PKBMock::getAllAssignmentStatementsThatMatch(const std::string& assignee, const std::string& pattern, bool isSubExpr) const {
+    return STATEMENT_NUMBER_LIST();
+}
+
+
 } // namespace qetest
 } // namespace qpbackend

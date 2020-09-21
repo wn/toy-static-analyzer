@@ -1,6 +1,5 @@
 #pragma once
 
-#include <TNode.h>
 #include <string>
 #include <vector>
 
@@ -126,5 +125,15 @@ class PKB {
     // Statement
     virtual VARIABLE_NAME_LIST getVariablesModifiedBy(STATEMENT_NUMBER s) const = 0;
     virtual VARIABLE_NAME_LIST getVariablesModifiedBySomeStatement() const = 0;
+
+    /* -- Patterns -- */
+    // Get all statements that matches the input pattern.
+    // Example:
+    //     pattern a(_, "_1+1_") -> getAllAssignmentStatementsThatMatch("", "1+1", true);
+    //     pattern a("x", "_") -> getAllAssignmentStatementsThatMatch("x", "", true);
+    //     pattern a("x", "1+1") -> getAllAssignmentStatementsThatMatch("x", "1+1", false)
+    virtual STATEMENT_NUMBER_LIST getAllAssignmentStatementsThatMatch(const std::string& assignee,
+                                                                      const std::string& pattern,
+                                                                      bool isSubExpr) const = 0;
 };
 } // namespace backend

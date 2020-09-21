@@ -50,6 +50,10 @@ class PKBImplementation : virtual public backend::PKB {
     VARIABLE_NAME_LIST getVariablesModifiedBy(STATEMENT_NUMBER s) const override;
     VARIABLE_NAME_LIST getVariablesModifiedBySomeStatement() const override;
 
+    // Pattern
+    STATEMENT_NUMBER_LIST
+    getAllAssignmentStatementsThatMatch(const std::string& assignee, const std::string& pattern, bool isSubExpr) const override;
+
   private:
     // Follows helper:
     // for k, v in map, follow(v, k).
@@ -70,7 +74,7 @@ class PKBImplementation : virtual public backend::PKB {
     STATEMENT_NUMBER_LIST allStatementsThatHaveDescendants;
 
     // Pattern helper:
-    std::unordered_map<std::string, std::vector<std::tuple<std::string, int, bool>>> patternsMap;
+    std::unordered_map<std::string, std::vector<std::tuple<std::string, STATEMENT_NUMBER, bool>>> patternsMap;
 
     // Performance booster fields:
     std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash> tNodeTypeToTNodesMap;

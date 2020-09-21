@@ -294,21 +294,22 @@ State Parser::parseExpr(int tokenPos) {
     logLine("start parseExpr");
     State term = parseTerm(tokenPos);
     tokenPos = term.tokenPos;
-    lexer::TokenType nextType = peekToken(tokenPos).type;
-    // expr = term {+ expr}?
-    if (nextType == lexer::TokenType::PLUS || nextType == lexer::TokenType::MINUS) {
-        auto token = assertTokenAndPop(tokenPos, nextType);
-        State rhs = parseExpr(tokenPos);
+    if (haveTokensLeft(tokenPos)) {
+        lexer::TokenType nextType = peekToken(tokenPos).type;
+        // expr = term {+ expr}?
+        if (nextType == lexer::TokenType::PLUS || nextType == lexer::TokenType::MINUS) {
+            auto token = assertTokenAndPop(tokenPos, nextType);
+            State rhs = parseExpr(tokenPos);
 
-        TNode node(nextType == lexer::PLUS ? Plus : Minus);
-        node.addChild(term.tNode);
-        node.addChild(rhs.tNode);
-        logLine("success parseExpr");
-        return State(rhs.tokenPos, node);
-    } else {
-        logLine("success parseExpr");
-        return term;
+            TNode node(nextType == lexer::PLUS ? Plus : Minus);
+            node.addChild(term.tNode);
+            node.addChild(rhs.tNode);
+            logLine("success parseExpr");
+            return State(rhs.tokenPos, node);
+        }
     }
+    logLine("success parseExpr");
+    return term;
 }
 
 // term: term ‘*’ factor | term ‘/’ factor | term ‘%’ factor | factor
@@ -317,30 +318,31 @@ State Parser::parseTerm(int tokenPos) {
 
     State term = parseFactor(tokenPos);
     tokenPos = term.tokenPos;
-    lexer::TokenType nextType = peekToken(tokenPos).type;
-    // term = factor {* Term}?
-    if (nextType == lexer::TokenType::MULT || nextType == lexer::TokenType::DIV ||
-        nextType == lexer::TokenType::MOD) {
-        auto token = assertTokenAndPop(tokenPos, nextType);
-        State rhs = parseTerm(tokenPos);
+    if (haveTokensLeft(tokenPos)) {
+        lexer::TokenType nextType = peekToken(tokenPos).type;
+        // term = factor {* Term}?
+        if (nextType == lexer::TokenType::MULT || nextType == lexer::TokenType::DIV ||
+            nextType == lexer::TokenType::MOD) {
+            auto token = assertTokenAndPop(tokenPos, nextType);
+            State rhs = parseTerm(tokenPos);
 
-        TNodeType nodeType;
-        if (nextType == lexer::TokenType::MULT) {
-            nodeType = Multiply;
-        } else if (nextType == lexer::TokenType::DIV) {
-            nodeType = Divide;
-        } else {
-            nodeType = Modulo;
+            TNodeType nodeType;
+            if (nextType == lexer::TokenType::MULT) {
+                nodeType = Multiply;
+            } else if (nextType == lexer::TokenType::DIV) {
+                nodeType = Divide;
+            } else {
+                nodeType = Modulo;
+            }
+            TNode node(nodeType);
+            node.addChild(term.tNode);
+            node.addChild(rhs.tNode);
+            logLine("success parseTerm");
+            return State(rhs.tokenPos, node);
         }
-        TNode node(nodeType);
-        node.addChild(term.tNode);
-        node.addChild(rhs.tNode);
-        logLine("success parseTerm");
-        return State(rhs.tokenPos, node);
-    } else {
-        logLine("success parseTerm");
-        return term;
     }
+    logLine("success parseTerm");
+    return term;
 }
 
 // factor: var_name | const_value | ‘(’ expr ‘)’
@@ -443,5 +445,15 @@ State Parser::parseCall(int tokenPos) {
     callNode.addChild(varState.tNode);
     assertTokenAndPop(tokenPos, lexer::TokenType::SEMICOLON);
     return State(tokenPos, callNode);
+}
+
+std::string Parser::parseExpr(const std::string& exprStr) {
+    std::istringstream iStr(exprStr);
+    std::vector<lexer::Token> tokens = lexer::tokenize(iStr);
+
+    Parser parser(tokens);
+    // If there is any issue with parsing tokens, parseExpr will throw.
+    State s = parser.parseExpr(0);
+    return getExprString(s.tNode);
 }
 } // namespace backend
