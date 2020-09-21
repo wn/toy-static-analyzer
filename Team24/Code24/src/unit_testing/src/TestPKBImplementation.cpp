@@ -4,6 +4,7 @@
 #include "catch.hpp"
 
 #include <algorithm>
+#include <unordered_map>
 
 namespace backend {
 namespace testpkb {
@@ -164,6 +165,146 @@ TEST_CASE("Test getStatementsThatHaveDescendants") {
     std::sort(actual.begin(), actual.end());
 
     REQUIRE(expected == actual);
+}
+
+const char USES_PROGRAM[] = "procedure caller {"
+                            "while (y == 3) {" // 1
+                            "gucci = 1;" // 2
+                            "}"
+
+                            "if (!(armani == gucci)) then {" // 3
+                            "armani = 7;" // 4
+                            "} else {"
+                            "apple = 1;" // 5
+                            "call callee;" // 6
+                            "}"
+                            "some_var = 23 + another_var;" //  7
+                            "}"
+                            "procedure callee {"
+                            "microsoft = apple;" //  8
+                            "google = microsoft;" //  9
+                            "while(nerf == google) {" //  10
+                            "nerf = roblox;" // 11
+                            "}"
+                            "}";
+
+TEST_CASE("Test getStatementsThatUse") {
+    Parser parser = testhelpers::GenerateParserFromTokens(USES_PROGRAM);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+    std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_LIST> testCases = {
+        { "another_var", { 7 } },       { "apple", { 3, 6, 8 } }, { "armani", { 3 } },
+        { "google", { 3, 6, 10 } },     { "gucci", { 3 } },       { "nerf", { 3, 6, 10 } },
+        { "roblox", { 3, 6, 10, 11 } }, { "some_var", {} },       { "y", { 1 } }
+    };
+    for (auto& p : testCases) {
+        VARIABLE_NAME input = p.first;
+        STATEMENT_NUMBER_LIST expected = p.second;
+        STATEMENT_NUMBER_LIST actual = pkb.getStatementsThatUse(input);
+        REQUIRE(actual == expected);
+    }
+}
+
+TEST_CASE("Test getStatementsThatUseSomeVariable") {
+    Parser parser = testhelpers::GenerateParserFromTokens(USES_PROGRAM);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+    STATEMENT_NUMBER_LIST expected = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+    STATEMENT_NUMBER_LIST actual = pkb.getStatementsThatUseSomeVariable();
+    REQUIRE(actual == expected);
+}
+
+TEST_CASE("Test getProceduresThatUse") {
+    Parser parser = testhelpers::GenerateParserFromTokens(USES_PROGRAM);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+    std::unordered_map<VARIABLE_NAME, PROCEDURE_NAME_LIST> testCases = {
+        { "another_var", { "caller" } },
+        { "apple", { "callee", "caller" } },
+        { "armani", { "caller" } },
+        { "google", { "callee", "caller" } },
+        { "gucci", { "caller" } },
+        { "nerf", { "callee", "caller" } },
+        { "roblox", { "callee", "caller" } },
+        { "some_var", {} },
+        { "y", { "caller" } }
+    };
+    for (auto& p : testCases) {
+        VARIABLE_NAME input = p.first;
+        PROCEDURE_NAME_LIST expected = p.second;
+        PROCEDURE_NAME_LIST actual = pkb.getProceduresThatUse(input);
+        REQUIRE(actual == expected);
+    }
+}
+
+TEST_CASE("Test getProceduresThatUseSomeVariable") {
+    Parser parser = testhelpers::GenerateParserFromTokens(USES_PROGRAM);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+    PROCEDURE_NAME_LIST expected = { "callee", "caller" };
+    PROCEDURE_NAME_LIST actual = pkb.getProceduresThatUseSomeVariable();
+    REQUIRE(actual == expected);
+}
+
+TEST_CASE("Test getVariablesUsedIn Statement") {
+    Parser parser = testhelpers::GenerateParserFromTokens(USES_PROGRAM);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+    std::unordered_map<STATEMENT_NUMBER, VARIABLE_NAME_LIST> testCases = {
+        { 1, { "y" } },
+        { 2, {} },
+        { 3, { "apple", "armani", "google", "gucci", "microsoft", "nerf", "roblox" } },
+        { 4, {} },
+        { 5, {} },
+        { 6, { "apple", "google", "microsoft", "nerf", "roblox" } },
+        { 7, { "another_var" } },
+        { 8, { "apple" } },
+        { 9, { "microsoft" } },
+        { 10, { "google", "nerf", "roblox" } },
+        { 11, { "roblox" } }
+    };
+    for (auto& p : testCases) {
+        auto input = p.first;
+        auto expected = p.second;
+        auto actual = pkb.getVariablesUsedIn(input);
+        REQUIRE(actual == expected);
+    }
+}
+
+TEST_CASE("Test getVariablesUsedBySomeProcedure") {
+    Parser parser = testhelpers::GenerateParserFromTokens(USES_PROGRAM);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+    VARIABLE_NAME_LIST expected = { "another_var", "apple", "armani", "google", "gucci",
+                                    "microsoft",   "nerf",  "roblox", "y" };
+    VARIABLE_NAME_LIST actual = pkb.getVariablesUsedBySomeProcedure();
+    REQUIRE(actual == expected);
+}
+
+TEST_CASE("Test getVariablesUsedIn Procedure") {
+    Parser parser = testhelpers::GenerateParserFromTokens(USES_PROGRAM);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+    std::unordered_map<PROCEDURE_NAME, VARIABLE_NAME_LIST> testCases = {
+        { "caller", { "another_var", "apple", "armani", "google", "gucci", "microsoft", "nerf", "roblox", "y" } },
+        { "callee", { "apple", "google", "microsoft", "nerf", "roblox" } }
+    };
+    for (auto& p : testCases) {
+        auto input = p.first;
+        auto expected = p.second;
+        auto actual = pkb.getVariablesUsedIn(input);
+        REQUIRE(actual == expected);
+    }
+}
+
+TEST_CASE("Test getVariablesUsedBySomeStatement") {
+    Parser parser = testhelpers::GenerateParserFromTokens(USES_PROGRAM);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+    VARIABLE_NAME_LIST expected = { "another_var", "apple", "armani", "google", "gucci",
+                                    "microsoft",   "nerf",  "roblox", "y" };
+    VARIABLE_NAME_LIST actual = pkb.getVariablesUsedBySomeStatement();
+    REQUIRE(actual == expected);
 }
 
 TEST_CASE("Test getAllAssignmentStatementsThatMatch") {

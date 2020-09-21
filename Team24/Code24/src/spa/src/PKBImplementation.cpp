@@ -29,6 +29,46 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
 
     // Pattern
     patternsMap = extractor::getPatternsMap(tNodeTypeToTNodesMap[Assign], tNodeToStatementNumber);
+
+    allStatementsThatHaveAncestors = extractor::getKeysInMap<>(childrenParentRelation);
+    allStatementsThatHaveDescendants = extractor::getKeysInMap<>(parentChildrenRelation);
+
+    std::unordered_map<const TNode*, std::unordered_set<std::string>> usesMapping =
+    extractor::getUsesMapping(tNodeTypeToTNodesMap);
+
+    for (auto& p : usesMapping) {
+        const TNode* tNode = p.first;
+        std::unordered_set<VARIABLE_NAME> usedVariables = p.second;
+        // For Statements
+        if (tNode->isStatementNode()) {
+            STATEMENT_NUMBER statementNumber = tNodeToStatementNumber[tNode];
+            // Update statement -> variable
+            allStatementsThatUseSomeVariable.insert(statementNumber);
+            statementToUsedVariables[statementNumber] =
+            VARIABLE_NAME_SET(usedVariables.begin(), usedVariables.end());
+
+            // Update variable -> statement
+            for (const VARIABLE_NAME& variable : usedVariables) {
+                variableToStatementsThatUseIt[variable].insert(statementNumber);
+                allVariablesUsedBySomeStatement.insert(variable);
+            }
+            // For Procedures
+        } else if (tNode->type == TNodeType::Procedure) {
+            PROCEDURE_NAME procedureName = tNode->name;
+            // Update proc -> variable
+            allProceduresThatThatUseSomeVariable.insert(procedureName);
+            procedureToUsedVariables[procedureName] =
+            PROCEDURE_NAME_SET(usedVariables.begin(), usedVariables.end());
+            // Update variable -> proc
+            for (const VARIABLE_NAME& variable : usedVariables) {
+                variableToProceduresThatUseIt[variable].insert(procedureName);
+                allVariablesUsedBySomeProcedure.insert(variable);
+            }
+        } else {
+            throw std::runtime_error("Found a TNode " + tNode->toShortString() +
+                                     " that should not be Use-ing any variable");
+        }
+    }
 }
 
 STATEMENT_NUMBER_LIST PKBImplementation::getAllStatements() const {
@@ -97,28 +137,52 @@ STATEMENT_NUMBER_LIST PKBImplementation::getStatementsThatHaveDescendants() cons
 
 /** -------------------------- USES ---------------------------- **/
 STATEMENT_NUMBER_LIST PKBImplementation::getStatementsThatUse(VARIABLE_NAME v) const {
-    return STATEMENT_NUMBER_LIST();
+    auto it = variableToStatementsThatUseIt.find(v);
+    if (it == variableToStatementsThatUseIt.end()) {
+        return STATEMENT_NUMBER_LIST();
+    } else {
+        return STATEMENT_NUMBER_LIST(it->second.begin(), it->second.end());
+    }
 }
 STATEMENT_NUMBER_LIST PKBImplementation::getStatementsThatUseSomeVariable() const {
-    return STATEMENT_NUMBER_LIST();
+    return STATEMENT_NUMBER_LIST(allStatementsThatUseSomeVariable.begin(),
+                                 allStatementsThatUseSomeVariable.end());
 }
 PROCEDURE_NAME_LIST PKBImplementation::getProceduresThatUse(VARIABLE_NAME v) const {
-    return PROCEDURE_NAME_LIST();
+    auto it = variableToProceduresThatUseIt.find(v);
+    if (it == variableToProceduresThatUseIt.end()) {
+        return PROCEDURE_NAME_LIST();
+    } else {
+        return PROCEDURE_NAME_LIST(it->second.begin(), it->second.end());
+    }
 }
 PROCEDURE_NAME_LIST PKBImplementation::getProceduresThatUseSomeVariable() const {
-    return PROCEDURE_NAME_LIST();
+    return PROCEDURE_NAME_LIST(allProceduresThatThatUseSomeVariable.begin(),
+                               allProceduresThatThatUseSomeVariable.end());
 }
 VARIABLE_NAME_LIST PKBImplementation::getVariablesUsedIn(PROCEDURE_NAME p) const {
-    return VARIABLE_NAME_LIST();
+    auto it = procedureToUsedVariables.find(p);
+    if (it == procedureToUsedVariables.end()) {
+        return VARIABLE_NAME_LIST();
+    } else {
+        return VARIABLE_NAME_LIST(it->second.begin(), it->second.end());
+    }
 }
 VARIABLE_NAME_LIST PKBImplementation::getVariablesUsedBySomeProcedure() const {
-    return VARIABLE_NAME_LIST();
+    return VARIABLE_NAME_LIST(allVariablesUsedBySomeProcedure.begin(),
+                              allVariablesUsedBySomeProcedure.end());
 }
 VARIABLE_NAME_LIST PKBImplementation::getVariablesUsedIn(STATEMENT_NUMBER s) const {
-    return VARIABLE_NAME_LIST();
+    auto it = statementToUsedVariables.find(s);
+    if (it == statementToUsedVariables.end()) {
+        return VARIABLE_NAME_LIST();
+    } else {
+        return VARIABLE_NAME_LIST(it->second.begin(), it->second.end());
+    }
 }
 VARIABLE_NAME_LIST PKBImplementation::getVariablesUsedBySomeStatement() const {
-    return VARIABLE_NAME_LIST();
+    return VARIABLE_NAME_LIST(allVariablesUsedBySomeStatement.begin(),
+                              allVariablesUsedBySomeStatement.end());
 }
 
 /** -------------------------- MODIFIES ---------------------------- **/

@@ -3,6 +3,7 @@
 #include "PKB.h"
 #include "TNode.h"
 
+#include <set>
 #include <unordered_map>
 
 /**
@@ -13,6 +14,10 @@ typedef std::vector<std::string> VARIABLE_NAME_LIST;
 typedef int STATEMENT_NUMBER;
 typedef std::vector<STATEMENT_NUMBER> STATEMENT_NUMBER_LIST;
 **/
+
+typedef std::set<std::string> PROCEDURE_NAME_SET;
+typedef std::set<std::string> VARIABLE_NAME_SET;
+typedef std::set<STATEMENT_NUMBER> STATEMENT_NUMBER_SET;
 
 namespace backend {
 class PKBImplementation : virtual public backend::PKB {
@@ -72,6 +77,20 @@ class PKBImplementation : virtual public backend::PKB {
     // Stmt list is private to prevent modification.
     STATEMENT_NUMBER_LIST allStatementsThatHaveAncestors;
     STATEMENT_NUMBER_LIST allStatementsThatHaveDescendants;
+
+
+    // Uses helper:
+    std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_SET> variableToStatementsThatUseIt;
+    STATEMENT_NUMBER_SET allStatementsThatUseSomeVariable;
+
+    std::unordered_map<VARIABLE_NAME, PROCEDURE_NAME_SET> variableToProceduresThatUseIt;
+    PROCEDURE_NAME_SET allProceduresThatThatUseSomeVariable;
+
+    std::unordered_map<PROCEDURE_NAME, VARIABLE_NAME_SET> procedureToUsedVariables;
+    VARIABLE_NAME_SET allVariablesUsedBySomeProcedure;
+
+    std::unordered_map<STATEMENT_NUMBER, VARIABLE_NAME_SET> statementToUsedVariables;
+    VARIABLE_NAME_SET allVariablesUsedBySomeStatement;
 
     // Pattern helper:
     std::unordered_map<std::string, std::vector<std::tuple<std::string, STATEMENT_NUMBER, bool>>> patternsMap;
