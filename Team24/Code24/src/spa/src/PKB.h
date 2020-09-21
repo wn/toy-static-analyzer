@@ -5,9 +5,9 @@
 #include <vector>
 
 typedef std::string PROCEDURE_NAME;
-typedef std::vector<std::string> PROCEDURE_LIST;
+typedef std::vector<std::string> PROCEDURE_NAME_LIST;
 typedef std::string VARIABLE_NAME;
-typedef std::vector<std::string> VARIABLE_LIST;
+typedef std::vector<std::string> VARIABLE_NAME_LIST;
 typedef int STATEMENT_NUMBER;
 typedef std::vector<STATEMENT_NUMBER> STATEMENT_NUMBER_LIST;
 
@@ -24,10 +24,10 @@ class PKB {
     virtual STATEMENT_NUMBER_LIST getAllStatements() const = 0;
 
     // Retrieves all variables used in the SIMPLE program.
-    virtual VARIABLE_LIST getAllVariables() const = 0;
+    virtual VARIABLE_NAME_LIST getAllVariables() const = 0;
 
     // Retrieves all procedures defined in the SIMPLE program.
-    virtual PROCEDURE_LIST getAllProcedures() const = 0;
+    virtual PROCEDURE_NAME_LIST getAllProcedures() const = 0;
 
     /* -- FOLLOWS / FOLLOWS* -- */
 
@@ -89,16 +89,16 @@ class PKB {
     virtual STATEMENT_NUMBER_LIST getStatementsThatUseSomeVariable() const = 0;
 
     // Get all procedure that Uses v
-    virtual PROCEDURE_LIST getProceduresThatUse(STATEMENT_NUMBER s) const = 0;
-    virtual PROCEDURE_LIST getProceduresThatUseSomeVariable() const = 0;
+    virtual PROCEDURE_NAME_LIST getProceduresThatUse(VARIABLE_NAME v) const = 0;
+    virtual PROCEDURE_NAME_LIST getProceduresThatUseSomeVariable() const = 0;
 
     // Get all variables "v" such that Procedure p Uses v
-    virtual VARIABLE_LIST getVariablesUsedIn(PROCEDURE_NAME p) const = 0;
-    virtual VARIABLE_LIST getVariablesUsedBySomeProcedure() const = 0;
+    virtual VARIABLE_NAME_LIST getVariablesUsedIn(PROCEDURE_NAME p) const = 0;
+    virtual VARIABLE_NAME_LIST getVariablesUsedBySomeProcedure() const = 0;
 
     // Get all variables "v" such that Statement s Uses v
-    virtual VARIABLE_LIST getVariablesUsedIn(STATEMENT_NUMBER s) const = 0;
-    virtual VARIABLE_LIST getVariablesUsedBySomeStatement() const = 0;
+    virtual VARIABLE_NAME_LIST getVariablesUsedIn(STATEMENT_NUMBER s) const = 0;
+    virtual VARIABLE_NAME_LIST getVariablesUsedBySomeStatement() const = 0;
 
     /* -- MODIFIES -- */
     // Get all statements that modify v
@@ -116,15 +116,15 @@ class PKB {
     virtual STATEMENT_NUMBER_LIST getStatementsThatModifySomeVariable() const = 0;
 
 
-    virtual PROCEDURE_LIST getProceduresThatModify(VARIABLE_NAME v) const = 0;
-    virtual PROCEDURE_LIST getProceduresThatModifySomeVariable() const = 0;
+    virtual PROCEDURE_NAME_LIST getProceduresThatModify(VARIABLE_NAME v) const = 0;
+    virtual PROCEDURE_NAME_LIST getProceduresThatModifySomeVariable() const = 0;
 
     // Procedure
-    virtual VARIABLE_LIST getVariablesModifiedBy(PROCEDURE_NAME p) const = 0;
-    virtual VARIABLE_LIST getVariablesModifiedBySomeProcedure() const = 0;
+    virtual VARIABLE_NAME_LIST getVariablesModifiedBy(PROCEDURE_NAME p) const = 0;
+    virtual VARIABLE_NAME_LIST getVariablesModifiedBySomeProcedure() const = 0;
 
     // Statement
-    virtual VARIABLE_LIST getVariablesModifiedBy(STATEMENT_NUMBER s) const = 0;
-    virtual VARIABLE_LIST getVariablesModifiedBySomeStatement() const = 0;
+    virtual VARIABLE_NAME_LIST getVariablesModifiedBy(STATEMENT_NUMBER s) const = 0;
+    virtual VARIABLE_NAME_LIST getVariablesModifiedBySomeStatement() const = 0;
 };
 } // namespace backend

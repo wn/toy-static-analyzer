@@ -12,7 +12,7 @@ STATEMENT_NUMBER_LIST PKBMock::getAllStatements() const {
     return statements;
 }
 
-VARIABLE_LIST PKBMock::getAllVariables() const {
+VARIABLE_NAME_LIST PKBMock::getAllVariables() const {
     std::vector<std::string> variables;
     switch (test_idx) {
     case 0:
@@ -21,7 +21,7 @@ VARIABLE_LIST PKBMock::getAllVariables() const {
     return variables;
 }
 
-PROCEDURE_LIST PKBMock::getAllProcedures() const {
+PROCEDURE_NAME_LIST PKBMock::getAllProcedures() const {
     std::vector<std::string> procedures;
     switch (test_idx) {
     case 0:
@@ -128,23 +128,23 @@ STATEMENT_NUMBER_LIST PKBMock::getStatementsThatUse(VARIABLE_NAME v) const {
 STATEMENT_NUMBER_LIST PKBMock::getStatementsThatUseSomeVariable() const {
     return STATEMENT_NUMBER_LIST();
 }
-PROCEDURE_LIST PKBMock::getProceduresThatUse(STATEMENT_NUMBER s) const {
-    return PROCEDURE_LIST();
+PROCEDURE_NAME_LIST PKBMock::getProceduresThatUse(VARIABLE_NAME v) const {
+    return PROCEDURE_NAME_LIST();
 }
-PROCEDURE_LIST PKBMock::getProceduresThatUseSomeVariable() const {
-    return PROCEDURE_LIST();
+PROCEDURE_NAME_LIST PKBMock::getProceduresThatUseSomeVariable() const {
+    return PROCEDURE_NAME_LIST();
 }
-VARIABLE_LIST PKBMock::getVariablesUsedIn(PROCEDURE_NAME p) const {
-    return VARIABLE_LIST();
+VARIABLE_NAME_LIST PKBMock::getVariablesUsedIn(PROCEDURE_NAME p) const {
+    return VARIABLE_NAME_LIST();
 }
-VARIABLE_LIST PKBMock::getVariablesUsedBySomeProcedure() const {
-    return VARIABLE_LIST();
+VARIABLE_NAME_LIST PKBMock::getVariablesUsedBySomeProcedure() const {
+    return VARIABLE_NAME_LIST();
 }
-VARIABLE_LIST PKBMock::getVariablesUsedIn(STATEMENT_NUMBER s) const {
-    return VARIABLE_LIST();
+VARIABLE_NAME_LIST PKBMock::getVariablesUsedIn(STATEMENT_NUMBER s) const {
+    return VARIABLE_NAME_LIST();
 }
-VARIABLE_LIST PKBMock::getVariablesUsedBySomeStatement() const {
-    return VARIABLE_LIST();
+VARIABLE_NAME_LIST PKBMock::getVariablesUsedBySomeStatement() const {
+    return VARIABLE_NAME_LIST();
 }
 
 STATEMENT_NUMBER_LIST PKBMock::getStatementsThatModify(VARIABLE_NAME v) const {
@@ -153,23 +153,23 @@ STATEMENT_NUMBER_LIST PKBMock::getStatementsThatModify(VARIABLE_NAME v) const {
 STATEMENT_NUMBER_LIST PKBMock::getStatementsThatModifySomeVariable() const {
     return STATEMENT_NUMBER_LIST();
 }
-PROCEDURE_LIST PKBMock::getProceduresThatModify(VARIABLE_NAME v) const {
-    return PROCEDURE_LIST();
+PROCEDURE_NAME_LIST PKBMock::getProceduresThatModify(VARIABLE_NAME v) const {
+    return PROCEDURE_NAME_LIST();
 }
-PROCEDURE_LIST PKBMock::getProceduresThatModifySomeVariable() const {
-    return PROCEDURE_LIST();
+PROCEDURE_NAME_LIST PKBMock::getProceduresThatModifySomeVariable() const {
+    return PROCEDURE_NAME_LIST();
 }
-VARIABLE_LIST PKBMock::getVariablesModifiedBy(PROCEDURE_NAME p) const {
-    return VARIABLE_LIST();
+VARIABLE_NAME_LIST PKBMock::getVariablesModifiedBy(PROCEDURE_NAME p) const {
+    return VARIABLE_NAME_LIST();
 }
-VARIABLE_LIST PKBMock::getVariablesModifiedBySomeProcedure() const {
-    return VARIABLE_LIST();
+VARIABLE_NAME_LIST PKBMock::getVariablesModifiedBySomeProcedure() const {
+    return VARIABLE_NAME_LIST();
 }
-VARIABLE_LIST PKBMock::getVariablesModifiedBy(STATEMENT_NUMBER s) const {
-    return VARIABLE_LIST();
+VARIABLE_NAME_LIST PKBMock::getVariablesModifiedBy(STATEMENT_NUMBER s) const {
+    return VARIABLE_NAME_LIST();
 }
-VARIABLE_LIST PKBMock::getVariablesModifiedBySomeStatement() const {
-    return VARIABLE_LIST();
+VARIABLE_NAME_LIST PKBMock::getVariablesModifiedBySomeStatement() const {
+    return VARIABLE_NAME_LIST();
 }
 
 } // namespace qetest

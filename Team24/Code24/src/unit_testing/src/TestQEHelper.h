@@ -21,8 +21,8 @@ class PKBMock : public backend::PKB {
     STATEMENT_NUMBER_LIST getPostFollows(STATEMENT_NUMBER s) const;
 
     STATEMENT_NUMBER_LIST getAllStatements() const;
-    VARIABLE_LIST getAllVariables() const;
-    PROCEDURE_LIST getAllProcedures() const;
+    VARIABLE_NAME_LIST getAllVariables() const;
+    PROCEDURE_NAME_LIST getAllProcedures() const;
 
     // FOLLOWS
     STATEMENT_NUMBER_LIST getStatementsFollowedBy(STATEMENT_NUMBER s) const;
@@ -38,21 +38,21 @@ class PKBMock : public backend::PKB {
 
     STATEMENT_NUMBER_LIST getStatementsThatUse(VARIABLE_NAME v) const;
     STATEMENT_NUMBER_LIST getStatementsThatUseSomeVariable() const;
-    PROCEDURE_LIST getProceduresThatUse(STATEMENT_NUMBER s) const;
-    PROCEDURE_LIST getProceduresThatUseSomeVariable() const;
-    VARIABLE_LIST getVariablesUsedIn(PROCEDURE_NAME p) const;
-    VARIABLE_LIST getVariablesUsedBySomeProcedure() const;
-    VARIABLE_LIST getVariablesUsedIn(STATEMENT_NUMBER s) const;
-    VARIABLE_LIST getVariablesUsedBySomeStatement() const;
+    PROCEDURE_NAME_LIST getProceduresThatUse(VARIABLE_NAME v) const;
+    PROCEDURE_NAME_LIST getProceduresThatUseSomeVariable() const;
+    VARIABLE_NAME_LIST getVariablesUsedIn(PROCEDURE_NAME p) const;
+    VARIABLE_NAME_LIST getVariablesUsedBySomeProcedure() const;
+    VARIABLE_NAME_LIST getVariablesUsedIn(STATEMENT_NUMBER s) const;
+    VARIABLE_NAME_LIST getVariablesUsedBySomeStatement() const;
 
     STATEMENT_NUMBER_LIST getStatementsThatModify(VARIABLE_NAME v) const;
     STATEMENT_NUMBER_LIST getStatementsThatModifySomeVariable() const;
-    PROCEDURE_LIST getProceduresThatModify(VARIABLE_NAME v) const;
-    PROCEDURE_LIST getProceduresThatModifySomeVariable() const;
-    VARIABLE_LIST getVariablesModifiedBy(PROCEDURE_NAME p) const;
-    VARIABLE_LIST getVariablesModifiedBySomeProcedure() const;
-    VARIABLE_LIST getVariablesModifiedBy(STATEMENT_NUMBER s) const;
-    VARIABLE_LIST getVariablesModifiedBySomeStatement() const;
+    PROCEDURE_NAME_LIST getProceduresThatModify(VARIABLE_NAME v) const;
+    PROCEDURE_NAME_LIST getProceduresThatModifySomeVariable() const;
+    VARIABLE_NAME_LIST getVariablesModifiedBy(PROCEDURE_NAME p) const;
+    VARIABLE_NAME_LIST getVariablesModifiedBySomeProcedure() const;
+    VARIABLE_NAME_LIST getVariablesModifiedBy(STATEMENT_NUMBER s) const;
+    VARIABLE_NAME_LIST getVariablesModifiedBySomeStatement() const;
 };
 } // namespace qetest
 } // namespace qpbackend

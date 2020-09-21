@@ -28,12 +28,12 @@ STATEMENT_NUMBER_LIST PKBImplementation::getAllStatements() const {
     return STATEMENT_NUMBER_LIST();
 }
 
-VARIABLE_LIST PKBImplementation::getAllVariables() const {
-    return VARIABLE_LIST();
+VARIABLE_NAME_LIST PKBImplementation::getAllVariables() const {
+    return VARIABLE_NAME_LIST();
 }
 
-PROCEDURE_LIST PKBImplementation::getAllProcedures() const {
-    return PROCEDURE_LIST();
+PROCEDURE_NAME_LIST PKBImplementation::getAllProcedures() const {
+    return PROCEDURE_NAME_LIST();
 }
 
 /** -------------------------- FOLLOWS ---------------------------- **/
@@ -95,23 +95,23 @@ STATEMENT_NUMBER_LIST PKBImplementation::getStatementsThatUse(VARIABLE_NAME v) c
 STATEMENT_NUMBER_LIST PKBImplementation::getStatementsThatUseSomeVariable() const {
     return STATEMENT_NUMBER_LIST();
 }
-PROCEDURE_LIST PKBImplementation::getProceduresThatUse(STATEMENT_NUMBER s) const {
-    return PROCEDURE_LIST();
+PROCEDURE_NAME_LIST PKBImplementation::getProceduresThatUse(VARIABLE_NAME v) const {
+    return PROCEDURE_NAME_LIST();
 }
-PROCEDURE_LIST PKBImplementation::getProceduresThatUseSomeVariable() const {
-    return PROCEDURE_LIST();
+PROCEDURE_NAME_LIST PKBImplementation::getProceduresThatUseSomeVariable() const {
+    return PROCEDURE_NAME_LIST();
 }
-VARIABLE_LIST PKBImplementation::getVariablesUsedIn(PROCEDURE_NAME p) const {
-    return VARIABLE_LIST();
+VARIABLE_NAME_LIST PKBImplementation::getVariablesUsedIn(PROCEDURE_NAME p) const {
+    return VARIABLE_NAME_LIST();
 }
-VARIABLE_LIST PKBImplementation::getVariablesUsedBySomeProcedure() const {
-    return VARIABLE_LIST();
+VARIABLE_NAME_LIST PKBImplementation::getVariablesUsedBySomeProcedure() const {
+    return VARIABLE_NAME_LIST();
 }
-VARIABLE_LIST PKBImplementation::getVariablesUsedIn(STATEMENT_NUMBER s) const {
-    return VARIABLE_LIST();
+VARIABLE_NAME_LIST PKBImplementation::getVariablesUsedIn(STATEMENT_NUMBER s) const {
+    return VARIABLE_NAME_LIST();
 }
-VARIABLE_LIST PKBImplementation::getVariablesUsedBySomeStatement() const {
-    return VARIABLE_LIST();
+VARIABLE_NAME_LIST PKBImplementation::getVariablesUsedBySomeStatement() const {
+    return VARIABLE_NAME_LIST();
 }
 
 /** -------------------------- MODIFIES ---------------------------- **/
@@ -121,23 +121,23 @@ STATEMENT_NUMBER_LIST PKBImplementation::getStatementsThatModify(VARIABLE_NAME v
 STATEMENT_NUMBER_LIST PKBImplementation::getStatementsThatModifySomeVariable() const {
     return STATEMENT_NUMBER_LIST();
 }
-PROCEDURE_LIST PKBImplementation::getProceduresThatModify(VARIABLE_NAME v) const {
-    return PROCEDURE_LIST();
+PROCEDURE_NAME_LIST PKBImplementation::getProceduresThatModify(VARIABLE_NAME v) const {
+    return PROCEDURE_NAME_LIST();
 }
-PROCEDURE_LIST PKBImplementation::getProceduresThatModifySomeVariable() const {
-    return PROCEDURE_LIST();
+PROCEDURE_NAME_LIST PKBImplementation::getProceduresThatModifySomeVariable() const {
+    return PROCEDURE_NAME_LIST();
 }
-VARIABLE_LIST PKBImplementation::getVariablesModifiedBy(PROCEDURE_NAME p) const {
-    return VARIABLE_LIST();
+VARIABLE_NAME_LIST PKBImplementation::getVariablesModifiedBy(PROCEDURE_NAME p) const {
+    return VARIABLE_NAME_LIST();
 }
-VARIABLE_LIST PKBImplementation::getVariablesModifiedBySomeProcedure() const {
-    return VARIABLE_LIST();
+VARIABLE_NAME_LIST PKBImplementation::getVariablesModifiedBySomeProcedure() const {
+    return VARIABLE_NAME_LIST();
 }
-VARIABLE_LIST PKBImplementation::getVariablesModifiedBy(STATEMENT_NUMBER s) const {
-    return VARIABLE_LIST();
+VARIABLE_NAME_LIST PKBImplementation::getVariablesModifiedBy(STATEMENT_NUMBER s) const {
+    return VARIABLE_NAME_LIST();
 }
-VARIABLE_LIST PKBImplementation::getVariablesModifiedBySomeStatement() const {
-    return VARIABLE_LIST();
+VARIABLE_NAME_LIST PKBImplementation::getVariablesModifiedBySomeStatement() const {
+    return VARIABLE_NAME_LIST();
 }
 
 } // namespace backend
