@@ -35,6 +35,24 @@ class PKBMock : public backend::PKB {
     STATEMENT_NUMBER_LIST getStatementsThatHaveAncestors() const;
     STATEMENT_NUMBER_LIST getDescendants(STATEMENT_NUMBER statementNumber) const;
     STATEMENT_NUMBER_LIST getStatementsThatHaveDescendants() const;
+
+    STATEMENT_NUMBER_LIST getStatementsThatUse(VARIABLE_NAME v) const;
+    STATEMENT_NUMBER_LIST getStatementsThatUseSomeVariable() const;
+    PROCEDURE_LIST getProceduresThatUse(STATEMENT_NUMBER s) const;
+    PROCEDURE_LIST getProceduresThatUseSomeVariable() const;
+    VARIABLE_LIST getVariablesUsedIn(PROCEDURE_NAME p) const;
+    VARIABLE_LIST getVariablesUsedBySomeProcedure() const;
+    VARIABLE_LIST getVariablesUsedIn(STATEMENT_NUMBER s) const;
+    VARIABLE_LIST getVariablesUsedBySomeStatement() const;
+
+    STATEMENT_NUMBER_LIST getStatementsThatModify(VARIABLE_NAME v) const;
+    STATEMENT_NUMBER_LIST getStatementsThatModifySomeVariable() const;
+    PROCEDURE_LIST getProceduresThatModify(VARIABLE_NAME v) const;
+    PROCEDURE_LIST getProceduresThatModifySomeVariable() const;
+    VARIABLE_LIST getVariablesModifiedBy(PROCEDURE_NAME p) const;
+    VARIABLE_LIST getVariablesModifiedBySomeProcedure() const;
+    VARIABLE_LIST getVariablesModifiedBy(STATEMENT_NUMBER s) const;
+    VARIABLE_LIST getVariablesModifiedBySomeStatement() const;
 };
 } // namespace qetest
 } // namespace qpbackend

@@ -122,6 +122,55 @@ STATEMENT_NUMBER_LIST PKBMock::getStatementsThatHaveDescendants() const {
     return stmts;
 }
 
+STATEMENT_NUMBER_LIST PKBMock::getStatementsThatUse(VARIABLE_NAME v) const {
+    return STATEMENT_NUMBER_LIST();
+}
+STATEMENT_NUMBER_LIST PKBMock::getStatementsThatUseSomeVariable() const {
+    return STATEMENT_NUMBER_LIST();
+}
+PROCEDURE_LIST PKBMock::getProceduresThatUse(STATEMENT_NUMBER s) const {
+    return PROCEDURE_LIST();
+}
+PROCEDURE_LIST PKBMock::getProceduresThatUseSomeVariable() const {
+    return PROCEDURE_LIST();
+}
+VARIABLE_LIST PKBMock::getVariablesUsedIn(PROCEDURE_NAME p) const {
+    return VARIABLE_LIST();
+}
+VARIABLE_LIST PKBMock::getVariablesUsedBySomeProcedure() const {
+    return VARIABLE_LIST();
+}
+VARIABLE_LIST PKBMock::getVariablesUsedIn(STATEMENT_NUMBER s) const {
+    return VARIABLE_LIST();
+}
+VARIABLE_LIST PKBMock::getVariablesUsedBySomeStatement() const {
+    return VARIABLE_LIST();
+}
+
+STATEMENT_NUMBER_LIST PKBMock::getStatementsThatModify(VARIABLE_NAME v) const {
+    return STATEMENT_NUMBER_LIST();
+}
+STATEMENT_NUMBER_LIST PKBMock::getStatementsThatModifySomeVariable() const {
+    return STATEMENT_NUMBER_LIST();
+}
+PROCEDURE_LIST PKBMock::getProceduresThatModify(VARIABLE_NAME v) const {
+    return PROCEDURE_LIST();
+}
+PROCEDURE_LIST PKBMock::getProceduresThatModifySomeVariable() const {
+    return PROCEDURE_LIST();
+}
+VARIABLE_LIST PKBMock::getVariablesModifiedBy(PROCEDURE_NAME p) const {
+    return VARIABLE_LIST();
+}
+VARIABLE_LIST PKBMock::getVariablesModifiedBySomeProcedure() const {
+    return VARIABLE_LIST();
+}
+VARIABLE_LIST PKBMock::getVariablesModifiedBy(STATEMENT_NUMBER s) const {
+    return VARIABLE_LIST();
+}
+VARIABLE_LIST PKBMock::getVariablesModifiedBySomeStatement() const {
+    return VARIABLE_LIST();
+}
 
 } // namespace qetest
 } // namespace qpbackend

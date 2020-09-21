@@ -4,9 +4,9 @@
 #include <string>
 #include <vector>
 
-typedef std::string PROCEDURE;
+typedef std::string PROCEDURE_NAME;
 typedef std::vector<std::string> PROCEDURE_LIST;
-typedef std::string VARIABLE;
+typedef std::string VARIABLE_NAME;
 typedef std::vector<std::string> VARIABLE_LIST;
 typedef int STATEMENT_NUMBER;
 typedef std::vector<STATEMENT_NUMBER> STATEMENT_NUMBER_LIST;
@@ -19,7 +19,7 @@ class PKB {
     // Retrieves all statements in the SIMPLE program.
     // Prefer:
     // - STATEMENT_NUMBER_LIST getAllAssignmentStatementsThatMatch(PATTERN p);
-    // - STATEMENT_NUMBER_LIST getAllAssignmentStatementsFor(VARIABLE v);
+    // - STATEMENT_NUMBER_LIST getAllAssignmentStatementsFor(VARIABLE_NAME v);
     // when pattern matching as they are optimized.
     virtual STATEMENT_NUMBER_LIST getAllStatements() const = 0;
 
@@ -72,5 +72,59 @@ class PKB {
     // of the statement at this statement number.
     virtual STATEMENT_NUMBER_LIST getDescendants(STATEMENT_NUMBER statementNumber) const = 0;
     virtual STATEMENT_NUMBER_LIST getStatementsThatHaveDescendants() const = 0;
+
+    /* -- USES -- */
+    // Get all statements that Uses v
+    // Example query:
+    //     variable v; select v such that uses(_,v);
+    // Possible query plan:
+    //     allVariables = getAllVariables();
+    //     return [v for v in allVariables if len(getStatementsThatUse(v)) > 0]
+    //
+    // Example query:
+    //     stmt s; select s such that uses(s,"v");
+    // Possible query plan:
+    //     return getStatementsThatUse("v")
+    virtual STATEMENT_NUMBER_LIST getStatementsThatUse(VARIABLE_NAME v) const = 0;
+    virtual STATEMENT_NUMBER_LIST getStatementsThatUseSomeVariable() const = 0;
+
+    // Get all procedure that Uses v
+    virtual PROCEDURE_LIST getProceduresThatUse(STATEMENT_NUMBER s) const = 0;
+    virtual PROCEDURE_LIST getProceduresThatUseSomeVariable() const = 0;
+
+    // Get all variables "v" such that Procedure p Uses v
+    virtual VARIABLE_LIST getVariablesUsedIn(PROCEDURE_NAME p) const = 0;
+    virtual VARIABLE_LIST getVariablesUsedBySomeProcedure() const = 0;
+
+    // Get all variables "v" such that Statement s Uses v
+    virtual VARIABLE_LIST getVariablesUsedIn(STATEMENT_NUMBER s) const = 0;
+    virtual VARIABLE_LIST getVariablesUsedBySomeStatement() const = 0;
+
+    /* -- MODIFIES -- */
+    // Get all statements that modify v
+    // Example query:
+    //     variable v; select v such that Modify();
+    // Possible query plan:
+    //     allVariables = getAllVariables();
+    //     return [v for v in allVariables if len(getStatementsThatUse(v)) > 0]
+    //
+    // Example query:
+    //     stmt s; select s such that uses(s,"v");
+    // Possible query plan:
+    //     return getStatementsThatUse("v")
+    virtual STATEMENT_NUMBER_LIST getStatementsThatModify(VARIABLE_NAME v) const = 0;
+    virtual STATEMENT_NUMBER_LIST getStatementsThatModifySomeVariable() const = 0;
+
+
+    virtual PROCEDURE_LIST getProceduresThatModify(VARIABLE_NAME v) const = 0;
+    virtual PROCEDURE_LIST getProceduresThatModifySomeVariable() const = 0;
+
+    // Procedure
+    virtual VARIABLE_LIST getVariablesModifiedBy(PROCEDURE_NAME p) const = 0;
+    virtual VARIABLE_LIST getVariablesModifiedBySomeProcedure() const = 0;
+
+    // Statement
+    virtual VARIABLE_LIST getVariablesModifiedBy(STATEMENT_NUMBER s) const = 0;
+    virtual VARIABLE_LIST getVariablesModifiedBySomeStatement() const = 0;
 };
 } // namespace backend
