@@ -223,7 +223,7 @@ PKBImplementation::getAllAssignmentStatementsThatMatch(const std::string& assign
 
     // Preprocess pattern using the parser, to set precedence.
     std::string searchPattern = Parser::parseExpr(pattern);
-    if (patternsMap.find(searchPattern) == patternsMap.end()) {
+    if (searchPattern.empty() || patternsMap.find(searchPattern) == patternsMap.end()) {
         return {};
     }
     std::vector<std::tuple<std::string, STATEMENT_NUMBER, bool>> candidateResult = patternsMap.at(searchPattern);

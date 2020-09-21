@@ -391,6 +391,15 @@ TEST_CASE("Test getAllAssignmentStatementsThatMatch multiple assign") {
     std::vector<int> expected9 = {};
     REQUIRE(actual9 == expected9);
 
+    std::vector<int> actual10 =
+    pkb.getAllAssignmentStatementsThatMatch("x", "impossible_string!@#$%^&*(){}|\"[0987654321", false);
+    std::vector<int> expected10 = {};
+    REQUIRE(actual10 == expected10);
+
+    std::vector<int> actual11 = pkb.getAllAssignmentStatementsThatMatch("x", "1+1", false);
+    std::vector<int> expected11 = {};
+    REQUIRE(actual11 == expected11);
+
     // TODO(remo5000): https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/192
     //
     // Test modify-like pattern: getAllAssignmentStatementsThatMatch("x", "", true)

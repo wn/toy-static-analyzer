@@ -447,13 +447,23 @@ State Parser::parseCall(int tokenPos) {
     return State(tokenPos, callNode);
 }
 
+/**
+ *
+ * @param exprStr
+ * @return the expr string with precedence bracket. Return empty string if there is any error.
+ */
 std::string Parser::parseExpr(const std::string& exprStr) {
-    std::istringstream iStr(exprStr);
-    std::vector<lexer::Token> tokens = lexer::tokenize(iStr);
+    try {
+        std::istringstream iStr(exprStr);
+        // If exprStr is invalid, tokenize will throw.
+        std::vector<lexer::Token> tokens = lexer::tokenize(iStr);
 
-    Parser parser(tokens);
-    // If there is any issue with parsing tokens, parseExpr will throw.
-    State s = parser.parseExpr(0);
-    return getExprString(s.tNode);
+        Parser parser(tokens);
+        // If there is any issue with parsing tokens, parseExpr will throw.
+        State s = parser.parseExpr(0);
+        return getExprString(s.tNode);
+    } catch (const std::exception& e) {
+        return "";
+    }
 }
 } // namespace backend
