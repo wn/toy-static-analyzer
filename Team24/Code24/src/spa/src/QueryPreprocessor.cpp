@@ -4,6 +4,7 @@
 #include "Logger.h"
 #include "Query.h"
 
+#include <sstream>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -18,7 +19,10 @@ namespace querypreprocessor {
 // Declarations.
 
 class State;
+// <state of parser, isValidState>
 typedef std::pair<State, bool> STATESTATUSPAIR;
+// <state of parser, string representation of parsed token(s), isValidState>
+typedef std::tuple<State, std::string, bool> STATE_RESULT_STATUS_TRIPLE;
 void throwIfTokenDoesNotHaveExpectedTokenType(backend::lexer::TokenType expectedTokenType, const TOKEN& token);
 static qpbackend::EntityType getEntityTypeFromToken(const TOKEN& token);
 State parseSelect(State state);
@@ -33,6 +37,7 @@ STATESTATUSPAIR parseRelationStmtStmt(State state, qpbackend::RelationType relat
 STATESTATUSPAIR parseRelationStmtEntOrEntEnt(State state, qpbackend::RelationType relationType);
 std::string getStmtRefStringValue(const TOKEN& token);
 bool isStmtRefToken(const TOKEN& token);
+STATE_RESULT_STATUS_TRIPLE parseEntRef(State state);
 // Declarations for patten clauses
 STATESTATUSPAIR parseSinglePatternClause(State state);
 
@@ -63,6 +68,14 @@ class State {
     qpbackend::Query query;
     TOKENS tokens;
     unsigned int tokenPos{ 0 };
+    void logTokenAt(unsigned int tokenPos, std::string methodName) {
+        std::stringstream s;
+        const TOKEN& token = tokens.at(tokenPos);
+        s << kQppLogInfoPrefix << methodName << " Token Position: " << std::to_string(tokenPos)
+          << "| value:" << token.nameValue << token.integerValue
+          << " type:" << backend::lexer::prettyPrintType(token.type);
+        logLine(s.str());
+    }
 
   public:
     State() = default;
@@ -83,6 +96,7 @@ class State {
             throw std::runtime_error(kQppErrorPrefix +
                                      "State::peekToken: There are no more tokens left to peek.");
         }
+        logTokenAt(tokenPos, "peekToken");
         return tokens[tokenPos];
     }
 
@@ -93,10 +107,7 @@ class State {
                                                        "but has run out of tokens to parse.");
         }
         TOKEN tokenToReturn = tokens[tokenPos];
-        // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/185):
-        // Some tokens don't have name value or integer values. Handle pretty printing them.
-        logLine(kQppLogInfoPrefix + "Token position: " + std::to_string(tokenPos) + "|" +
-                tokenToReturn.nameValue + tokenToReturn.integerValue);
+        logTokenAt(tokenPos, "popToken");
         tokenPos += 1;
         return tokenToReturn;
     }
@@ -292,7 +303,6 @@ STATESTATUSPAIR parseSingleSuchThatClause(State state) {
  * relRef : Follows | FollowsT | Parent | ParentT | UsesS | UsesP | ModifiesS | ModifiesP
  * @return <state of parser, isStateInvalid>
  */
-// TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/72): parse suchthat-cl
 STATESTATUSPAIR parseRelRef(State state) {
     std::stringstream stringstream;
     TOKEN keywordToken = state.popUntilNonWhitespaceToken();
@@ -410,8 +420,108 @@ bool isStmtRefToken(const TOKEN& token) {
  * @return <state of parser, isStateInvalid>
  */
 STATESTATUSPAIR parseRelationStmtEntOrEntEnt(State state, qpbackend::RelationType relationType) {
-    throw std::logic_error("Function not implemented yet.");
+    // Mutable variables in function.
+    std::string stmtOrEntString;
+    bool isValidState = true;
+    std::string entString;
+    // state argument is also mutable.
+
+    TOKEN lParenToken = state.popUntilNonWhitespaceToken();
+    if (lParenToken.type != backend::lexer::LPAREN || !state.hasTokensLeftToParse()) {
+        logLine(kQppLogWarnPrefix +
+                "parseRelationStmtEntOrEntEnt: Expected more tokens but finished "
+                "consuming tokens or LPAREN token not found. Obtained " +
+                backend::lexer::prettyPrintType(lParenToken.type));
+        return STATESTATUSPAIR(state, false);
+    }
+
+    // Check the current token to see if it should be handled as an EntRef or StmtRef
+    state.popIfCurrentTokenIsWhitespaceToken();
+    if (!state.hasTokensLeftToParse()) {
+        logLine(kQppLogWarnPrefix +
+                "parseRelationStmtEntOrEntEnt: Expected more tokens but finished consuming tokens");
+        return STATESTATUSPAIR(state, false);
+    }
+    TOKEN stmtOrEntToken = state.peekToken();
+    if (isStmtRefToken(stmtOrEntToken)) {
+        state.popToken();
+        stmtOrEntString = getStmtRefStringValue(stmtOrEntToken);
+    } else {
+        std::tie(state, stmtOrEntString, isValidState) = parseEntRef(state);
+    }
+    if (!isValidState || !state.hasTokensLeftToParse()) {
+        logLine(kQppLogWarnPrefix +
+                "parseRelationStmtEntOrEntEnt: Expected more tokens but finished "
+                "consuming tokens or STMT | ENT not found. Obtained " +
+                backend::lexer::prettyPrintType(stmtOrEntToken.type));
+        return STATESTATUSPAIR(state, false);
+    }
+    if (stmtOrEntString == "_") {
+        logLine(kQppLogWarnPrefix + "parseRelationStmtEntOrEntEnt: Semantically invalid to have a"
+                                    " UNDERSCORE('_') as USES/MODIFIES first argument ");
+        return STATESTATUSPAIR(state, false);
+    }
+
+    TOKEN commaToken = state.popUntilNonWhitespaceToken();
+    if (commaToken.type != backend::lexer::COMMA || !state.hasTokensLeftToParse()) {
+        logLine(kQppLogWarnPrefix +
+                "parseRelationStmtEntOrEntEnt: Expected more tokens but finished "
+                "consuming tokens or COMMA token not found. Obtained " +
+                backend::lexer::prettyPrintType(commaToken.type));
+        return STATESTATUSPAIR(state, false);
+    }
+
+    std::tie(state, entString, isValidState) = parseEntRef(state);
+    if (!isValidState || !state.hasTokensLeftToParse()) {
+        logLine(kQppLogWarnPrefix +
+                "parseRelationStmtEntOrEntEnt: Expected more tokens but finished "
+                "consuming tokens or ENT not found. Obtained token of value:" +
+                entString);
+        return STATESTATUSPAIR(state, false);
+    }
+
+    TOKEN rParenToken = state.popUntilNonWhitespaceToken();
+    if (rParenToken.type != backend::lexer::RPAREN) {
+        logLine(kQppLogWarnPrefix + "parseRelationStmtEntOrEntEnt: RPAREN token not found. Obtained " +
+                backend::lexer::prettyPrintType(rParenToken.type));
+        return STATESTATUSPAIR(state, false);
+    }
+    state.addSuchThatClause(relationType, stmtOrEntString, entString);
+    return STATESTATUSPAIR(state, true);
 }
+
+/**
+ * entRef : synonym | ‘_’ | ‘"’ IDENT ‘"’
+ * @return <state of parser, string representation of valid ent ref, isValidState>
+ */
+STATE_RESULT_STATUS_TRIPLE parseEntRef(State state) {
+    TOKEN firstToken = state.popUntilNonWhitespaceToken();
+    // Handle (synonym | '_')
+    switch (firstToken.type) {
+    case backend::lexer::NAME:
+        return STATE_RESULT_STATUS_TRIPLE(state, firstToken.nameValue, true);
+    case backend::lexer::UNDERSCORE:
+        return STATE_RESULT_STATUS_TRIPLE(state, "_", true);
+    }
+
+    // Handle ‘"’ IDENT ‘"’
+    if (firstToken.type != backend::lexer::DOUBLE_QUOTE || !state.hasTokensLeftToParse()) {
+        return STATE_RESULT_STATUS_TRIPLE(state, "", false);
+    }
+    TOKEN identToken = state.popToken();
+    if (identToken.type != backend::lexer::NAME || !state.hasTokensLeftToParse()) {
+        return STATE_RESULT_STATUS_TRIPLE(state, "", false);
+    }
+    TOKEN closingDoubleQuoteToken = state.popToken();
+    if (closingDoubleQuoteToken.type != backend::lexer::DOUBLE_QUOTE || !state.hasTokensLeftToParse()) {
+        return STATE_RESULT_STATUS_TRIPLE(state, "", false);
+    }
+    std::string result = "\"";
+    result += identToken.nameValue;
+    result += "\"";
+    return STATE_RESULT_STATUS_TRIPLE(state, result, true);
+}
+
 
 /**
  * pattern-cl : ‘pattern’ syn-assign ‘(‘ entRef ‘,’ expression-spec ’)’

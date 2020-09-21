@@ -176,6 +176,200 @@ TEST_CASE("Test assign a; while w; Select a such that Parent (w, _)") {
     REQUIRE(expectedQuery == actualQuery);
 }
 
+// Test Uses
+
+// Test UsesP  ... ‘(’ entRef ‘,’ entRef ‘)’
+
+TEST_CASE("Test UsesP procedure p; variable v; Select p such that Uses(p, v)") {
+    std::stringstream queryString =
+    std::stringstream("procedure p; variable v; Select p such that Uses(p, v)");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "p", qpbackend::EntityType::PROCEDURE }, { "v", qpbackend::EntityType::VARIABLE } },
+                     { "p" }, { { qpbackend::RelationType::USES, "p", "v" } }, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test assign a; while w; Select a such that Uses(w, _)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that Uses(w, _)");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+                     { "a" }, { { qpbackend::RelationType::USES, "w", "_" } }, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test assign a; while w; Select a such that Uses(\"ident\", _)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that Uses(\"ident\", _)");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+                     { "a" }, { { qpbackend::RelationType::USES, "\"ident\"", "_" } }, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test assign a; while w; Select a such that Uses(\"ident\", \"ident\")") {
+    std::stringstream queryString =
+    std::stringstream(R"(assign a; while w; Select a such that Uses("hello", "there"))");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+                     { "a" }, { { qpbackend::RelationType::USES, "\"hello\"", "\"there\"" } }, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+// Test UsesS  ... ‘(’ stmtRef ‘,’ entRef ‘)’
+
+TEST_CASE("Test assign a; while w; Select a such that Uses(8, \"ident\")") {
+    std::stringstream queryString =
+    std::stringstream(R"(assign a; while w; Select a such that Uses(8, "there"))");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+                     { "a" }, { { qpbackend::RelationType::USES, "8", "\"there\"" } }, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test assign a; while w; Select a such that Uses(8, _)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that Uses(8, _)");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+                     { "a" }, { { qpbackend::RelationType::USES, "8", "_" } }, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test assign a; while w; Select a such that Uses(8, a)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that Uses(8, a)");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+                     { "a" }, { { qpbackend::RelationType::USES, "8", "a" } }, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+
+// Test ModifiesP  ... ‘(’ entRef ‘,’ entRef ‘)’
+
+TEST_CASE("Test UsesP procedure p; variable v; Select p such that Modifies(p, v)") {
+    std::stringstream queryString =
+    std::stringstream("procedure p; variable v; Select p such that Modifies(p, v)");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "p", qpbackend::EntityType::PROCEDURE }, { "v", qpbackend::EntityType::VARIABLE } },
+                     { "p" }, { { qpbackend::RelationType::MODIFIES, "p", "v" } }, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test assign a; while w; Select a such that Modifies(w, _)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that Modifies(w, _)");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+                     { "a" }, { { qpbackend::RelationType::MODIFIES, "w", "_" } }, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test assign a; while w; Select a such that Modifies(\"ident\", _)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that Modifies(\"ident\", _)");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+                     { "a" }, { { qpbackend::RelationType::MODIFIES, "\"ident\"", "_" } }, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test assign a; while w; Select a such that Modifies(\"ident\", \"ident\")") {
+    std::stringstream queryString =
+    std::stringstream(R"(assign a; while w; Select a such that Modifies("hello", "there"))");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+                     { "a" }, { { qpbackend::RelationType::MODIFIES, "\"hello\"", "\"there\"" } }, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+// Test ModifiesS  ... ‘(’ stmtRef ‘,’ entRef ‘)’
+
+TEST_CASE("Test assign a; while w; Select a such that Modifies(8, \"ident\")") {
+    std::stringstream queryString =
+    std::stringstream(R"(assign a; while w; Select a such that Modifies(8, "there"))");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+                     { "a" }, { { qpbackend::RelationType::MODIFIES, "8", "\"there\"" } }, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test assign a; while w; Select a such that Modifies(8, _)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that Modifies(8, _)");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+                     { "a" }, { { qpbackend::RelationType::MODIFIES, "8", "_" } }, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test assign a; while w; Select a such that Modifies(8, a)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that Modifies(8, a)");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+                     { "a" }, { { qpbackend::RelationType::MODIFIES, "8", "a" } }, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+
 // Test multiple such that clauses
 
 TEST_CASE("Test multiple such that clauses.") {
@@ -359,6 +553,15 @@ TEST_CASE("Test selected synonyms missing failure") {
 TEST_CASE("Test selected synonyms missing due to no declaration failure") {
     requireParsingInvalidQPLQueryToReturnEmptyQuery("Select v");
 }
+
+TEST_CASE("Test Uses first argument '_' failure") {
+    requireParsingInvalidQPLQueryToReturnEmptyQuery("variable v; Select p such that Uses(_,v)");
+}
+
+TEST_CASE("Test Modifies first argument '_' failure") {
+    requireParsingInvalidQPLQueryToReturnEmptyQuery("variable v; Select p such that Modifies(_,v)");
+}
+
 
 // Test syntax error detection
 
