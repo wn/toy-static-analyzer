@@ -508,5 +508,17 @@ getPatternsMap(const std::vector<const TNode*>& assignTNodes,
     return result;
 }
 
+std::unordered_map<int, TNodeType>
+getStatementNumberToTNodeTypeMap(const std::unordered_map<int, const TNode*>& statementNumberToTNode) {
+    std::unordered_map<int, TNodeType> result;
+    for (auto it : statementNumberToTNode) {
+        int stmtNo = it.first;
+        const TNode* tNode = it.second;
+        result[stmtNo] = tNode->type;
+    }
+    return result;
+}
+
+
 } // namespace extractor
 } // namespace backend

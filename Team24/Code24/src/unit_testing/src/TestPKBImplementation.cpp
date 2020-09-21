@@ -413,5 +413,68 @@ TEST_CASE("Test getAllAssignmentStatementsThatMatch multiple assign") {
     //    std::vector<int> expected11 = { 1, 2 };
     //    REQUIRE(actual11 == expected11);
 }
+
+TEST_CASE("Test isEntity") {
+    const char STRUCTURED_STATEMENT[] = "procedure aoeu {"
+
+                                        "while (y == 3) {"
+                                        "gucci = 1;"
+                                        "}"
+
+                                        "if (!(armani == gucci)) then {"
+                                        "read x;"
+                                        "call y;"
+                                        "} else {"
+                                        "print z;"
+                                        "}"
+                                        "}"
+
+                                        "procedure y {y = 1+1;}";
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+    REQUIRE(pkb.isWhile(1));
+    REQUIRE(pkb.isAssign(2));
+    REQUIRE(pkb.isIfElse(3));
+    REQUIRE(pkb.isRead(4));
+    REQUIRE(pkb.isCall(5));
+    REQUIRE(pkb.isPrint(6));
+
+    REQUIRE_FALSE(pkb.isWhile(2));
+    REQUIRE_FALSE(pkb.isWhile(3));
+    REQUIRE_FALSE(pkb.isWhile(4));
+    REQUIRE_FALSE(pkb.isWhile(5));
+    REQUIRE_FALSE(pkb.isWhile(6));
+
+    REQUIRE_FALSE(pkb.isAssign(1));
+    REQUIRE_FALSE(pkb.isAssign(3));
+    REQUIRE_FALSE(pkb.isAssign(4));
+    REQUIRE_FALSE(pkb.isAssign(5));
+    REQUIRE_FALSE(pkb.isAssign(6));
+
+    REQUIRE_FALSE(pkb.isIfElse(1));
+    REQUIRE_FALSE(pkb.isIfElse(2));
+    REQUIRE_FALSE(pkb.isIfElse(4));
+    REQUIRE_FALSE(pkb.isIfElse(5));
+    REQUIRE_FALSE(pkb.isIfElse(6));
+
+    REQUIRE_FALSE(pkb.isRead(1));
+    REQUIRE_FALSE(pkb.isRead(2));
+    REQUIRE_FALSE(pkb.isRead(3));
+    REQUIRE_FALSE(pkb.isRead(5));
+    REQUIRE_FALSE(pkb.isRead(6));
+
+    REQUIRE_FALSE(pkb.isCall(1));
+    REQUIRE_FALSE(pkb.isCall(2));
+    REQUIRE_FALSE(pkb.isCall(3));
+    REQUIRE_FALSE(pkb.isCall(4));
+    REQUIRE_FALSE(pkb.isCall(6));
+
+    REQUIRE_FALSE(pkb.isPrint(1));
+    REQUIRE_FALSE(pkb.isPrint(2));
+    REQUIRE_FALSE(pkb.isPrint(3));
+    REQUIRE_FALSE(pkb.isPrint(4));
+    REQUIRE_FALSE(pkb.isPrint(5));
+}
 } // namespace testpkb
 } // namespace backend

@@ -27,6 +27,13 @@ class PKBImplementation : virtual public backend::PKB {
     VARIABLE_NAME_LIST getAllVariables() const override;
     PROCEDURE_NAME_LIST getAllProcedures() const override;
 
+    bool isRead(STATEMENT_NUMBER s) const override;
+    bool isPrint(STATEMENT_NUMBER s) const override;
+    bool isCall(STATEMENT_NUMBER s) const override;
+    bool isWhile(STATEMENT_NUMBER s) const override;
+    bool isIfElse(STATEMENT_NUMBER s) const override;
+    bool isAssign(STATEMENT_NUMBER s) const override;
+
     STATEMENT_NUMBER_LIST getStatementsFollowedBy(STATEMENT_NUMBER s) const override;
     STATEMENT_NUMBER_LIST getAllStatementsThatFollows() const override;
     STATEMENT_NUMBER_LIST getStatementsThatFollows(STATEMENT_NUMBER s) const override;
@@ -97,5 +104,6 @@ class PKBImplementation : virtual public backend::PKB {
 
     // Performance booster fields:
     std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash> tNodeTypeToTNodesMap;
+    std::unordered_map<int, TNodeType> statementNumberToTNodeType;
 };
 } // namespace backend

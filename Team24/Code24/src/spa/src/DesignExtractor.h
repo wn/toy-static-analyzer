@@ -83,5 +83,8 @@ std::vector<int> getVisitedPathFromStart(int start, const std::unordered_map<int
 std::unordered_map<std::string, std::vector<std::tuple<std::string, int, bool>>>
 getPatternsMap(const std::vector<const TNode*>& assignTNodes,
                const std::unordered_map<const TNode*, int>& tNodeToStatementNumber);
+
+std::unordered_map<int, TNodeType>
+getStatementNumberToTNodeTypeMap(const std::unordered_map<int, const TNode*>& statementNumberToTNode);
 } // namespace extractor
 } // namespace backend

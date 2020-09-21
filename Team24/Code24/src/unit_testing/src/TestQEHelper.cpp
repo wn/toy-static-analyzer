@@ -260,6 +260,25 @@ PKBMock::getAllAssignmentStatementsThatMatch(const std::string& assignee, const 
     return STATEMENT_NUMBER_LIST();
 }
 
+bool PKBMock::isRead(STATEMENT_NUMBER s) const {
+    return false;
+}
+bool PKBMock::isPrint(STATEMENT_NUMBER s) const {
+    return false;
+}
+bool PKBMock::isCall(STATEMENT_NUMBER s) const {
+    return false;
+}
+bool PKBMock::isWhile(STATEMENT_NUMBER s) const {
+    return false;
+}
+bool PKBMock::isIfElse(STATEMENT_NUMBER s) const {
+    return false;
+}
+bool PKBMock::isAssign(STATEMENT_NUMBER s) const {
+    return false;
+}
+
 
 } // namespace qetest
 } // namespace qpbackend

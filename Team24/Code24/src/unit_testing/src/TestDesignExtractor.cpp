@@ -601,5 +601,34 @@ TEST_CASE("Test getPatternsMap check precedence complicated") {
     std::vector<std::tuple<std::string, int, bool>> result_expr = { { "x", 1, false } };
     REQUIRE(result["(((1+2)*x)+(y/(z-3)))"] == result_expr);
 }
+
+TEST_CASE("Test getStatementNumberToTNodeTypeMap") {
+    const char STRUCTURED_STATEMENT[] = "procedure MySpecialProc {"
+
+                                        "while (y == 3) {"
+                                        "gucci = 1;"
+                                        "}"
+
+                                        "if (!(armani == gucci)) then {"
+                                        "read x;"
+                                        "call y;"
+                                        "} else {"
+                                        "print z;"
+                                        "}"
+                                        "}";
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+
+    std::unordered_map<const TNode*, int> tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto statementNumberToTNode = extractor::getStatementNumberToTNode(tNodeToStatementNumber);
+    std::unordered_map<int, TNodeType> result =
+    extractor::getStatementNumberToTNodeTypeMap(statementNumberToTNode);
+
+    std::unordered_map<int, TNodeType> expected = {
+        { 1, While }, { 2, Assign }, { 3, TNodeType::IfElse },
+        { 4, Read },  { 5, Call },   { 6, Print }
+    };
+    REQUIRE(result == expected);
+}
 } // namespace testextractor
 } // namespace backend

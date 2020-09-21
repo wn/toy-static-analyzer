@@ -13,9 +13,11 @@ namespace backend {
 PKBImplementation::PKBImplementation(const TNode& ast) {
     logWord("PKB starting with ast");
     logLine(ast.toString());
-    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
-    auto statementNumberToTNode = extractor::getStatementNumberToTNode(tNodeToStatementNumber);
+    std::unordered_map<const TNode*, int> tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    std::unordered_map<int, const TNode*> statementNumberToTNode =
+    extractor::getStatementNumberToTNode(tNodeToStatementNumber);
     tNodeTypeToTNodesMap = extractor::getTNodeTypeToTNodes(ast);
+    statementNumberToTNodeType = extractor::getStatementNumberToTNodeTypeMap(statementNumberToTNode);
 
     // Follow
     std::tie(followFollowedRelation, followedFollowRelation) = extractor::getFollowRelationship(ast);
@@ -29,9 +31,6 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
 
     // Pattern
     patternsMap = extractor::getPatternsMap(tNodeTypeToTNodesMap[Assign], tNodeToStatementNumber);
-
-    allStatementsThatHaveAncestors = extractor::getKeysInMap<>(childrenParentRelation);
-    allStatementsThatHaveDescendants = extractor::getKeysInMap<>(parentChildrenRelation);
 
     std::unordered_map<const TNode*, std::unordered_set<std::string>> usesMapping =
     extractor::getUsesMapping(tNodeTypeToTNodesMap);
@@ -249,6 +248,54 @@ PKBImplementation::getAllAssignmentStatementsThatMatch(const std::string& assign
         result.push_back(std::get<1>(tup));
     }
     return result;
+}
+
+bool PKBImplementation::isRead(STATEMENT_NUMBER s) const {
+    auto it = statementNumberToTNodeType.find(s);
+    if (it == statementNumberToTNodeType.end()) {
+        return false;
+    }
+    return it->second == Read;
+}
+
+bool PKBImplementation::isPrint(STATEMENT_NUMBER s) const {
+    auto it = statementNumberToTNodeType.find(s);
+    if (it == statementNumberToTNodeType.end()) {
+        return false;
+    }
+    return it->second == Print;
+}
+
+bool PKBImplementation::isCall(STATEMENT_NUMBER s) const {
+    auto it = statementNumberToTNodeType.find(s);
+    if (it == statementNumberToTNodeType.end()) {
+        return false;
+    }
+    return it->second == Call;
+}
+
+bool PKBImplementation::isWhile(STATEMENT_NUMBER s) const {
+    auto it = statementNumberToTNodeType.find(s);
+    if (it == statementNumberToTNodeType.end()) {
+        return false;
+    }
+    return it->second == While;
+}
+
+bool PKBImplementation::isIfElse(STATEMENT_NUMBER s) const {
+    auto it = statementNumberToTNodeType.find(s);
+    if (it == statementNumberToTNodeType.end()) {
+        return false;
+    }
+    return it->second == IfElse;
+}
+
+bool PKBImplementation::isAssign(STATEMENT_NUMBER s) const {
+    auto it = statementNumberToTNodeType.find(s);
+    if (it == statementNumberToTNodeType.end()) {
+        return false;
+    }
+    return it->second == Assign;
 }
 
 } // namespace backend

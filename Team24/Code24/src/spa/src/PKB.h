@@ -28,6 +28,14 @@ class PKB {
     // Retrieves all procedures defined in the SIMPLE program.
     virtual PROCEDURE_NAME_LIST getAllProcedures() const = 0;
 
+    /* -- Check type of statement number -- */
+    virtual bool isRead(STATEMENT_NUMBER s) const = 0;
+    virtual bool isPrint(STATEMENT_NUMBER s) const = 0;
+    virtual bool isCall(STATEMENT_NUMBER s) const = 0;
+    virtual bool isWhile(STATEMENT_NUMBER s) const = 0;
+    virtual bool isIfElse(STATEMENT_NUMBER s) const = 0;
+    virtual bool isAssign(STATEMENT_NUMBER s) const = 0;
+
     /* -- FOLLOWS / FOLLOWS* -- */
 
     // Retrieves all the statements that appear after the statement at

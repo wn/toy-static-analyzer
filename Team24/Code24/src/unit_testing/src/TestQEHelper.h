@@ -25,6 +25,13 @@ class PKBMock : public backend::PKB {
     STATEMENT_NUMBER_LIST getPreFollows(STATEMENT_NUMBER s) const;
     STATEMENT_NUMBER_LIST getPostFollows(STATEMENT_NUMBER s) const;
 
+    bool isRead(STATEMENT_NUMBER s) const;
+    bool isPrint(STATEMENT_NUMBER s) const;
+    bool isCall(STATEMENT_NUMBER s) const;
+    bool isWhile(STATEMENT_NUMBER s) const;
+    bool isIfElse(STATEMENT_NUMBER s) const;
+    bool isAssign(STATEMENT_NUMBER s) const;
+
     STATEMENT_NUMBER_LIST getAllStatements() const;
     VARIABLE_NAME_LIST getAllVariables() const;
     PROCEDURE_NAME_LIST getAllProcedures() const;
