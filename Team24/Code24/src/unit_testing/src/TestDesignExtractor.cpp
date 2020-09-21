@@ -186,5 +186,109 @@ TEST_CASE("Test getParentRelationship") {
     REQUIRE(actualParentChildrenVector == expectedParentChildren);
     REQUIRE(actualChildParentVector == expectedChildParent);
 }
+
+TEST_CASE("Test getPatternsMap multiple assigns") {
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+
+    std::vector<const TNode*> assignTNodes = extractor::getTNodeTypeToTNodes(ast)[Assign];
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto result = extractor::getPatternsMap(assignTNodes, tNodeToStatementNumber);
+
+    std::vector<std::tuple<std::string, int, bool>> result_c7 = { { "armani", 4, false } };
+    REQUIRE(result["7"] == result_c7);
+    std::vector<std::tuple<std::string, int, bool>> result_c1 = { { "apple", 5, false }, { "gucci", 2, false } };
+    REQUIRE(result["1"] == result_c1);
+    std::vector<std::tuple<std::string, int, bool>> result_23_plus_another_var = { { "some_var", 6, false } };
+    REQUIRE(result["(23+another_var)"] == result_23_plus_another_var);
+    std::vector<std::tuple<std::string, int, bool>> result_another_var = { { "some_var", 6, true } };
+    REQUIRE(result["another_var"] == result_another_var);
+    std::vector<std::tuple<std::string, int, bool>> result_23 = { { "some_var", 6, true } };
+    REQUIRE(result["23"] == result_23);
+}
+
+TEST_CASE("Test getPatternsMap check precedence 1") {
+    const char EXPR_STMT_PROG[] = "procedure p {"
+                                  "x = 1 + 2 * 3;"
+                                  "}";
+    Parser parser = testhelpers::GenerateParserFromTokens(EXPR_STMT_PROG);
+    TNode ast(parser.parse());
+
+    std::vector<const TNode*> assignTNodes = extractor::getTNodeTypeToTNodes(ast)[Assign];
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto result = extractor::getPatternsMap(assignTNodes, tNodeToStatementNumber);
+
+    std::vector<std::tuple<std::string, int, bool>> result_two_plus_three = { { "x", 1, true } };
+    REQUIRE(result["(2*3)"] == result_two_plus_three);
+    std::vector<std::tuple<std::string, int, bool>> result_three = { { "x", 1, true } };
+    REQUIRE(result["3"] == result_three);
+    std::vector<std::tuple<std::string, int, bool>> result_two = { { "x", 1, true } };
+    REQUIRE(result["2"] == result_two);
+    std::vector<std::tuple<std::string, int, bool>> result_expr = { { "x", 1, false } };
+    REQUIRE(result["(1+(2*3))"] == result_expr);
+    std::vector<std::tuple<std::string, int, bool>> result_one = { { "x", 1, true } };
+    REQUIRE(result["1"] == result_one);
+}
+
+TEST_CASE("Test getPatternsMap check precedence 2") {
+    const char EXPR_STMT_PROG[] = "procedure p {"
+                                  "x = (1 + 2) * 3;"
+                                  "}";
+    Parser parser = testhelpers::GenerateParserFromTokens(EXPR_STMT_PROG);
+    TNode ast(parser.parse());
+
+    std::vector<const TNode*> assignTNodes = extractor::getTNodeTypeToTNodes(ast)[Assign];
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto result = extractor::getPatternsMap(assignTNodes, tNodeToStatementNumber);
+
+    std::vector<std::tuple<std::string, int, bool>> result_1_plus_2 = { { "x", 1, true } };
+    REQUIRE(result["(1+2)"] == result_1_plus_2);
+    std::vector<std::tuple<std::string, int, bool>> result_three = { { "x", 1, true } };
+    REQUIRE(result["3"] == result_three);
+    std::vector<std::tuple<std::string, int, bool>> result_two = { { "x", 1, true } };
+    REQUIRE(result["2"] == result_two);
+    std::vector<std::tuple<std::string, int, bool>> result_expr = { { "x", 1, false } };
+    REQUIRE(result["((1+2)*3)"] == result_expr);
+    std::vector<std::tuple<std::string, int, bool>> result_one = { { "x", 1, true } };
+    REQUIRE(result["1"] == result_one);
+}
+
+TEST_CASE("Test getPatternsMap check precedence complicated") {
+    const char EXPR_STMT_PROG[] = "procedure p {"
+                                  "x = (1 + 2) * x + y / (z - 3);"
+                                  "}";
+    Parser parser = testhelpers::GenerateParserFromTokens(EXPR_STMT_PROG);
+    TNode ast(parser.parse());
+
+    std::vector<const TNode*> assignTNodes = extractor::getTNodeTypeToTNodes(ast)[Assign];
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto result = extractor::getPatternsMap(assignTNodes, tNodeToStatementNumber);
+
+    std::vector<std::tuple<std::string, int, bool>> result_three = { { "x", 1, true } };
+    REQUIRE(result["3"] == result_three);
+    std::vector<std::tuple<std::string, int, bool>> result_two = { { "x", 1, true } };
+    REQUIRE(result["2"] == result_two);
+    std::vector<std::tuple<std::string, int, bool>> result_one = { { "x", 1, true } };
+    REQUIRE(result["1"] == result_one);
+    std::vector<std::tuple<std::string, int, bool>> result_x = { { "x", 1, true } };
+    REQUIRE(result["x"] == result_x);
+    std::vector<std::tuple<std::string, int, bool>> result_y = { { "x", 1, true } };
+    REQUIRE(result["y"] == result_y);
+    std::vector<std::tuple<std::string, int, bool>> result_z = { { "x", 1, true } };
+    REQUIRE(result["z"] == result_z);
+
+    std::vector<std::tuple<std::string, int, bool>> result_y_div_z_minus_three = { { "x", 1, true } };
+    REQUIRE(result["(y/(z-3))"] == result_y_div_z_minus_three);
+    std::vector<std::tuple<std::string, int, bool>> result_z_minus_three = { { "x", 1, true } };
+    REQUIRE(result["(z-3)"] == result_z_minus_three);
+
+    std::vector<std::tuple<std::string, int, bool>> result_one_plus_two_times_x = { { "x", 1, true } };
+    REQUIRE(result["((1+2)*x)"] == result_one_plus_two_times_x);
+    std::vector<std::tuple<std::string, int, bool>> result_one_plus_two = { { "x", 1, true } };
+    REQUIRE(result["(1+2)"] == result_one_plus_two);
+
+    std::vector<std::tuple<std::string, int, bool>> result_expr = { { "x", 1, false } };
+    REQUIRE(result["(((1+2)*x)+(y/(z-3)))"] == result_expr);
+}
 } // namespace testextractor
 } // namespace backend

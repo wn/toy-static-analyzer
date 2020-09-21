@@ -178,5 +178,76 @@ std::vector<int> getVisitedPathFromStart(int start, const std::unordered_map<int
     return result;
 }
 
+/**
+ * Helper method for getPatternsMap when running a post-order traversal on the expr of an assignment statement.
+ * @param result - the hashmap storing the result
+ * @param visiting - The node that we are currently visiting
+ * @param assignee - For each assignment statement in the AST, there is an assignee, which is
+ * the left of the assignment statement. i.e. the "a" in a = 1 + 1;
+ * @param stmtNo - The statement number of the assignee and expression.
+ * @param isSubExpr - boolean of whether the visiting tNode is a sub expression
+ * @return the string representation of visitingNode.
+ */
+std::string dfsHelper(std::unordered_map<std::string, std::vector<std::tuple<std::string, int, bool>>>& result,
+                      const TNode& visiting,
+                      const std::string& assignee,
+                      int stmtNo,
+                      bool isSubExpr) {
+    if (visiting.children.size() == 0) {
+        // By validity of AST, if `visiting` is leaf node, it must be a const or a var.
+        if (visiting.type == TNodeType::Constant) {
+            result[visiting.constant].emplace_back(assignee, stmtNo, isSubExpr);
+            return visiting.constant;
+        } else if (visiting.type == TNodeType::Variable) {
+            result[visiting.name].emplace_back(assignee, stmtNo, isSubExpr);
+            return visiting.name;
+        } else {
+            throw std::runtime_error(
+            "dfsHelper: leaf node should only be a constant or a variable. Got: " +
+            getTNodeTypeString(visiting.type));
+        }
+    }
+    // there should be 2 children for any operator.
+    const TNode& lhs = visiting.children.at(0);
+    const TNode& rhs = visiting.children.at(1);
+
+    // the lhs string must have a right subtree (rhsString), and vice-versa
+    std::string lhsString = dfsHelper(result, lhs, assignee, stmtNo, true);
+    std::string rhsString = dfsHelper(result, rhs, assignee, stmtNo, true);
+    std::string opString = getOperatorStringFromTNodeType(visiting.type);
+
+    std::string visitingString = "(" + lhsString + opString + rhsString + ")";
+    result[visitingString].emplace_back(assignee, stmtNo, isSubExpr);
+    return visitingString;
+}
+
+/**
+ * Helper method for getPatternsMap when running a post-order traversal on the ast.
+ * @param result - the hashmap storing the result
+ * @param visiting - The node that we are currently visiting
+ * @param assignee - For each assignment statement in the AST, there is an assignee, which is
+ * the left of the assignment statement. i.e. the "a" in a = 1 + 1;
+ * @param stmtNo - The statement number of the assignee and expression.
+ * @param hasLeft - boolean of whether this visiting node has a left expr. e.g. for 1 + (visiting
+ * node) + 2, visitingNode has both left(1) and right(2) expr.
+ * @param hasRight - symmetric to hasLeft
+ * @return map<string, {assignee, stmt_number, has_left_node, has_right_node}>
+ * eg {1+2*4/5: {a, 4, false, true}};
+ */
+std::unordered_map<std::string, std::vector<std::tuple<std::string, int, bool>>>
+getPatternsMap(const std::vector<const TNode*>& assignTNodes,
+               const std::unordered_map<const TNode*, int>& tNodeToStatementNumber) {
+    std::unordered_map<std::string, std::vector<std::tuple<std::string, int, bool>>> result;
+    for (const TNode* tNodePtr : assignTNodes) {
+        const TNode& assigneeNode = tNodePtr->children.at(0);
+        const std::string& assigneeName = assigneeNode.name;
+        int stmtNo = tNodeToStatementNumber.at(tNodePtr);
+
+        const TNode& exprTNode = tNodePtr->children.at(1);
+        dfsHelper(result, exprTNode, assigneeName, stmtNo, false);
+    }
+    return result;
+}
+
 } // namespace extractor
 } // namespace backend

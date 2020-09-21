@@ -68,5 +68,11 @@ class PKBImplementation : virtual public backend::PKB {
     // Stmt list is private to prevent modification.
     STATEMENT_NUMBER_LIST allStatementsThatHaveAncestors;
     STATEMENT_NUMBER_LIST allStatementsThatHaveDescendants;
+
+    // Pattern helper:
+    std::unordered_map<std::string, std::vector<std::tuple<std::string, int, bool>>> patternsMap;
+
+    // Performance booster fields:
+    std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash> tNodeTypeToTNodesMap;
 };
 } // namespace backend

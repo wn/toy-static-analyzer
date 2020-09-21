@@ -14,14 +14,20 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
     logLine(ast.toString());
     auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
     auto statementNumberToTNode = extractor::getStatementNumberToTNode(tNodeToStatementNumber);
+    tNodeTypeToTNodesMap = extractor::getTNodeTypeToTNodes(ast);
 
+    // Follow
     std::tie(followFollowedRelation, followedFollowRelation) = extractor::getFollowRelationship(ast);
-    allStatementsThatFollows = extractor::getKeysInMap<>(followFollowedRelation);
-    allStatementsThatAreFollowed = extractor::getKeysInMap<>(followedFollowRelation);
+    allStatementsThatFollows = extractor::getKeysInMap(followFollowedRelation);
+    allStatementsThatAreFollowed = extractor::getKeysInMap(followedFollowRelation);
 
+    // Parent
     std::tie(childrenParentRelation, parentChildrenRelation) = extractor::getParentRelationship(ast);
-    allStatementsThatHaveAncestors = extractor::getKeysInMap<>(childrenParentRelation);
-    allStatementsThatHaveDescendants = extractor::getKeysInMap<>(parentChildrenRelation);
+    allStatementsThatHaveAncestors = extractor::getKeysInMap(childrenParentRelation);
+    allStatementsThatHaveDescendants = extractor::getKeysInMap(parentChildrenRelation);
+
+    // Pattern
+    patternsMap = extractor::getPatternsMap(tNodeTypeToTNodesMap[Assign], tNodeToStatementNumber);
 }
 
 STATEMENT_NUMBER_LIST PKBImplementation::getAllStatements() const {

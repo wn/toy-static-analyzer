@@ -27,5 +27,18 @@ template <typename T> std::vector<int> getKeysInMap(const std::unordered_map<int
 }
 
 std::vector<int> getVisitedPathFromStart(int start, const std::unordered_map<int, int>& relation);
+
+/**
+ * Get a mapping of pattern to {assignee, stmtNumber, isSubExpr}
+ *
+ * Note:
+ * - isSubExpr - boolean of whether the visiting tNode is a sub expression
+ * - stmtNo - the statement number of the assignee and expression.
+ * - assignee - for each assign statement in the AST, the assignee is the variable on
+ *   the left of the assignment statement. i.e. the "a" in a = 1 + 1;
+ */
+std::unordered_map<std::string, std::vector<std::tuple<std::string, int, bool>>>
+getPatternsMap(const std::vector<const TNode*>& assignTNodes,
+               const std::unordered_map<const TNode*, int>& tNodeToStatementNumber);
 } // namespace extractor
 } // namespace backend

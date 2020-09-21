@@ -66,6 +66,41 @@ std::string getTNodeTypeString(TNodeType t) {
     };
 }
 
+std::string getOperatorStringFromTNodeType(TNodeType t) {
+    switch (t) {
+    case TNodeType::Not:
+        return "!";
+    case TNodeType::And:
+        return "&&";
+    case TNodeType::Or:
+        return "||";
+    case TNodeType::Greater:
+        return ">";
+    case TNodeType::GreaterThanOrEqual:
+        return ">=";
+    case TNodeType::Lesser:
+        return "<";
+    case TNodeType::LesserThanOrEqual:
+        return "<=";
+    case TNodeType::Equal:
+        return "==";
+    case TNodeType::NotEqual:
+        return "!=";
+    case TNodeType::Plus:
+        return "+";
+    case TNodeType::Minus:
+        return "-";
+    case TNodeType::Multiply:
+        return "*";
+    case TNodeType::Divide:
+        return "/";
+    case TNodeType::Modulo:
+        return "%";
+    default:
+        throw "Error: getOperatorTNodeTypeString only takes in an operator type";
+    };
+}
+
 std::string TNode::toString() const {
     return toStringHelper(0);
 }

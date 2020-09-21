@@ -53,6 +53,7 @@ struct EnumClassHash {
 };
 
 std::string getTNodeTypeString(TNodeType t);
+std::string getOperatorStringFromTNodeType(TNodeType t);
 
 class TNode {
   public:
