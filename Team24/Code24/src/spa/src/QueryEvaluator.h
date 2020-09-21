@@ -26,14 +26,14 @@ class SingleQueryEvaluator {
     bool hasClauseFailed; // flag indicates if any clause has failed
     bool hasEvaluationCompleted; // flag indicates evaluation completed
 
-    std::string evaluateQuery(const backend::PKB* pkb); // evaluate the query with the assistance of PKB
+    std::vector<std::string> evaluateQuery(const backend::PKB* pkb); // evaluate the query with the assistance of PKB
 
   private:
     // table stored candidates of synonyms
     std::unordered_map<std::string, std::vector<std::string>> synonym_candidates;
 
     // summarize the result as a string
-    std::string produceResult();
+    std::vector<std::string> produceResult();
 
     // methods to initialize synonyms and link variables
     void initializeSynonym(const backend::PKB* pkb, const std::string& synonymName);
@@ -101,7 +101,7 @@ class QueryEvaluator {
     }
 
     const backend::PKB* pkb;
-    std::string evaluateQuery(Query query);
+    std::vector<std::string> evaluateQuery(Query query);
 };
 } // namespace queryevaluator
 } // namespace qpbackend

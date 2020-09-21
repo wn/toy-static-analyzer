@@ -2,29 +2,12 @@
 
 namespace qpbackend {
 namespace qetest {
-std::vector<std::string> convertStrToVector(std::string const& str) {
-    std::vector<std::string> v;
-    std::string delimiter = ", ";
-    std::string remain = str;
-    std::string token;
-    size_t pos = 0;
-
-    while ((pos = remain.find(delimiter)) != std::string::npos) {
-        token = remain.substr(0, pos);
-        v.push_back(token);
-        remain.erase(0, pos + delimiter.length());
-    }
-
-    v.push_back(remain);
-    return v;
-}
-
-bool checkIfVectorOfStringMatch(std::string const& str1, std::string const& str2) {
-    std::vector<std::string> str1_vec = convertStrToVector(str1);
-    std::vector<std::string> str2_vec = convertStrToVector(str2);
-    std::sort(str1_vec.begin(), str1_vec.end());
-    std::sort(str2_vec.begin(), str2_vec.end());
-    return str1_vec == str2_vec;
+bool checkIfVectorOfStringMatch(const std::vector<std::string>& lst1, const std::vector<std::string>& lst2) {
+    std::vector<std::string> copy1(lst1);
+    std::vector<std::string> copy2(lst2);
+    std::sort(copy1.begin(), copy1.end());
+    std::sort(copy2.begin(), copy2.end());
+    return copy1 == copy2;
 }
 
 STATEMENT_NUMBER_LIST PKBMock::getAllStatements() const {

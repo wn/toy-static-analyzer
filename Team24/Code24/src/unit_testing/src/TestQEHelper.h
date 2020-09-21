@@ -63,10 +63,7 @@ class PKBMock : public backend::PKB {
     getAllAssignmentStatementsThatMatch(const std::string& assignee, const std::string& pattern, bool isSubExpr) const;
 };
 
-// convert string to a vector
-std::vector<std::string> convertStrToVector(std::string const& str);
-
 // For string representing two vectors
-bool checkIfVectorOfStringMatch(std::string const& str1, std::string const& str2);
+bool checkIfVectorOfStringMatch(const std::vector<std::string>& lst1, const std::vector<std::string>& lst2);
 } // namespace qetest
 } // namespace qpbackend

@@ -10,7 +10,7 @@
 
 namespace qpbackend {
 namespace queryevaluator {
-std::string QueryEvaluator::evaluateQuery(Query query) {
+std::vector<std::string> QueryEvaluator::evaluateQuery(Query query) {
     SingleQueryEvaluator sqe(query);
     return sqe.evaluateQuery(pkb);
 }
@@ -18,7 +18,7 @@ std::string QueryEvaluator::evaluateQuery(Query query) {
 // helper structure to map such-that clause arguments to SubRelationType
 SRT_LOOKUP_TABLE SingleQueryEvaluator::srt_table = generateSrtTable();
 
-std::string SingleQueryEvaluator::evaluateQuery(const backend::PKB* pkb) {
+std::vector<std::string> SingleQueryEvaluator::evaluateQuery(const backend::PKB* pkb) {
     // initialize the table of candidates
     if (hasEvaluationCompleted) {
         handleError("same single query evaluator should not be called twice");
@@ -48,31 +48,23 @@ std::string SingleQueryEvaluator::evaluateQuery(const backend::PKB* pkb) {
     }
 
     // prepare output
-    std::string result = produceResult();
     hasEvaluationCompleted = true;
-    return result;
+    return produceResult();
 }
 
 /**
  * convert evaluation result to a string
  */
-std::string SingleQueryEvaluator::produceResult() {
-    std::string result = "";
-
+std::vector<std::string> SingleQueryEvaluator::produceResult() {
     // for basic requirement
     if (query.synonymsToReturn.size() == 1) {
         std::string inquired = query.synonymsToReturn[0];
         if (!hasClauseFailed) {
-            for (const auto& candidate : synonym_candidates[inquired]) {
-                if (result.size() > 0) {
-                    result += ", ";
-                }
-                result += candidate;
-            }
+            return synonym_candidates[inquired];
         }
     }
 
-    return result;
+    return std::vector<std::string>();
 };
 
 /**
