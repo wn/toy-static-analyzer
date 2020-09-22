@@ -18,8 +18,10 @@ class PKBMock : public backend::PKB {
     }
 
     // the index of the source code used for testing
-    // link to the code 0: https://tinyurl.com/y32cfm6c
-    // code 1: nested structure {1, {{2, {3}}, {4, {5, 6}}}}
+    // code 0: https://tinyurl.com/y32cfm6c -- for Follows & Follows*
+    // code 1: nested structure {1, {{2, {3}}, {4, {5, 6}}}} -- for Parent & Parent*
+    // code 2: VP5 in https://tinyurl.com/y2w76kw5 -- for Uses & Modifies
+    // code 3: code 4 in https://tinyurl.com/y2heef28 -- for isRead/Print/Call/While/IfElse/Assign
     int test_idx;
 
     STATEMENT_NUMBER_LIST getPreFollows(STATEMENT_NUMBER s) const;

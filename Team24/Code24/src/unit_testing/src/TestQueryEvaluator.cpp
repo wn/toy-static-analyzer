@@ -47,6 +47,36 @@ TEST_CASE("Test without clauses") {
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryProc), { "computeCentroid" }));
 }
 
+TEST_CASE("TEST select entities by type") {
+    PKBMock pkb(3);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    // test select read
+    Query queryRead = { { { "s", READ } }, { "s" }, {}, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryRead), { "4", "5" }));
+
+    // test select print
+    Query queryPrint = { { { "s", PRINT } }, { "s" }, {}, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPrint), { "6", "7", "8", "9" }));
+
+    // test select call
+    Query queryCall = { { { "s", CALL } }, { "s" }, {}, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryCall), { "2", "3", "13", "18" }));
+
+    // test select while
+    Query queryWhile = { { { "s", WHILE } }, { "s" }, {}, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryWhile), { "14" }));
+
+    // test select ifelse
+    Query queryIf = { { { "s", IF } }, { "s" }, {}, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryIf), { "19" }));
+
+    // test select isAssign
+    Query queryAssign = { { { "s", ASSIGN } }, { "s" }, {}, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryAssign),
+                                       { "1", "10", "11", "12", "15", "16", "17", "20", "21", "22", "23" }));
+}
+
 TEST_CASE("Test evaluation of Follows between synonyms") {
     PKBMock pkb(0);
     queryevaluator::QueryEvaluator qe(&pkb);

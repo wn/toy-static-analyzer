@@ -6,8 +6,6 @@
 #include <unordered_set>
 #include <utility>
 
-#define DEBUG 0
-
 namespace qpbackend {
 namespace queryevaluator {
 std::vector<std::string> QueryEvaluator::evaluateQuery(Query query) {
@@ -99,32 +97,41 @@ void SingleQueryEvaluator::initializeCandidate(const backend::PKB* pkb,
     } else {
         STATEMENT_NUMBER_LIST result = pkb->getAllStatements();
         if (entityType != STMT) {
-            auto unary_predictor = [](STATEMENT_NUMBER x) { return true; };
-            /* TODO: update the PKB.h accordingly
-            switch (et) {
-            case READ:
-                unary_predictor = [](STATEMENT_NUMBER x) { return !(pkb->isRead(x)); };
+            switch (entityType) {
+            case READ: {
+                auto unary_predictor = [pkb](STATEMENT_NUMBER x) { return !(pkb->isRead(x)); };
+                result.erase(std::remove_if(result.begin(), result.end(), unary_predictor), result.end());
                 break;
-            case PRINT:
-                unary_predictor = [](STATEMENT_NUMBER x) { return !(pkb->isPrint(x)); };
+            }
+            case PRINT: {
+                auto unary_predictor = [pkb](STATEMENT_NUMBER x) { return !(pkb->isPrint(x)); };
+                result.erase(std::remove_if(result.begin(), result.end(), unary_predictor), result.end());
                 break;
-            case CALL:
-                unary_predictor = [](STATEMENT_NUMBER x) { return !(pkb->isCall(x)); };
+            }
+            case CALL: {
+                auto unary_predictor = [pkb](STATEMENT_NUMBER x) { return !(pkb->isCall(x)); };
+                result.erase(std::remove_if(result.begin(), result.end(), unary_predictor), result.end());
                 break;
-            case WHILE:
-                unary_predictor = [](STATEMENT_NUMBER x) { return !(pkb->isWhile(x)); };
+            }
+            case WHILE: {
+                auto unary_predictor = [pkb](STATEMENT_NUMBER x) { return !(pkb->isWhile(x)); };
+                result.erase(std::remove_if(result.begin(), result.end(), unary_predictor), result.end());
                 break;
-            case IF:
-                unary_predictor = [](STATEMENT_NUMBER x) { return !(pkb->isIf(x)); };
+            }
+            case IF: {
+                auto unary_predictor = [pkb](STATEMENT_NUMBER x) { return !(pkb->isIfElse(x)); };
+                result.erase(std::remove_if(result.begin(), result.end(), unary_predictor), result.end());
                 break;
-            case ASSIGN:
-                unary_predictor = [](STATEMENT_NUMBER x) { return !(pkb->isAssign(x)); };
+            }
+            case ASSIGN: {
+                auto unary_predictor = [pkb](STATEMENT_NUMBER x) { return !(pkb->isAssign(x)); };
+                result.erase(std::remove_if(result.begin(), result.end(), unary_predictor), result.end());
                 break;
+            }
             default:
                 handleError("invalid entity type"); // TODO: handle invalid entity type
                 return;
-            } */
-            result.erase(std::remove_if(result.begin(), result.end(), unary_predictor), result.end());
+            }
         }
         synonym_candidates[synonymName] = castToStrVector<STATEMENT_NUMBER>(result);
     }

@@ -18,6 +18,10 @@ const STATEMENT_NUMBER_LIST& PKBMock::getAllStatements() const {
         break;
     case 1:
         statements = { 1, 2, 3, 4, 5, 6 };
+        break;
+    case 3:
+        statements = { 1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12,
+                       13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 };
     }
     return statements;
 }
@@ -306,21 +310,74 @@ PKBMock::getAllAssignmentStatementsThatMatch(const std::string& assignee, const 
 }
 
 bool PKBMock::isRead(STATEMENT_NUMBER s) const {
+    if (test_idx == 3) {
+        switch (s) {
+        case 4:
+        case 5:
+            return true;
+        }
+    }
     return false;
 }
 bool PKBMock::isPrint(STATEMENT_NUMBER s) const {
+    if (test_idx == 3) {
+        switch (s) {
+        case 6:
+        case 7:
+        case 8:
+        case 9:
+            return true;
+        }
+    }
     return false;
 }
 bool PKBMock::isCall(STATEMENT_NUMBER s) const {
+    if (test_idx == 3) {
+        switch (s) {
+        case 2:
+        case 3:
+        case 13:
+        case 18:
+            return true;
+        }
+    }
     return false;
 }
 bool PKBMock::isWhile(STATEMENT_NUMBER s) const {
+    if (test_idx == 3) {
+        switch (s) {
+        case 14:
+            return true;
+        }
+    }
     return false;
 }
 bool PKBMock::isIfElse(STATEMENT_NUMBER s) const {
+    if (test_idx == 3) {
+        switch (s) {
+        case 19:
+            return true;
+        }
+    }
     return false;
 }
 bool PKBMock::isAssign(STATEMENT_NUMBER s) const {
+    if (test_idx == 3) {
+        switch (s) {
+        case 1:
+        case 10:
+        case 11:
+        case 12:
+        case 15:
+        case 16:
+        case 17:
+        case 20:
+        case 21:
+        case 22:
+        case 23:
+            return true;
+        }
+    }
     return false;
 }
 
