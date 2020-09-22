@@ -17,13 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 function usage {
-    echo "Usage: $0 DIR..."
+    echo "Usage: $0 "
     exit 1
 }
-
-if [ $# -eq 0 ]; then
-    usage
-fi
 
 # Variable that will hold the name of the clang-format command
 FMT=""
@@ -45,14 +41,6 @@ if [ -z "$FMT" ]; then
     exit 1
 fi
 
-# Check all of the arguments first to make sure they're all directories
-for dir in "$@"; do
-    if [ ! -d "${dir}" ]; then
-        echo "${dir} is not a directory"
-        usage
-    fi
-done
-
 # Find a dominating file, starting from a given directory and going up.
 find-dominating-file() {
     if [ -r "$1"/"$2" ]; then
@@ -66,8 +54,7 @@ find-dominating-file() {
 }
 
 # Run clang-format -i on all of the things
-for dir in "$@"; do
-    pushd "${dir}" &>/dev/null
+    pushd "Team24/Code24/src" &>/dev/null
     if ! find-dominating-file . .clang-format; then
         echo "Failed to find dominating .clang-format starting at $PWD"
         continue
@@ -81,4 +68,3 @@ for dir in "$@"; do
          -o -name '*.hpp' \) \
          -exec "${FMT}" -i '{}' \;
     popd &>/dev/null
-done
