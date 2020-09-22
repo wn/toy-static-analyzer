@@ -103,9 +103,18 @@ std::string Query::toString() const {
     RelationType relationType;
     std::string arg1;
     std::string arg2;
-    for (const auto& suchThatClause : suchThatClauses) {
+    for (const RELATIONTUPLE& suchThatClause : suchThatClauses) {
         std::tie(relationType, arg1, arg2) = suchThatClause;
         stringstream << "{" << stringFromRelationType(relationType) << ", " << arg1 << ", " << arg2 << "} ";
+    }
+
+    stringstream << "\nPattern clauses: ";
+    std::string assignSynonym;
+    std::string variable;
+    std::string expressionSpec;
+    for (const PATTERNTUPLE& patternClause : patternClauses) {
+        std::tie(assignSynonym, variable, expressionSpec) = patternClause;
+        stringstream << "{" << assignSynonym << ", " << variable << ", " << expressionSpec << "} ";
     }
 
     stringstream << "\n}";
