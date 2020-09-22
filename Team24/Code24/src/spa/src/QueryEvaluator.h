@@ -5,6 +5,7 @@
 #include "QEHelper.h"
 #include "Query.h"
 
+#include <map>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -31,6 +32,10 @@ class SingleQueryEvaluator {
   private:
     // table stored candidates of synonyms
     std::unordered_map<std::string, std::vector<std::string>> synonym_candidates;
+
+    // table of pairwise constrain between synonym
+    // the key is pair(a, b), a < b
+    std::map<std::pair<std::string, std::string>, std::vector<std::pair<std::string, std::string>>> pairConstraints;
 
     // summarize the result as a string
     std::vector<std::string> produceResult();
@@ -94,6 +99,8 @@ template <typename T> std::vector<std::string> castToStrVector(const std::vector
 template <typename T> bool isFoundInVector(const std::vector<T>& v, T arg);
 template <typename T>
 std::vector<T> vectorIntersection(const std::vector<T>& lst1, const std::vector<T>& lst2);
+template <typename T>
+std::vector<T> vectorUnhashableIntersection(const std::vector<T>& lst1, const std::vector<T>& lst2);
 
 class QueryEvaluator {
   public:

@@ -2,6 +2,7 @@
 
 #include "Logger.h"
 
+#include <set>
 #include <stdexcept>
 #include <unordered_set>
 #include <utility>
@@ -264,37 +265,44 @@ bool SingleQueryEvaluator::evaluateSynonymSynonym(const backend::PKB* pkb,
         return false;
     }
 
-    // helper data structure
-    std::vector<bool> arg1_mask(candidates_1.size(), false);
-    std::unordered_set<std::string> arg2_set;
-
-    // call PKB to retrive answers to find possible pairs
-    for (std::size_t i = 0; i < candidates_1.size(); i++) {
-        std::string c1 = candidates_1[i];
+    // check all pairs
+    std::vector<std::pair<std::string, std::string>> constraintList;
+    bool swapped = arg1 > arg2; // check lexical order of synonym
+    for (const auto& c1 : candidates_1) {
         std::vector<std::string> c1_result = inquirePKBForRelation(pkb, subRelationType, c1);
-        std::vector<std::string> c2_list = vectorIntersection<std::string>(candidates_2, c1_result);
-        if (!c2_list.empty()) {
-            arg1_mask[i] = true;
-            arg2_set.insert(c2_list.begin(), c2_list.end());
+        for (const auto& c2 : candidates_2) {
+            if (isFoundInVector<std::string>(c1_result, c2)) {
+                std::pair<std::string, std::string> constraint =
+                (swapped) ? std::make_pair(c2, c1) : std::make_pair(c1, c2);
+                constraintList.push_back(constraint);
+            }
         }
     }
 
-    // filter the candidates by pairwise constraints
-    bool flag_1 = false;
-    std::vector<std::string> result1;
-    for (size_t i = 0; i < arg1_mask.size(); i++) {
-        if (arg1_mask[i]) {
-            flag_1 = true;
-            result1.push_back(candidates_1[i]);
-        }
+    // update constrainsts
+    std::pair<std::string, std::string> signature =
+    (swapped) ? std::make_pair(arg2, arg1) : std::make_pair(arg1, arg2);
+    if (pairConstraints.find(signature) != pairConstraints.end()) {
+        pairConstraints[signature] =
+        vectorUnhashableIntersection<std::pair<std::string, std::string>>(constraintList,
+                                                                          pairConstraints.at(signature));
+    } else {
+        pairConstraints[signature] = constraintList;
     }
-    synonym_candidates[arg1] = std::move(result1);
 
-    bool flag_2 = !arg2_set.empty();
-    synonym_candidates[arg2] = std::vector<std::string>(arg2_set.begin(), arg2_set.end());
+    // filter the constrainsts to update candidate list of two synonyms
+    std::unordered_set<std::string> set_fir, set_sec;
+    for (const auto& constraint : pairConstraints[signature]) {
+        set_fir.insert(constraint.first);
+        set_sec.insert(constraint.second);
+    }
+    std::vector<std::string> vec_fir, vec_sec;
+    std::copy(set_fir.begin(), set_fir.end(), std::back_inserter(vec_fir));
+    std::copy(set_sec.begin(), set_sec.end(), std::back_inserter(vec_sec));
+    synonym_candidates[arg1] = (swapped) ? vec_sec : vec_fir;
+    synonym_candidates[arg2] = (swapped) ? vec_fir : vec_sec;
 
-    // TODO: consider the pairwise constraint for advanced requirement
-    return flag_1 && flag_2;
+    return !((synonym_candidates[arg1].empty()) || (synonym_candidates[arg2].empty()));
 }
 
 /**
@@ -569,5 +577,16 @@ std::vector<T> vectorIntersection(const std::vector<T>& lst1, const std::vector<
     return result;
 }
 
+template <typename T>
+std::vector<T> vectorUnhashableIntersection(const std::vector<T>& lst1, const std::vector<T>& lst2) {
+    std::vector<T> result;
+    std::set<T> lst1_set(lst1.begin(), lst1.end());
+    for (const auto& element : lst2) {
+        if (lst1_set.find(element) != lst1_set.end()) {
+            result.push_back(element);
+        }
+    }
+    return result;
+}
 } // namespace queryevaluator
 } // namespace qpbackend
