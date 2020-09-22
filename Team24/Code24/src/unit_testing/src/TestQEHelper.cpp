@@ -53,14 +53,6 @@ const CONSTANT_NAME_SET& PKBMock::getAllConstants() const {
     return constants;
 }
 
-STATEMENT_NUMBER_LIST PKBMock::getPreFollows(STATEMENT_NUMBER s) const {
-    return STATEMENT_NUMBER_LIST();
-}
-
-STATEMENT_NUMBER_LIST PKBMock::getPostFollows(STATEMENT_NUMBER s) const {
-    return STATEMENT_NUMBER_LIST();
-}
-
 STATEMENT_NUMBER_LIST PKBMock::getDirectFollow(STATEMENT_NUMBER s) const {
     std::vector<int> stmts;
     if (test_idx == 0) {

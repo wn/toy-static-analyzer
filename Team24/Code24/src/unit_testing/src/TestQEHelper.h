@@ -24,57 +24,54 @@ class PKBMock : public backend::PKB {
     // code 3: code 4 in https://tinyurl.com/y2heef28 -- for isRead/Print/Call/While/IfElse/Assign
     int test_idx;
 
-    STATEMENT_NUMBER_LIST getPreFollows(STATEMENT_NUMBER s) const;
-    STATEMENT_NUMBER_LIST getPostFollows(STATEMENT_NUMBER s) const;
+    bool isRead(STATEMENT_NUMBER s) const override;
+    bool isPrint(STATEMENT_NUMBER s) const override;
+    bool isCall(STATEMENT_NUMBER s) const override;
+    bool isWhile(STATEMENT_NUMBER s) const override;
+    bool isIfElse(STATEMENT_NUMBER s) const override;
+    bool isAssign(STATEMENT_NUMBER s) const override;
 
-    bool isRead(STATEMENT_NUMBER s) const;
-    bool isPrint(STATEMENT_NUMBER s) const;
-    bool isCall(STATEMENT_NUMBER s) const;
-    bool isWhile(STATEMENT_NUMBER s) const;
-    bool isIfElse(STATEMENT_NUMBER s) const;
-    bool isAssign(STATEMENT_NUMBER s) const;
-
-    const STATEMENT_NUMBER_LIST& getAllStatements() const;
-    const VARIABLE_NAME_LIST& getAllVariables() const;
-    const PROCEDURE_NAME_LIST& getAllProcedures() const;
-    const CONSTANT_NAME_SET& getAllConstants() const;
+    const STATEMENT_NUMBER_LIST& getAllStatements() const override;
+    const VARIABLE_NAME_LIST& getAllVariables() const override;
+    const PROCEDURE_NAME_LIST& getAllProcedures() const override;
+    const CONSTANT_NAME_SET& getAllConstants() const override;
 
     // FOLLOWS
-    STATEMENT_NUMBER_LIST getDirectFollow(STATEMENT_NUMBER s) const;
-    STATEMENT_NUMBER_LIST getDirectFollowedBy(STATEMENT_NUMBER s) const;
-    STATEMENT_NUMBER_LIST getStatementsFollowedBy(STATEMENT_NUMBER s) const;
-    STATEMENT_NUMBER_LIST getAllStatementsThatAreFollowed() const;
-    STATEMENT_NUMBER_LIST getStatementsThatFollows(STATEMENT_NUMBER s) const;
-    STATEMENT_NUMBER_LIST getAllStatementsThatFollows() const;
+    STATEMENT_NUMBER_LIST getDirectFollow(STATEMENT_NUMBER s) const override;
+    STATEMENT_NUMBER_LIST getDirectFollowedBy(STATEMENT_NUMBER s) const override;
+    STATEMENT_NUMBER_LIST getStatementsFollowedBy(STATEMENT_NUMBER s) const override;
+    STATEMENT_NUMBER_LIST getAllStatementsThatAreFollowed() const override;
+    STATEMENT_NUMBER_LIST getStatementsThatFollows(STATEMENT_NUMBER s) const override;
+    STATEMENT_NUMBER_LIST getAllStatementsThatFollows() const override;
 
     // PARENT
-    STATEMENT_NUMBER_LIST getParent(STATEMENT_NUMBER statementNumber) const;
-    STATEMENT_NUMBER_LIST getChildren(STATEMENT_NUMBER statementNumber) const;
-    STATEMENT_NUMBER_LIST getAncestors(STATEMENT_NUMBER statementNumber) const;
-    STATEMENT_NUMBER_LIST getStatementsThatHaveAncestors() const;
-    STATEMENT_NUMBER_LIST getDescendants(STATEMENT_NUMBER statementNumber) const;
-    STATEMENT_NUMBER_LIST getStatementsThatHaveDescendants() const;
+    STATEMENT_NUMBER_LIST getParent(STATEMENT_NUMBER statementNumber) const override;
+    STATEMENT_NUMBER_LIST getChildren(STATEMENT_NUMBER statementNumber) const override;
+    STATEMENT_NUMBER_LIST getAncestors(STATEMENT_NUMBER statementNumber) const override;
+    STATEMENT_NUMBER_LIST getStatementsThatHaveAncestors() const override;
+    STATEMENT_NUMBER_LIST getDescendants(STATEMENT_NUMBER statementNumber) const override;
+    STATEMENT_NUMBER_LIST getStatementsThatHaveDescendants() const override;
 
-    STATEMENT_NUMBER_LIST getStatementsThatUse(VARIABLE_NAME v) const;
-    STATEMENT_NUMBER_LIST getStatementsThatUseSomeVariable() const;
-    PROCEDURE_NAME_LIST getProceduresThatUse(VARIABLE_NAME v) const;
-    PROCEDURE_NAME_LIST getProceduresThatUseSomeVariable() const;
-    VARIABLE_NAME_LIST getVariablesUsedIn(PROCEDURE_NAME p) const;
-    VARIABLE_NAME_LIST getVariablesUsedBySomeProcedure() const;
-    VARIABLE_NAME_LIST getVariablesUsedIn(STATEMENT_NUMBER s) const;
-    VARIABLE_NAME_LIST getVariablesUsedBySomeStatement() const;
+    STATEMENT_NUMBER_LIST getStatementsThatUse(VARIABLE_NAME v) const override;
+    STATEMENT_NUMBER_LIST getStatementsThatUseSomeVariable() const override;
+    PROCEDURE_NAME_LIST getProceduresThatUse(VARIABLE_NAME v) const override;
+    PROCEDURE_NAME_LIST getProceduresThatUseSomeVariable() const override;
+    VARIABLE_NAME_LIST getVariablesUsedIn(PROCEDURE_NAME p) const override;
+    VARIABLE_NAME_LIST getVariablesUsedBySomeProcedure() const override;
+    VARIABLE_NAME_LIST getVariablesUsedIn(STATEMENT_NUMBER s) const override;
+    VARIABLE_NAME_LIST getVariablesUsedBySomeStatement() const override;
 
-    STATEMENT_NUMBER_LIST getStatementsThatModify(VARIABLE_NAME v) const;
-    STATEMENT_NUMBER_LIST getStatementsThatModifySomeVariable() const;
-    PROCEDURE_NAME_LIST getProceduresThatModify(VARIABLE_NAME v) const;
-    PROCEDURE_NAME_LIST getProceduresThatModifySomeVariable() const;
-    VARIABLE_NAME_LIST getVariablesModifiedBy(PROCEDURE_NAME p) const;
-    VARIABLE_NAME_LIST getVariablesModifiedBySomeProcedure() const;
-    VARIABLE_NAME_LIST getVariablesModifiedBy(STATEMENT_NUMBER s) const;
-    VARIABLE_NAME_LIST getVariablesModifiedBySomeStatement() const;
+    STATEMENT_NUMBER_LIST getStatementsThatModify(VARIABLE_NAME v) const override;
+    STATEMENT_NUMBER_LIST getStatementsThatModifySomeVariable() const override;
+    PROCEDURE_NAME_LIST getProceduresThatModify(VARIABLE_NAME v) const override;
+    PROCEDURE_NAME_LIST getProceduresThatModifySomeVariable() const override;
+    VARIABLE_NAME_LIST getVariablesModifiedBy(PROCEDURE_NAME p) const override;
+    VARIABLE_NAME_LIST getVariablesModifiedBySomeProcedure() const override;
+    VARIABLE_NAME_LIST getVariablesModifiedBy(STATEMENT_NUMBER s) const override;
+    VARIABLE_NAME_LIST getVariablesModifiedBySomeStatement() const override;
 
     STATEMENT_NUMBER_LIST
-    getAllAssignmentStatementsThatMatch(const std::string& assignee, const std::string& pattern, bool isSubExpr) const;
+    getAllAssignmentStatementsThatMatch(const std::string& assignee, const std::string& pattern, bool isSubExpr) const override;
 };
 
 // For string representing two vectors
