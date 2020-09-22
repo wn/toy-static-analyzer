@@ -354,7 +354,7 @@ PKBImplementation::getAllAssignmentStatementsThatMatch(const std::string& assign
         return {};
     }
     std::vector<std::tuple<std::string, STATEMENT_NUMBER, bool>> candidateResult = patternsMap.at(searchPattern);
-    if (!assignee.empty()) {
+    if (assignee != "_") {
         // remove results that have a different assignee
         auto res = std::remove_if(candidateResult.begin(), candidateResult.end(),
                                   [&](const std::tuple<std::string, STATEMENT_NUMBER, bool>& x) {
