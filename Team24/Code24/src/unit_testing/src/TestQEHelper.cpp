@@ -161,6 +161,35 @@ STATEMENT_NUMBER_LIST PKBMock::getAllStatementsThatFollows() const {
     return stmts;
 }
 
+STATEMENT_NUMBER_LIST PKBMock::getParent(STATEMENT_NUMBER statementNumber) const {
+    std::vector<int> stmts;
+    if (test_idx == 1) {
+        switch (statementNumber) {
+        case 2:
+            stmts = { 1 };
+            break;
+        case 3:
+            stmts = { 2 };
+            break;
+        case 4:
+            stmts = { 1 };
+            break;
+        case 5:
+        case 6:
+            stmts = { 4 };
+            break;
+        default:
+            stmts = {};
+        }
+    }
+    return stmts;
+}
+
+STATEMENT_NUMBER_LIST PKBMock::getChildren(STATEMENT_NUMBER statementNumber) const {
+    std::vector<int> stmts;
+    return stmts;
+}
+
 STATEMENT_NUMBER_LIST PKBMock::getAncestors(STATEMENT_NUMBER statementNumber) const {
     std::vector<int> stmts;
     if (test_idx == 1) {

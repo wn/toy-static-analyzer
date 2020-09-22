@@ -29,6 +29,8 @@ class PKBImplementation : virtual public backend::PKB {
     STATEMENT_NUMBER_LIST getStatementsThatFollows(STATEMENT_NUMBER s) const override;
     STATEMENT_NUMBER_LIST getAllStatementsThatAreFollowed() const override;
 
+    STATEMENT_NUMBER_LIST getParent(STATEMENT_NUMBER statementNumber) const override;
+    STATEMENT_NUMBER_LIST getChildren(STATEMENT_NUMBER statementNumber) const override;
     STATEMENT_NUMBER_LIST getAncestors(STATEMENT_NUMBER statementNumber) const override;
     STATEMENT_NUMBER_LIST getStatementsThatHaveAncestors() const override;
     STATEMENT_NUMBER_LIST getDescendants(STATEMENT_NUMBER statementNumber) const override;

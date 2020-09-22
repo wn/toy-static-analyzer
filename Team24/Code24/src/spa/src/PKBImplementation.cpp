@@ -182,6 +182,23 @@ STATEMENT_NUMBER_LIST PKBImplementation::getAllStatementsThatAreFollowed() const
 }
 
 /** -------------------------- PARENTS ---------------------------- **/
+
+STATEMENT_NUMBER_LIST PKBImplementation::getParent(STATEMENT_NUMBER statementNumber) const {
+    auto it = childrenParentRelation.find(statementNumber);
+    if (it == childrenParentRelation.end()) {
+        return {};
+    }
+    return { it->second };
+}
+
+STATEMENT_NUMBER_LIST PKBImplementation::getChildren(STATEMENT_NUMBER statementNumber) const {
+    auto it = parentChildrenRelation.find(statementNumber);
+    if (it == parentChildrenRelation.end()) {
+        return {};
+    }
+    return it->second;
+}
+
 STATEMENT_NUMBER_LIST PKBImplementation::getAncestors(STATEMENT_NUMBER s) const {
     return extractor::getVisitedPathFromStart(s, childrenParentRelation);
 }

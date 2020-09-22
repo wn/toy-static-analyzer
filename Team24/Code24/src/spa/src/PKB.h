@@ -71,15 +71,16 @@ class PKB {
     //
     // A list of statements is returned such that for statement s,
     // Parent*(s, <statement at statementNumber>) holds true.
-    // We order the STATEMENT_LIST in order of proximity to the statement, i.e.
-    // the first item in the list is the closest ancestor to the statementNumber.
     //
     // Usage: To get all s1 such that Parent*(s1, 9),
     // ancestors = getAncestors(9)
     //
-    // Usage: To get the s1 such that Parent(s1, 9),
-    // ancestors = getAncestors(9)
-    // parent_of_9 = ancestors[0]
+    // Usage: To get the s1 such that Parent(s1, 9):
+    // parent_of_9 = getParent(9)
+    // Usage: To get the s1 such that Parent(9, s1):
+    // children_of_9 = getChildren(9)
+    virtual STATEMENT_NUMBER_LIST getParent(STATEMENT_NUMBER statementNumber) const = 0;
+    virtual STATEMENT_NUMBER_LIST getChildren(STATEMENT_NUMBER statementNumber) const = 0;
     virtual STATEMENT_NUMBER_LIST getAncestors(STATEMENT_NUMBER statementNumber) const = 0;
     virtual STATEMENT_NUMBER_LIST getStatementsThatHaveAncestors() const = 0;
 

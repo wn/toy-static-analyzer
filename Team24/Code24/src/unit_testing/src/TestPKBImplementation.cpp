@@ -192,6 +192,66 @@ TEST_CASE("Test getDescendants") {
     REQUIRE(pkb.getDescendants(6) == expected6);
 }
 
+TEST_CASE("Test getParent") {
+    const char STRUCTURED_STATEMENT[] = "procedure MySpecialProc {"
+                                        "while (y == 3) {"
+                                        "a=3;"
+                                        "while (x == 3) {"
+                                        "x = 1;"
+                                        "}"
+                                        "b=4;"
+                                        "}"
+                                        "}";
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    std::vector<int> expected = {};
+    REQUIRE(pkb.getParent(1) == expected);
+
+    std::vector<int> expected2 = { 1 };
+    REQUIRE(pkb.getParent(2) == expected2);
+
+    std::vector<int> expected3 = { 1 };
+    REQUIRE(pkb.getParent(3) == expected3);
+
+    std::vector<int> expected4 = { 3 };
+    REQUIRE(pkb.getParent(4) == expected4);
+
+    std::vector<int> expected5 = { 1 };
+    REQUIRE(pkb.getParent(5) == expected5);
+}
+
+TEST_CASE("Test getChildren") {
+    const char STRUCTURED_STATEMENT[] = "procedure MySpecialProc {"
+                                        "while (y == 3) {"
+                                        "a=3;"
+                                        "while (x == 3) {"
+                                        "x = 1;"
+                                        "}"
+                                        "b=4;"
+                                        "}"
+                                        "}";
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    std::vector<int> expected = { 2, 3, 5 };
+    REQUIRE(pkb.getChildren(1) == expected);
+
+    std::vector<int> expected2 = {};
+    REQUIRE(pkb.getChildren(2) == expected2);
+
+    std::vector<int> expected3 = { 4 };
+    REQUIRE(pkb.getChildren(3) == expected3);
+
+    std::vector<int> expected4 = {};
+    REQUIRE(pkb.getChildren(4) == expected4);
+
+    std::vector<int> expected5 = {};
+    REQUIRE(pkb.getChildren(5) == expected5);
+}
+
 TEST_CASE("Test getStatementsThatHaveAncestors") {
     Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
     TNode ast(parser.parse());

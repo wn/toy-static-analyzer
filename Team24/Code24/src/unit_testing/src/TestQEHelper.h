@@ -46,6 +46,8 @@ class PKBMock : public backend::PKB {
     STATEMENT_NUMBER_LIST getAllStatementsThatFollows() const;
 
     // PARENT
+    STATEMENT_NUMBER_LIST getParent(STATEMENT_NUMBER statementNumber) const;
+    STATEMENT_NUMBER_LIST getChildren(STATEMENT_NUMBER statementNumber) const;
     STATEMENT_NUMBER_LIST getAncestors(STATEMENT_NUMBER statementNumber) const;
     STATEMENT_NUMBER_LIST getStatementsThatHaveAncestors() const;
     STATEMENT_NUMBER_LIST getDescendants(STATEMENT_NUMBER statementNumber) const;
