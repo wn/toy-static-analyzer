@@ -440,6 +440,19 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelation(const backe
     case POSTUSESP:
         result = pkb->getProceduresThatUse(arg);
         break;
+    case PREMODIFIESS:
+        result = pkb->getVariablesModifiedBy(std::stoi(arg));
+        break;
+    case POSTMODIFIESS:
+        stmts = pkb->getStatementsThatModify(arg);
+        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        break;
+    case PREMODIFIESP:
+        result = pkb->getVariablesModifiedBy(arg);
+        break;
+    case POSTMODIFIESP:
+        result = pkb->getProceduresThatModify(arg);
+        break;
     default:
         handleError("unknown sub-relation type");
     }
@@ -479,6 +492,13 @@ SingleQueryEvaluator::inquirePKBForRelationWildcard(const backend::PKB* pkb, Sub
         break;
     case USEP_WILDCARD:
         result = pkb->getProceduresThatUseSomeVariable();
+        break;
+    case MODIFIESS_WILDCARD:
+        stmts = pkb->getStatementsThatModifySomeVariable();
+        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        break;
+    case MODIFIESP_WILDCARD:
+        result = pkb->getProceduresThatModifySomeVariable();
         break;
     default:
         handleError("unknown sub-relation type");

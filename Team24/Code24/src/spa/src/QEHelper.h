@@ -27,6 +27,12 @@ enum SubRelationType {
     POSTUSESP, // check upon v, get p (procedure) that Uses(p, v)
     USES_WILDCARD, // check upon s (stmt), Uses(s, v)
     USEP_WILDCARD, // check upon p (procedure), Uses(p, v)
+    PREMODIFIESS, // check upon s (stmt), get v that Modifies(s, v)
+    POSTMODIFIESS, // check upon v, get s (stmt) that Modifies(s, v)
+    PREMODIFIESP, // check upon p (procedure), get v that Modifies(p, v)
+    POSTMODIFIESP, // check upon v, get p (procedure) that Modifes(p, v)
+    MODIFIESS_WILDCARD, // check upon s (stmt), Modifies(s, v)
+    MODIFIESP_WILDCARD, // check upon p (procedure), Modifies(p, v)
     INVALID // no suitable subrelation to evaluate
 };
 

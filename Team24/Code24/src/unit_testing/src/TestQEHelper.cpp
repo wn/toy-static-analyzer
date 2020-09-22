@@ -2,12 +2,26 @@
 
 namespace qpbackend {
 namespace qetest {
+
+std::string printVectorString(const std::vector<std::string>& lst) {
+    std::string res;
+    for (const std::string& s : lst) {
+        res += s + ", ";
+    }
+    return res;
+}
+
 bool checkIfVectorOfStringMatch(const std::vector<std::string>& lst1, const std::vector<std::string>& lst2) {
     std::vector<std::string> copy1(lst1);
     std::vector<std::string> copy2(lst2);
     std::sort(copy1.begin(), copy1.end());
     std::sort(copy2.begin(), copy2.end());
-    return copy1 == copy2;
+    if (copy1 != copy2) {
+        // This will print the error :)
+        throw std::runtime_error("string dont match: " + printVectorString(copy1) + " | " +
+                                 printVectorString(copy2));
+    }
+    return true;
 }
 
 const STATEMENT_NUMBER_LIST& PKBMock::getAllStatements() const {
@@ -20,7 +34,7 @@ const STATEMENT_NUMBER_LIST& PKBMock::getAllStatements() const {
         statements = { 1, 2, 3, 4, 5, 6 };
         break;
     case 2:
-        statements = { 1, 2, 3, 4, 5, 6 };
+        statements = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
         break;
     case 3:
         statements = { 1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12,
@@ -39,7 +53,7 @@ const VARIABLE_NAME_LIST& PKBMock::getAllVariables() const {
         variables = { "x", "y", "z" };
         break;
     case 2:
-        variables = { "x", "y", "z", "m", "n", "count", "random" };
+        variables = { "x", "y", "z", "m", "n", "count", "random", "a" };
     }
     return variables;
 }
@@ -448,28 +462,99 @@ VARIABLE_NAME_LIST PKBMock::getVariablesUsedBySomeStatement() const {
 }
 
 STATEMENT_NUMBER_LIST PKBMock::getStatementsThatModify(VARIABLE_NAME v) const {
-    return STATEMENT_NUMBER_LIST();
+    std::vector<int> stmts;
+    if (test_idx == 2) {
+        if (v == "random") {
+            stmts = { 2, 3 };
+        } else if (v == "n") {
+            stmts = { 2, 4, 5 };
+        } else if (v == "y") {
+            stmts = { 2, 4, 6 };
+        } else if (v == "a") {
+            stmts = { 7, 8 };
+        }
+    }
+    return stmts;
 }
 STATEMENT_NUMBER_LIST PKBMock::getStatementsThatModifySomeVariable() const {
-    return STATEMENT_NUMBER_LIST();
+    std::vector<int> stmts;
+    if (test_idx == 2) {
+        stmts = { 2, 3, 4, 5, 6, 7, 8, 9 };
+    }
+    return stmts;
 }
 PROCEDURE_NAME_LIST PKBMock::getProceduresThatModify(VARIABLE_NAME v) const {
-    return PROCEDURE_NAME_LIST();
+    std::vector<std::string> procs;
+    if (test_idx == 2) {
+        if (v == "random" || v == "n" || v == "y") {
+            procs = { "foo", "bar" };
+        }
+    }
+    return procs;
 }
 PROCEDURE_NAME_LIST PKBMock::getProceduresThatModifySomeVariable() const {
-    return PROCEDURE_NAME_LIST();
+    std::vector<std::string> procs;
+    if (test_idx == 2) {
+        procs = { "foo", "bar" };
+    }
+    return procs;
 }
 VARIABLE_NAME_LIST PKBMock::getVariablesModifiedBy(PROCEDURE_NAME p) const {
-    return VARIABLE_NAME_LIST();
+    std::vector<std::string> vars;
+    if (test_idx == 2) {
+        if (p == "foo") {
+            vars = { "n", "random", "y", "a" };
+        } else if (p == "bar") {
+            vars = { "n", "random", "y", "a" };
+        }
+    }
+    return vars;
 }
 VARIABLE_NAME_LIST PKBMock::getVariablesModifiedBySomeProcedure() const {
-    return VARIABLE_NAME_LIST();
+    std::vector<std::string> vars;
+    if (test_idx == 2) {
+        vars = { "n", "y", "random", "a" };
+    }
+    return vars;
 }
 VARIABLE_NAME_LIST PKBMock::getVariablesModifiedBy(STATEMENT_NUMBER s) const {
-    return VARIABLE_NAME_LIST();
+    std::vector<std::string> vars;
+    if (test_idx == 2) {
+        switch (s) {
+        case 2:
+            vars = { "n", "random", "y" };
+            break;
+        case 3:
+            vars = { "random" };
+            break;
+        case 4:
+            vars = { "n", "y" };
+            break;
+        case 5:
+            vars = { "n" };
+            break;
+        case 6:
+            vars = { "y" };
+            break;
+        case 7:
+            vars = { "a" };
+            break;
+        case 8:
+            vars = { "a" };
+            break;
+        case 9:
+            vars = { "a" };
+            break;
+        }
+    }
+    return vars;
 }
 VARIABLE_NAME_LIST PKBMock::getVariablesModifiedBySomeStatement() const {
-    return VARIABLE_NAME_LIST();
+    std::vector<std::string> vars;
+    if (test_idx == 2) {
+        vars = { "n", "y", "random", "a" };
+    }
+    return vars;
 }
 
 STATEMENT_NUMBER_LIST
@@ -518,12 +603,25 @@ bool PKBMock::isWhile(STATEMENT_NUMBER s) const {
             return true;
         }
     }
+    if (test_idx == 2) {
+        switch (s) {
+        case 7:
+        case 8:
+            return true;
+        }
+    }
     return false;
 }
 bool PKBMock::isIfElse(STATEMENT_NUMBER s) const {
     if (test_idx == 3) {
         switch (s) {
         case 19:
+            return true;
+        }
+    }
+    if (test_idx == 2) {
+        switch (s) {
+        case 4:
             return true;
         }
     }
