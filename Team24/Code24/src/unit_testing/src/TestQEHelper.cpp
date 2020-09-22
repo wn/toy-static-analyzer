@@ -62,13 +62,86 @@ STATEMENT_NUMBER_LIST PKBMock::getPostFollows(STATEMENT_NUMBER s) const {
 }
 
 STATEMENT_NUMBER_LIST PKBMock::getDirectFollow(STATEMENT_NUMBER s) const {
-    return STATEMENT_NUMBER_LIST();
+    std::vector<int> stmts;
+    if (test_idx == 0) {
+        switch (s) {
+        case 2:
+            stmts = { 1 };
+            break;
+        case 3:
+            stmts = { 2 };
+            break;
+        case 4:
+            stmts = { 3 };
+            break;
+        case 5:
+            stmts = { 4 };
+            break;
+        case 10:
+            stmts = { 5 };
+            break;
+        case 14:
+            stmts = { 10 };
+            break;
+        case 7:
+            stmts = { 6 };
+            break;
+        case 8:
+            stmts = { 7 };
+            break;
+        case 9:
+            stmts = { 8 };
+            break;
+        case 13:
+            stmts = { 12 };
+        default:
+            stmts = {};
+        }
+    }
+    return stmts;
 }
 STATEMENT_NUMBER_LIST PKBMock::getDirectFollowedBy(STATEMENT_NUMBER s) const {
-    return STATEMENT_NUMBER_LIST();
+    std::vector<int> stmts;
+    if (test_idx == 0) {
+        switch (s) {
+        case 1:
+            stmts = { 2 };
+            break;
+        case 2:
+            stmts = { 3 };
+            break;
+        case 3:
+            stmts = { 4 };
+            break;
+        case 4:
+            stmts = { 5 };
+            break;
+        case 5:
+            stmts = { 10 };
+            break;
+        case 10:
+            stmts = { 14 };
+            break;
+        case 6:
+            stmts = { 7 };
+            break;
+        case 7:
+            stmts = { 8 };
+            break;
+        case 8:
+            stmts = { 9 };
+            break;
+        case 12:
+            stmts = { 13 };
+            break;
+        default:
+            stmts = {};
+        }
+    }
+    return stmts;
 }
 
-STATEMENT_NUMBER_LIST PKBMock::getStatementsFollowedBy(STATEMENT_NUMBER s) const {
+STATEMENT_NUMBER_LIST PKBMock::getStatementsThatFollows(STATEMENT_NUMBER s) const {
     std::vector<int> stmts;
     if (test_idx == 0) {
         switch (s) {
@@ -117,7 +190,7 @@ STATEMENT_NUMBER_LIST PKBMock::getAllStatementsThatAreFollowed() const {
     return stmts;
 }
 
-STATEMENT_NUMBER_LIST PKBMock::getStatementsThatFollows(STATEMENT_NUMBER s) const {
+STATEMENT_NUMBER_LIST PKBMock::getStatementsFollowedBy(STATEMENT_NUMBER s) const {
     std::vector<int> stmts;
     if (test_idx == 0) {
         switch (s) {
@@ -191,6 +264,21 @@ STATEMENT_NUMBER_LIST PKBMock::getParent(STATEMENT_NUMBER statementNumber) const
 
 STATEMENT_NUMBER_LIST PKBMock::getChildren(STATEMENT_NUMBER statementNumber) const {
     std::vector<int> stmts;
+    if (test_idx == 1) {
+        switch (statementNumber) {
+        case 1:
+            stmts = { 2, 4 };
+            break;
+        case 2:
+            stmts = { 3 };
+            break;
+        case 4:
+            stmts = { 5, 6 };
+            break;
+        default:
+            stmts = {};
+        }
+    }
     return stmts;
 }
 

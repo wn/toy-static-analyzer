@@ -49,7 +49,7 @@ class PKB {
     // Follows*(<statement at statementNumber>, s) holds true.
     //
     // Usage: To get s1 such that Follows(9, s1)
-    // first_statement_after_statement_9 = getStatementsFollowedBy(9)
+    // first_statement_after_statement_9 = getDirectFollowedBy(9)
     // Usage: To get s1 such that Follows(s1, 9)
     // first_statement_before_statement_9 = getDirectFollow(9)
 

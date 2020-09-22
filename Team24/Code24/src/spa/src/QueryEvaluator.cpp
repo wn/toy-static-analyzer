@@ -381,50 +381,33 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelation(const backe
     STATEMENT_NUMBER_LIST stmts;
     switch (subRelationType) {
     case PREFOLLOWS:
-        stmts = pkb->getStatementsFollowedBy(std::stoi(arg));
-        if (!stmts.empty()) {
-            result.push_back(std::to_string(stmts[0]));
-        }
+        stmts = pkb->getDirectFollowedBy(std::stoi(arg));
         break;
     case POSTFOLLOWS:
-        stmts = pkb->getStatementsThatFollows(std::stoi(arg));
-        if (!stmts.empty()) {
-            result.push_back(std::to_string(stmts.back()));
-        }
+        stmts = pkb->getDirectFollow(std::stoi(arg));
         break;
     case PREFOLLOWST:
-        stmts = pkb->getStatementsFollowedBy(std::stoi(arg));
-        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        stmts = pkb->getStatementsThatFollows(std::stoi(arg));
         break;
     case POSTFOLLOWST:
-        stmts = pkb->getStatementsThatFollows(std::stoi(arg));
-        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        stmts = pkb->getStatementsFollowedBy(std::stoi(arg));
         break;
     case PREPARENT:
-        stmts = pkb->getDescendants(std::stoi(arg));
-        for (const auto& child : stmts) {
-            if (std::stoi(arg) == (pkb->getAncestors(child)).at(0)) {
-                result.push_back(std::to_string(child));
-            }
-        }
+        stmts = pkb->getChildren(std::stoi(arg));
         break;
     case POSTPARENT:
-        stmts = pkb->getAncestors(std::stoi(arg));
-        if (!stmts.empty()) {
-            result.push_back(std::to_string(stmts[0]));
-        }
+        stmts = pkb->getParent(std::stoi(arg));
         break;
     case PREPARENTT:
         stmts = pkb->getDescendants(std::stoi(arg));
-        result = castToStrVector<STATEMENT_NUMBER>(stmts);
         break;
     case POSTPARENTT:
         stmts = pkb->getAncestors(std::stoi(arg));
-        result = castToStrVector<STATEMENT_NUMBER>(stmts);
         break;
     default:
         handleError("unknown sub-relation type");
     }
+    result = castToStrVector<STATEMENT_NUMBER>(stmts);
     return result;
 }
 
