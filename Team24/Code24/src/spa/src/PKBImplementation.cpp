@@ -32,6 +32,7 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
     // Pattern
     patternsMap = extractor::getPatternsMap(tNodeTypeToTNodesMap[Assign], tNodeToStatementNumber);
 
+    // Uses
     std::unordered_map<const TNode*, std::unordered_set<std::string>> usesMapping =
     extractor::getUsesMapping(tNodeTypeToTNodesMap);
 
@@ -66,6 +67,43 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
         } else {
             throw std::runtime_error("Found a TNode " + tNode->toShortString() +
                                      " that should not be Use-ing any variable");
+        }
+    }
+
+    // Modifies
+    std::unordered_map<const TNode*, std::unordered_set<std::string>> modifiesMapping =
+    extractor::getModifiesMapping(tNodeTypeToTNodesMap);
+    for (auto& p : modifiesMapping) {
+        const TNode* tNode = p.first;
+        std::unordered_set<VARIABLE_NAME> modifiedVariables = p.second;
+        // For Statements
+        if (tNode->isStatementNode()) {
+            STATEMENT_NUMBER statementNumber = tNodeToStatementNumber[tNode];
+            // Update statement -> variable
+            allStatementsThatModifySomeVariable.insert(statementNumber);
+            statementToModifiedVariables[statementNumber] =
+            VARIABLE_NAME_SET(modifiedVariables.begin(), modifiedVariables.end());
+
+            // Update variable -> statement
+            for (const VARIABLE_NAME& variable : modifiedVariables) {
+                variableToStatementsThatModifyIt[variable].insert(statementNumber);
+                allVariablesModifiedBySomeStatement.insert(variable);
+            }
+            // For Procedures
+        } else if (tNode->type == TNodeType::Procedure) {
+            PROCEDURE_NAME procedureName = tNode->name;
+            // Update proc -> variable
+            allProceduresThatThatModifySomeVariable.insert(procedureName);
+            procedureToModifiedVariables[procedureName] =
+            PROCEDURE_NAME_SET(modifiedVariables.begin(), modifiedVariables.end());
+            // Update variable -> proc
+            for (const VARIABLE_NAME& variable : modifiedVariables) {
+                variableToProceduresThatModifyIt[variable].insert(procedureName);
+                allVariablesModifiedBySomeProcedure.insert(variable);
+            }
+        } else {
+            throw std::runtime_error("Found a TNode " + tNode->toShortString() +
+                                     " that should not be Modify-ing any variable");
         }
     }
 }
@@ -186,30 +224,55 @@ VARIABLE_NAME_LIST PKBImplementation::getVariablesUsedBySomeStatement() const {
 
 /** -------------------------- MODIFIES ---------------------------- **/
 STATEMENT_NUMBER_LIST PKBImplementation::getStatementsThatModify(VARIABLE_NAME v) const {
-    return STATEMENT_NUMBER_LIST();
+    auto it = variableToStatementsThatModifyIt.find(v);
+    if (it == variableToStatementsThatModifyIt.end()) {
+        return STATEMENT_NUMBER_LIST();
+    } else {
+        return STATEMENT_NUMBER_LIST(it->second.begin(), it->second.end());
+    }
 }
 STATEMENT_NUMBER_LIST PKBImplementation::getStatementsThatModifySomeVariable() const {
-    return STATEMENT_NUMBER_LIST();
+    return STATEMENT_NUMBER_LIST(allStatementsThatModifySomeVariable.begin(),
+                                 allStatementsThatModifySomeVariable.end());
 }
 PROCEDURE_NAME_LIST PKBImplementation::getProceduresThatModify(VARIABLE_NAME v) const {
-    return PROCEDURE_NAME_LIST();
+    auto it = variableToProceduresThatModifyIt.find(v);
+    if (it == variableToProceduresThatModifyIt.end()) {
+        return PROCEDURE_NAME_LIST();
+    } else {
+        return PROCEDURE_NAME_LIST(it->second.begin(), it->second.end());
+    }
 }
 PROCEDURE_NAME_LIST PKBImplementation::getProceduresThatModifySomeVariable() const {
-    return PROCEDURE_NAME_LIST();
+    return PROCEDURE_NAME_LIST(allProceduresThatThatModifySomeVariable.begin(),
+                               allProceduresThatThatModifySomeVariable.end());
 }
 VARIABLE_NAME_LIST PKBImplementation::getVariablesModifiedBy(PROCEDURE_NAME p) const {
-    return VARIABLE_NAME_LIST();
+    auto it = procedureToModifiedVariables.find(p);
+    if (it == procedureToModifiedVariables.end()) {
+        return VARIABLE_NAME_LIST();
+    } else {
+        return VARIABLE_NAME_LIST(it->second.begin(), it->second.end());
+    }
 }
 VARIABLE_NAME_LIST PKBImplementation::getVariablesModifiedBySomeProcedure() const {
-    return VARIABLE_NAME_LIST();
+    return VARIABLE_NAME_LIST(allVariablesModifiedBySomeProcedure.begin(),
+                              allVariablesModifiedBySomeProcedure.end());
 }
 VARIABLE_NAME_LIST PKBImplementation::getVariablesModifiedBy(STATEMENT_NUMBER s) const {
-    return VARIABLE_NAME_LIST();
+    auto it = statementToModifiedVariables.find(s);
+    if (it == statementToModifiedVariables.end()) {
+        return VARIABLE_NAME_LIST();
+    } else {
+        return VARIABLE_NAME_LIST(it->second.begin(), it->second.end());
+    }
 }
 VARIABLE_NAME_LIST PKBImplementation::getVariablesModifiedBySomeStatement() const {
-    return VARIABLE_NAME_LIST();
+    return VARIABLE_NAME_LIST(allVariablesModifiedBySomeStatement.begin(),
+                              allVariablesModifiedBySomeStatement.end());
 }
 
+/** -------------------------- Pattern ---------------------------- **/
 STATEMENT_NUMBER_LIST
 PKBImplementation::getAllAssignmentStatementsThatMatch(const std::string& assignee,
                                                        const std::string& pattern,

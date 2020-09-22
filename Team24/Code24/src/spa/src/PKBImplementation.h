@@ -89,15 +89,22 @@ class PKBImplementation : virtual public backend::PKB {
     // Uses helper:
     std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_SET> variableToStatementsThatUseIt;
     STATEMENT_NUMBER_SET allStatementsThatUseSomeVariable;
-
     std::unordered_map<VARIABLE_NAME, PROCEDURE_NAME_SET> variableToProceduresThatUseIt;
     PROCEDURE_NAME_SET allProceduresThatThatUseSomeVariable;
-
     std::unordered_map<PROCEDURE_NAME, VARIABLE_NAME_SET> procedureToUsedVariables;
     VARIABLE_NAME_SET allVariablesUsedBySomeProcedure;
-
     std::unordered_map<STATEMENT_NUMBER, VARIABLE_NAME_SET> statementToUsedVariables;
     VARIABLE_NAME_SET allVariablesUsedBySomeStatement;
+
+    // Modifies helper:
+    std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_SET> variableToStatementsThatModifyIt;
+    STATEMENT_NUMBER_SET allStatementsThatModifySomeVariable;
+    std::unordered_map<VARIABLE_NAME, PROCEDURE_NAME_SET> variableToProceduresThatModifyIt;
+    PROCEDURE_NAME_SET allProceduresThatThatModifySomeVariable;
+    std::unordered_map<PROCEDURE_NAME, VARIABLE_NAME_SET> procedureToModifiedVariables;
+    VARIABLE_NAME_SET allVariablesModifiedBySomeProcedure;
+    std::unordered_map<STATEMENT_NUMBER, VARIABLE_NAME_SET> statementToModifiedVariables;
+    VARIABLE_NAME_SET allVariablesModifiedBySomeStatement;
 
     // Pattern helper:
     std::unordered_map<std::string, std::vector<std::tuple<std::string, STATEMENT_NUMBER, bool>>> patternsMap;
