@@ -38,6 +38,8 @@ class PKBMock : public backend::PKB {
     const CONSTANT_NAME_SET& getAllConstants() const;
 
     // FOLLOWS
+    STATEMENT_NUMBER_LIST getDirectFollow(STATEMENT_NUMBER s) const;
+    STATEMENT_NUMBER_LIST getDirectFollowedBy(STATEMENT_NUMBER s) const;
     STATEMENT_NUMBER_LIST getStatementsFollowedBy(STATEMENT_NUMBER s) const;
     STATEMENT_NUMBER_LIST getAllStatementsThatAreFollowed() const;
     STATEMENT_NUMBER_LIST getStatementsThatFollows(STATEMENT_NUMBER s) const;

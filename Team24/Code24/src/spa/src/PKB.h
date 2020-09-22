@@ -47,9 +47,13 @@ class PKB {
     // i.e. a list of statements is returned such that for statement s,
     // Follows*(<statement at statementNumber>, s) holds true.
     //
-    // Usage: To get s1 such that Follows(9, s1),
-    // statements_after_statement_9 = getStatementsFollowedBy(9)
-    // first_statement_after_statement_9 = statements_after_statement_9[0]
+    // Usage: To get s1 such that Follows(9, s1)
+    // first_statement_after_statement_9 = getStatementsFollowedBy(9)
+    // Usage: To get s1 such that Follows(s1, 9)
+    // first_statement_before_statement_9 = getDirectFollow(9)
+
+    virtual STATEMENT_NUMBER_LIST getDirectFollow(STATEMENT_NUMBER s) const = 0;
+    virtual STATEMENT_NUMBER_LIST getDirectFollowedBy(STATEMENT_NUMBER s) const = 0;
     virtual STATEMENT_NUMBER_LIST getStatementsFollowedBy(STATEMENT_NUMBER s) const = 0;
     // Get all statements that are followed by some statement.
     virtual STATEMENT_NUMBER_LIST getAllStatementsThatAreFollowed() const = 0;

@@ -24,6 +24,54 @@ const char STRUCTURED_STATEMENT[] = "procedure MySpecialProc {"
                                     "some_var = 23 + another_var;"
                                     "}";
 
+TEST_CASE("Test getDirectFollow") {
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    std::vector<int> expected = { 3 };
+    REQUIRE(pkb.getDirectFollow(1) == expected);
+
+    std::vector<int> expected2 = {};
+    REQUIRE(pkb.getDirectFollow(2) == expected2);
+
+    std::vector<int> expected3 = { 6 };
+    REQUIRE(pkb.getDirectFollow(3) == expected3);
+
+    std::vector<int> expected4 = {};
+    REQUIRE(pkb.getDirectFollow(4) == expected4);
+
+    std::vector<int> expected5 = {};
+    REQUIRE(pkb.getDirectFollow(5) == expected5);
+
+    std::vector<int> expected6 = {};
+    REQUIRE(pkb.getDirectFollow(6) == expected6);
+}
+
+TEST_CASE("Test getDirectFollowedBy") {
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    std::vector<int> expected = {};
+    REQUIRE(pkb.getDirectFollowedBy(1) == expected);
+
+    std::vector<int> expected2 = {};
+    REQUIRE(pkb.getDirectFollowedBy(2) == expected2);
+
+    std::vector<int> expected3 = { 1 };
+    REQUIRE(pkb.getDirectFollowedBy(3) == expected3);
+
+    std::vector<int> expected4 = {};
+    REQUIRE(pkb.getDirectFollowedBy(4) == expected4);
+
+    std::vector<int> expected5 = {};
+    REQUIRE(pkb.getDirectFollowedBy(5) == expected5);
+
+    std::vector<int> expected6 = { 3 };
+    REQUIRE(pkb.getDirectFollowedBy(6) == expected6);
+}
+
 TEST_CASE("Test getStatementsFollowedBy") {
     Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
     TNode ast(parser.parse());
@@ -54,8 +102,7 @@ TEST_CASE("Test getStatementsThatFollows") {
     PKBImplementation pkb(ast);
 
     std::vector<int> expected = { 3, 6 };
-    std::vector<int> actual = { 3, 6 };
-    REQUIRE(actual == expected);
+    REQUIRE(pkb.getStatementsThatFollows(1) == expected);
 
     std::vector<int> expected2 = {};
     REQUIRE(pkb.getStatementsThatFollows(2) == expected2);

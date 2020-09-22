@@ -22,6 +22,8 @@ class PKBImplementation : virtual public backend::PKB {
     bool isIfElse(STATEMENT_NUMBER s) const override;
     bool isAssign(STATEMENT_NUMBER s) const override;
 
+    STATEMENT_NUMBER_LIST getDirectFollow(STATEMENT_NUMBER s) const override;
+    STATEMENT_NUMBER_LIST getDirectFollowedBy(STATEMENT_NUMBER s) const override;
     STATEMENT_NUMBER_LIST getStatementsFollowedBy(STATEMENT_NUMBER s) const override;
     STATEMENT_NUMBER_LIST getAllStatementsThatFollows() const override;
     STATEMENT_NUMBER_LIST getStatementsThatFollows(STATEMENT_NUMBER s) const override;

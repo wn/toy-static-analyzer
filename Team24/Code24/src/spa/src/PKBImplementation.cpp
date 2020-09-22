@@ -146,6 +146,23 @@ const CONSTANT_NAME_SET& PKBImplementation::getAllConstants() const {
 }
 
 /** -------------------------- FOLLOWS ---------------------------- **/
+
+STATEMENT_NUMBER_LIST PKBImplementation::getDirectFollow(STATEMENT_NUMBER s) const {
+    auto it = followedFollowRelation.find(s);
+    if (it == followedFollowRelation.end()) {
+        return {};
+    }
+    return { it->second };
+}
+
+STATEMENT_NUMBER_LIST PKBImplementation::getDirectFollowedBy(STATEMENT_NUMBER s) const {
+    auto it = followFollowedRelation.find(s);
+    if (it == followFollowedRelation.end()) {
+        return {};
+    }
+    return { it->second };
+}
+
 // TODO(weineng) optimize in the future.
 STATEMENT_NUMBER_LIST PKBImplementation::getStatementsThatFollows(STATEMENT_NUMBER s) const {
     return extractor::getVisitedPathFromStart(s, followedFollowRelation);

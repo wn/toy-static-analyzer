@@ -57,6 +57,13 @@ STATEMENT_NUMBER_LIST PKBMock::getPostFollows(STATEMENT_NUMBER s) const {
     return STATEMENT_NUMBER_LIST();
 }
 
+STATEMENT_NUMBER_LIST PKBMock::getDirectFollow(STATEMENT_NUMBER s) const {
+    return STATEMENT_NUMBER_LIST();
+}
+STATEMENT_NUMBER_LIST PKBMock::getDirectFollowedBy(STATEMENT_NUMBER s) const {
+    return STATEMENT_NUMBER_LIST();
+}
+
 STATEMENT_NUMBER_LIST PKBMock::getStatementsFollowedBy(STATEMENT_NUMBER s) const {
     std::vector<int> stmts;
     if (test_idx == 0) {
