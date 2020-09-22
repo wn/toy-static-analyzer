@@ -45,6 +45,10 @@ TEST_CASE("Test without clauses") {
     // select procedures
     Query queryProc = { { { "p", PROCEDURE } }, { "p" }, {}, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryProc), { "computeCentroid" }));
+
+    // select constants
+    Query queryConst = { { { "c", CONSTANT } }, { "c" }, {}, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryConst), { "0", "1" }));
 }
 
 TEST_CASE("TEST select entities by type") {

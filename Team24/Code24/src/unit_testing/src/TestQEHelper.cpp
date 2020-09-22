@@ -61,10 +61,10 @@ const PROCEDURE_NAME_LIST& PKBMock::getAllProcedures() const {
 
 const CONSTANT_NAME_SET& PKBMock::getAllConstants() const {
     static std::unordered_set<std::string> constants;
-    //    switch (test_idx) {
-    //    case 0:
-    //        constants = { "123" };
-    //    }
+    switch (test_idx) {
+    case 0:
+        constants = { "0", "1" };
+    }
     return constants;
 }
 

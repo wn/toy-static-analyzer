@@ -93,7 +93,10 @@ void SingleQueryEvaluator::initializeCandidate(const backend::PKB* pkb,
     } else if (entityType == PROCEDURE) {
         synonym_candidates[synonymName] = pkb->getAllProcedures();
     } else if (entityType == CONSTANT) {
-        synonym_candidates[synonymName] = {}; // TODO: call PKB for constants
+        CONSTANT_NAME_SET consts = pkb->getAllConstants();
+        std::vector<std::string> constStrs;
+        std::copy(consts.begin(), consts.end(), std::back_inserter(constStrs));
+        synonym_candidates[synonymName] = constStrs;
     } else {
         STATEMENT_NUMBER_LIST result = pkb->getAllStatements();
         if (entityType != STMT) {
