@@ -12,6 +12,9 @@
 #include <sstream>
 #include <sys/stat.h>
 
+// Toggle this to false when submitting. SANITY=true enforces stricter checks in this program.
+#define SANITY true
+
 // implementation code of WrapperFactory - do NOT modify the next 5 lines
 AbstractWrapper* WrapperFactory::wrapper = 0;
 AbstractWrapper* WrapperFactory::createWrapper() {
@@ -29,20 +32,28 @@ TestWrapper::TestWrapper() {
 
 // method for parsing the SIMPLE source
 void TestWrapper::parse(std::string filename) {
-    struct stat buffer;
-    if (stat(filename.c_str(), &buffer) != 0) {
-        logLine("File does not exist: " + filename);
-        exit(1);
+    try {
+        struct stat buffer;
+        if (SANITY && stat(filename.c_str(), &buffer) != 0) {
+            throw std::runtime_error("File does not exist: " + filename);
+        }
+        std::ifstream inputFileStream;
+        std::cout << "Parsing SIMPLE source file: " + filename << std::endl;
+        inputFileStream.open(filename);
+        backend::TNode ast = backend::Parser(backend::lexer::tokenize(inputFileStream)).parse();
+        pkb = backend::PKBImplementation(ast);
+    } catch (const std::exception& e) {
+        std::cerr << e.what() << std::endl;
+        hasParseFailed = true;
     }
-    std::ifstream inputFileStream;
-    std::cout << "Parsing SIMPLE source file: " + filename << std::endl;
-    inputFileStream.open(filename);
-    backend::TNode ast = backend::Parser(backend::lexer::tokenize(inputFileStream)).parse();
-    pkb = backend::PKBImplementation(ast);
 }
 
 // method to evaluating a query
 void TestWrapper::evaluate(std::string query, std::list<std::string>& results) {
+    if (hasParseFailed) {
+        std::cerr << "Can't evaluate query as SIMPLE source parsing has failed." << std::endl;
+        return;
+    }
     std::cout << "Query string: " << query << std::endl;
     //    for (auto i : pkb.getAllStatements())
     //        std::cout << i << "aaa" << std::endl;

@@ -19,6 +19,9 @@ class TestWrapper : public AbstractWrapper {
     // PKB to store information of SIMPLE program
     backend::PKBImplementation pkb;
 
+    // Flag to indicate TestWrapper::parse (SIMPLE program parsing) failure
+    bool hasParseFailed{ false };
+
     // method for parsing the SIMPLE source
     virtual void parse(std::string filename);
 
