@@ -1,6 +1,7 @@
 #pragma once
 
-#include <string>
+#include <set>
+#include <unordered_set>
 #include <vector>
 
 typedef std::string PROCEDURE_NAME;
@@ -9,6 +10,10 @@ typedef std::string VARIABLE_NAME;
 typedef std::vector<std::string> VARIABLE_NAME_LIST;
 typedef int STATEMENT_NUMBER;
 typedef std::vector<STATEMENT_NUMBER> STATEMENT_NUMBER_LIST;
+typedef std::set<std::string> PROCEDURE_NAME_SET;
+typedef std::set<std::string> VARIABLE_NAME_SET;
+typedef std::unordered_set<std::string> CONSTANT_NAME_SET;
+typedef std::set<STATEMENT_NUMBER> STATEMENT_NUMBER_SET;
 
 namespace backend {
 class PKB {
@@ -16,17 +21,16 @@ class PKB {
     /* -- MASS RETRIEVAL OF DESIGN ENTITIES -- */
 
     // Retrieves all statements in the SIMPLE program.
-    // Prefer:
-    // - STATEMENT_NUMBER_LIST getAllAssignmentStatementsThatMatch(PATTERN p);
-    // - STATEMENT_NUMBER_LIST getAllAssignmentStatementsFor(VARIABLE_NAME v);
-    // when pattern matching as they are optimized.
-    virtual STATEMENT_NUMBER_LIST getAllStatements() const = 0;
+    virtual const STATEMENT_NUMBER_LIST& getAllStatements() const = 0;
 
-    // Retrieves all variables used in the SIMPLE program.
-    virtual VARIABLE_NAME_LIST getAllVariables() const = 0;
+    // Retrieves all variables name used in the SIMPLE program.
+    virtual const VARIABLE_NAME_LIST& getAllVariables() const = 0;
 
-    // Retrieves all procedures defined in the SIMPLE program.
-    virtual PROCEDURE_NAME_LIST getAllProcedures() const = 0;
+    // Retrieves all procedures name defined in the SIMPLE program.
+    virtual const PROCEDURE_NAME_LIST& getAllProcedures() const = 0;
+
+    // Retrieves all constants value defined in the SIMPLE program.
+    virtual const CONSTANT_NAME_SET& getAllConstants() const = 0;
 
     /* -- Check type of statement number -- */
     virtual bool isRead(STATEMENT_NUMBER s) const = 0;

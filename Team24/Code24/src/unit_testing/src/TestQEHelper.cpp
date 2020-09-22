@@ -10,8 +10,8 @@ bool checkIfVectorOfStringMatch(const std::vector<std::string>& lst1, const std:
     return copy1 == copy2;
 }
 
-STATEMENT_NUMBER_LIST PKBMock::getAllStatements() const {
-    std::vector<int> statements;
+const STATEMENT_NUMBER_LIST& PKBMock::getAllStatements() const {
+    static std::vector<int> statements;
     switch (test_idx) {
     case 0:
         statements = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
@@ -22,8 +22,8 @@ STATEMENT_NUMBER_LIST PKBMock::getAllStatements() const {
     return statements;
 }
 
-VARIABLE_NAME_LIST PKBMock::getAllVariables() const {
-    std::vector<std::string> variables;
+const VARIABLE_NAME_LIST& PKBMock::getAllVariables() const {
+    static std::vector<std::string> variables;
     switch (test_idx) {
     case 0:
         variables = { "count", "cenX", "cenY", "x", "y", "flag", "normSq" };
@@ -31,13 +31,22 @@ VARIABLE_NAME_LIST PKBMock::getAllVariables() const {
     return variables;
 }
 
-PROCEDURE_NAME_LIST PKBMock::getAllProcedures() const {
-    std::vector<std::string> procedures;
+const PROCEDURE_NAME_LIST& PKBMock::getAllProcedures() const {
+    static std::vector<std::string> procedures;
     switch (test_idx) {
     case 0:
         procedures = { "computeCentroid" };
     }
     return procedures;
+}
+
+const CONSTANT_NAME_SET& PKBMock::getAllConstants() const {
+    static std::unordered_set<std::string> constants;
+    //    switch (test_idx) {
+    //    case 0:
+    //        constants = { "123" };
+    //    }
+    return constants;
 }
 
 STATEMENT_NUMBER_LIST PKBMock::getPreFollows(STATEMENT_NUMBER s) const {

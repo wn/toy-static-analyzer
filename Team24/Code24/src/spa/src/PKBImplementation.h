@@ -6,26 +6,14 @@
 #include <set>
 #include <unordered_map>
 
-/**
-typedef std::string PROCEDURE_NAME;
-typedef std::vector<std::string> PROCEDURE_NAME_LIST;
-typedef std::string VARIABLE_NAME;
-typedef std::vector<std::string> VARIABLE_NAME_LIST;
-typedef int STATEMENT_NUMBER;
-typedef std::vector<STATEMENT_NUMBER> STATEMENT_NUMBER_LIST;
-**/
-
-typedef std::set<std::string> PROCEDURE_NAME_SET;
-typedef std::set<std::string> VARIABLE_NAME_SET;
-typedef std::set<STATEMENT_NUMBER> STATEMENT_NUMBER_SET;
-
 namespace backend {
 class PKBImplementation : virtual public backend::PKB {
   public:
     explicit PKBImplementation(const TNode& ast);
-    STATEMENT_NUMBER_LIST getAllStatements() const override;
-    VARIABLE_NAME_LIST getAllVariables() const override;
-    PROCEDURE_NAME_LIST getAllProcedures() const override;
+    const STATEMENT_NUMBER_LIST& getAllStatements() const override;
+    const VARIABLE_NAME_LIST& getAllVariables() const override;
+    const PROCEDURE_NAME_LIST& getAllProcedures() const override;
+    const CONSTANT_NAME_SET& getAllConstants() const override;
 
     bool isRead(STATEMENT_NUMBER s) const override;
     bool isPrint(STATEMENT_NUMBER s) const override;
@@ -112,5 +100,10 @@ class PKBImplementation : virtual public backend::PKB {
     // Performance booster fields:
     std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash> tNodeTypeToTNodesMap;
     std::unordered_map<int, TNodeType> statementNumberToTNodeType;
+
+    /// Entities retrieval helper
+    VARIABLE_NAME_LIST allVariablesName;
+    CONSTANT_NAME_SET allConstantsName;
+    PROCEDURE_NAME_LIST allProceduresName;
 };
 } // namespace backend

@@ -19,6 +19,27 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
     tNodeTypeToTNodesMap = extractor::getTNodeTypeToTNodes(ast);
     statementNumberToTNodeType = extractor::getStatementNumberToTNodeTypeMap(statementNumberToTNode);
 
+    // Get all constants name:
+    for (auto i : tNodeTypeToTNodesMap[Constant]) {
+        allConstantsName.insert(i->constant);
+    }
+
+    // TODO: allVariablesName is currently a vector. To change to unordered_set
+    // Get all variables name:
+    std::unordered_set<std::string> varNames;
+    for (auto i : tNodeTypeToTNodesMap[Variable]) {
+        varNames.insert(i->name);
+    }
+    allVariablesName = { varNames.begin(), varNames.end() };
+
+    // TODO: allProceduresName is currently a vector. To change to unordered_set
+    // Get all procedure name:
+    std::unordered_set<std::string> procedureNames;
+    for (auto i : tNodeTypeToTNodesMap[Procedure]) {
+        procedureNames.insert(i->name);
+    }
+    allProceduresName = { procedureNames.begin(), procedureNames.end() };
+
     // Follow
     std::tie(followFollowedRelation, followedFollowRelation) = extractor::getFollowRelationship(ast);
     allStatementsThatFollows = extractor::getKeysInMap(followFollowedRelation);
@@ -108,16 +129,20 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
     }
 }
 
-STATEMENT_NUMBER_LIST PKBImplementation::getAllStatements() const {
+const STATEMENT_NUMBER_LIST& PKBImplementation::getAllStatements() const {
     return STATEMENT_NUMBER_LIST();
 }
 
-VARIABLE_NAME_LIST PKBImplementation::getAllVariables() const {
-    return VARIABLE_NAME_LIST();
+const VARIABLE_NAME_LIST& PKBImplementation::getAllVariables() const {
+    return allVariablesName;
 }
 
-PROCEDURE_NAME_LIST PKBImplementation::getAllProcedures() const {
-    return PROCEDURE_NAME_LIST();
+const PROCEDURE_NAME_LIST& PKBImplementation::getAllProcedures() const {
+    return allProceduresName;
+}
+
+const CONSTANT_NAME_SET& PKBImplementation::getAllConstants() const {
+    return allConstantsName;
 }
 
 /** -------------------------- FOLLOWS ---------------------------- **/

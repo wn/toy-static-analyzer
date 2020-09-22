@@ -32,9 +32,10 @@ class PKBMock : public backend::PKB {
     bool isIfElse(STATEMENT_NUMBER s) const;
     bool isAssign(STATEMENT_NUMBER s) const;
 
-    STATEMENT_NUMBER_LIST getAllStatements() const;
-    VARIABLE_NAME_LIST getAllVariables() const;
-    PROCEDURE_NAME_LIST getAllProcedures() const;
+    const STATEMENT_NUMBER_LIST& getAllStatements() const;
+    const VARIABLE_NAME_LIST& getAllVariables() const;
+    const PROCEDURE_NAME_LIST& getAllProcedures() const;
+    const CONSTANT_NAME_SET& getAllConstants() const;
 
     // FOLLOWS
     STATEMENT_NUMBER_LIST getStatementsFollowedBy(STATEMENT_NUMBER s) const;

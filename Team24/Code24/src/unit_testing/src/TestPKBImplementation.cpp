@@ -593,5 +593,40 @@ TEST_CASE("Test isEntity") {
     REQUIRE_FALSE(pkb.isPrint(4));
     REQUIRE_FALSE(pkb.isPrint(5));
 }
+
+TEST_CASE("Test getAllEntity") {
+    const char STRUCTURED_STATEMENT[] = "procedure aoeu {"
+
+                                        "while (y == 3) {"
+                                        "gucci = 1;"
+                                        "}"
+
+                                        "if (!(armani == gucci)) then {"
+                                        "read x;"
+                                        "call y;"
+                                        "} else {"
+                                        "print z;"
+                                        "}"
+                                        "}"
+
+                                        "procedure y {y = 1+1;}";
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    std::vector<std::string> expectedVariables = { "armani", "gucci", "x", "y", "z" };
+    std::vector<std::string> actualVariables = pkb.getAllVariables();
+    sort(actualVariables.begin(), actualVariables.end());
+    REQUIRE(actualVariables == expectedVariables);
+
+    std::vector<std::string> expectedProcedures = { "aoeu", "y" };
+    std::vector<std::string> actualProcedures = pkb.getAllProcedures();
+    sort(actualProcedures.begin(), actualProcedures.end());
+    REQUIRE(actualProcedures == expectedProcedures);
+
+    std::unordered_set<std::string> expectedConstants = { "3", "1" };
+    std::unordered_set<std::string> actualConstants = pkb.getAllConstants();
+    REQUIRE(actualConstants == expectedConstants);
+}
 } // namespace testpkb
 } // namespace backend
