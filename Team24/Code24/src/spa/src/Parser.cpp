@@ -457,8 +457,10 @@ State Parser::parseCall(int tokenPos) {
 
     const State& varState = parseVarName(tokenPos);
     tokenPos = varState.tokenPos;
+    TNode callVar(std::move(varState.tNode));
+    callVar.isProcedureVar = true;
 
-    callNode.addChild(varState.tNode);
+    callNode.addChild(callVar);
     assertTokenAndPop(tokenPos, lexer::TokenType::SEMICOLON);
     return State(tokenPos, callNode);
 }

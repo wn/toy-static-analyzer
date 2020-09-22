@@ -32,7 +32,9 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
     // Get all variables name:
     std::unordered_set<std::string> varNames;
     for (auto i : tNodeTypeToTNodesMap[Variable]) {
-        varNames.insert(i->name);
+        if (!i->isProcedureVar) {
+            varNames.insert(i->name);
+        }
     }
     allVariablesName = { varNames.begin(), varNames.end() };
 

@@ -74,6 +74,8 @@ class TNode {
     bool operator==(const TNode& s) const;
     std::string constant;
 
+    bool isProcedureVar{ false }; // For use in `call`.
+
     bool isStatementNode() const;
 
     friend std::ostream& operator<<(std::ostream& os, const backend::TNode& t);
