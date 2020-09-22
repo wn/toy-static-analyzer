@@ -205,7 +205,7 @@ TEST_CASE("Test Condition with == math operator") {
 
 TEST_CASE("Test Condition with != math operator") {
     Parser parser =
-    testhelpers::GenerateParserFromTokens("procedure p{while (x + y * z != 1){y = y + 1;}}");
+    testhelpers::GenerateParserFromTokens("procedure p{while (x + y * z != 1) {y = y + 1;}}");
     TNode result = parser.parse();
 
     TNode y(Variable, 1);
@@ -354,7 +354,7 @@ TEST_CASE("Test Condition with Triple operator") {
     REQUIRE(result == testhelpers::generateProgramNodeFromCondition(notNode));
 }
 
-TEST_CASE("Test expr associativity + before *") {
+TEST_CASE("Test expr precedence: + before *") {
     Parser parser =
     testhelpers::GenerateParserFromTokens("procedure p{while (x + y * z <= 1){y = y + 1;}}");
     TNode result = parser.parse();
@@ -390,7 +390,7 @@ TEST_CASE("Test expr associativity + before *") {
     REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 
-TEST_CASE("Test expr associativity * before +") {
+TEST_CASE("Test expr precedence: * before +") {
     Parser parser =
     testhelpers::GenerateParserFromTokens("procedure p{while (x * y + z <= 1){y = y + 1;}}");
     TNode result = parser.parse();
@@ -429,18 +429,18 @@ TEST_CASE("Test expr associativity * before +") {
     REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 
-TEST_CASE("Test expr associativity * before *") {
+TEST_CASE("Test expr left-associativity of +") {
     Parser parser =
-    testhelpers::GenerateParserFromTokens("procedure p{while (x * y * z <= 1){y = y + 1;}}");
+    testhelpers::GenerateParserFromTokens("procedure p{while (x + y + z <= 1){y = y + 1;}}");
     TNode result = parser.parse();
 
 
     // We expect our node to look like:
-    //         *
-    //        /  \
-    //       x    *
+    //               +
+    //             /   \
+    //            +     z
     //           /  \
-    //          y    z
+    //          x    y
 
     TNode x(Variable, 1);
     x.name = "x";
@@ -449,13 +449,13 @@ TEST_CASE("Test expr associativity * before *") {
     TNode z(Variable, 1);
     z.name = "z";
 
-    TNode lCondLHSMultiply2(Multiply);
+    TNode lCondLHSMultiply2(Plus);
+    lCondLHSMultiply2.addChild(x);
     lCondLHSMultiply2.addChild(y);
-    lCondLHSMultiply2.addChild(z);
 
-    TNode lCondLHSMultiply(Multiply);
-    lCondLHSMultiply.addChild(x);
+    TNode lCondLHSMultiply(Plus);
     lCondLHSMultiply.addChild(lCondLHSMultiply2);
+    lCondLHSMultiply.addChild(z);
 
     TNode condNode(LesserThanOrEqual, 1);
     condNode.addChild(lCondLHSMultiply);
@@ -468,7 +468,46 @@ TEST_CASE("Test expr associativity * before *") {
     REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 
-TEST_CASE("Test expr associativity * before + with brackets") {
+TEST_CASE("Test expr left-associativity of *") {
+    Parser parser =
+    testhelpers::GenerateParserFromTokens("procedure p{while (x * y * z <= 1){y = y + 1;}}");
+    TNode result = parser.parse();
+
+
+    // We expect our node to look like:
+    //               *
+    //             /   \
+    //            *     z
+    //           /  \
+    //          x    y
+
+    TNode x(Variable, 1);
+    x.name = "x";
+    TNode y(Variable, 1);
+    y.name = "y";
+    TNode z(Variable, 1);
+    z.name = "z";
+
+    TNode lCondLHSMultiply2(Multiply);
+    lCondLHSMultiply2.addChild(x);
+    lCondLHSMultiply2.addChild(y);
+
+    TNode lCondLHSMultiply(Multiply);
+    lCondLHSMultiply.addChild(lCondLHSMultiply2);
+    lCondLHSMultiply.addChild(z);
+
+    TNode condNode(LesserThanOrEqual, 1);
+    condNode.addChild(lCondLHSMultiply);
+    TNode lCondRHSConst(Constant, 1);
+    lCondRHSConst.constant = "1";
+    condNode.addChild(lCondRHSConst);
+
+    std::cout << result.toString() << std::endl;
+    std::cout << testhelpers::generateProgramNodeFromCondition(condNode).toString() << std::endl;
+    REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
+}
+
+TEST_CASE("Test expr precedence: * before + with brackets") {
     Parser parser =
     testhelpers::GenerateParserFromTokens("procedure p{while (x * (y + z) <= 1){y = y + 1;}}");
     TNode result = parser.parse();
@@ -507,7 +546,7 @@ TEST_CASE("Test expr associativity * before + with brackets") {
     REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 
-TEST_CASE("Test expr associativity + before * with brackets") {
+TEST_CASE("Test expr precedence: + before * with brackets") {
     Parser parser =
     testhelpers::GenerateParserFromTokens("procedure p{while ((x + y) * z <= 1){y = y + 1;}}");
     TNode result = parser.parse();
@@ -668,8 +707,9 @@ TEST_CASE("Test Parser::parseExpr") {
     REQUIRE(Parser::parseExpr("1+y") == "(1+y)");
     REQUIRE(Parser::parseExpr("1+2*3") == "(1+(2*3))");
     REQUIRE(Parser::parseExpr("1*2+3") == "((1*2)+3)");
-    // TODO(weineng): Not available yet as our expr precedence has issue.
-    // REQUIRE(Parser::parseExpr("1+y     *z + 4*3") == "((1+(y*z))+(4*3))");
+    REQUIRE(Parser::parseExpr("1+y*z+4*3") == "((1+(y*z))+(4*3))");
+    REQUIRE(Parser::parseExpr("1+2+3-4") == "(((1+2)+3)-4)");
+    REQUIRE(Parser::parseExpr("1*2%3/4") == "(((1*2)%3)/4)");
 }
 } // namespace testparser
 } // namespace backend

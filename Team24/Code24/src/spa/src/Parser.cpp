@@ -292,57 +292,73 @@ State Parser::parseRelFactor(int tokenPos) {
 // expr: expr ‘+’ term | expr ‘-’ term | term
 State Parser::parseExpr(int tokenPos) {
     logLine("start parseExpr");
-    State term = parseTerm(tokenPos);
-    tokenPos = term.tokenPos;
-    if (haveTokensLeft(tokenPos)) {
+    State result = parseTerm(tokenPos);
+    tokenPos = result.tokenPos;
+    while (haveTokensLeft(tokenPos)) {
         lexer::TokenType nextType = peekToken(tokenPos).type;
-        // expr = term {+ expr}?
-        if (nextType == lexer::TokenType::PLUS || nextType == lexer::TokenType::MINUS) {
-            auto token = assertTokenAndPop(tokenPos, nextType);
-            State rhs = parseExpr(tokenPos);
-
-            TNode node(nextType == lexer::PLUS ? Plus : Minus);
-            node.addChild(term.tNode);
-            node.addChild(rhs.tNode);
-            logLine("success parseExpr");
-            return State(rhs.tokenPos, node);
+        if (nextType != lexer::TokenType::PLUS && nextType != lexer::TokenType::MINUS) {
+            break;
         }
+        auto operatorToken = assertTokenAndPop(tokenPos, nextType);
+
+        // Construct a new TNode as the result, like so:
+        //     newExpr: +
+        //            /   \
+        //        result   nextTerm
+        // This results in left-associativity, as the new term is the right-child.
+        State nextTermState = parseTerm(tokenPos);
+
+        // Create newExpr
+        TNodeType newExprType = operatorToken.type == lexer::PLUS ? TNodeType::Plus : TNodeType::Minus;
+        TNode newExpr(newExprType);
+        newExpr.addChild(result.tNode);
+        newExpr.addChild(nextTermState.tNode);
+
+        // Update the result;
+        result = State(nextTermState.tokenPos, newExpr);
+        tokenPos = result.tokenPos;
     }
-    logLine("success parseExpr");
-    return term;
+    return result;
 }
 
 // term: term ‘*’ factor | term ‘/’ factor | term ‘%’ factor | factor
 State Parser::parseTerm(int tokenPos) {
     logLine("start parseTerm");
+    State result = parseFactor(tokenPos);
+    tokenPos = result.tokenPos;
 
-    State term = parseFactor(tokenPos);
-    tokenPos = term.tokenPos;
-    if (haveTokensLeft(tokenPos)) {
+    std::map<lexer::TokenType, TNodeType> tokenTypeToTNodeType = {
+        { lexer::TokenType::MULT, TNodeType::Multiply },
+        { lexer::TokenType::DIV, TNodeType::Divide },
+        { lexer::TokenType::MOD, TNodeType::Modulo }
+    };
+    while (haveTokensLeft(tokenPos)) {
         lexer::TokenType nextType = peekToken(tokenPos).type;
-        // term = factor {* Term}?
-        if (nextType == lexer::TokenType::MULT || nextType == lexer::TokenType::DIV ||
-            nextType == lexer::TokenType::MOD) {
-            auto token = assertTokenAndPop(tokenPos, nextType);
-            State rhs = parseTerm(tokenPos);
-
-            TNodeType nodeType;
-            if (nextType == lexer::TokenType::MULT) {
-                nodeType = Multiply;
-            } else if (nextType == lexer::TokenType::DIV) {
-                nodeType = Divide;
-            } else {
-                nodeType = Modulo;
-            }
-            TNode node(nodeType);
-            node.addChild(term.tNode);
-            node.addChild(rhs.tNode);
-            logLine("success parseTerm");
-            return State(rhs.tokenPos, node);
+        if (nextType != lexer::TokenType::MULT && nextType != lexer::TokenType::DIV &&
+            nextType != lexer::TokenType::MOD) {
+            break;
         }
+        auto operatorToken = assertTokenAndPop(tokenPos, nextType);
+
+        // Construct a new TNode as the result, like so:
+        //     newTerm: *
+        //            /   \
+        //        result   nextFactor
+        // This results in left-associativity, as the new factor is the right-child.
+        State nextFactorState = parseFactor(tokenPos);
+
+        // Create newExpr
+        TNodeType newTermType = tokenTypeToTNodeType[operatorToken.type];
+        TNode newTerm(newTermType);
+        newTerm.addChild(result.tNode);
+        newTerm.addChild(nextFactorState.tNode);
+
+        // Update the result;
+        result = State(nextFactorState.tokenPos, newTerm);
+        tokenPos = result.tokenPos;
     }
     logLine("success parseTerm");
-    return term;
+    return result;
 }
 
 // factor: var_name | const_value | ‘(’ expr ‘)’
