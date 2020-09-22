@@ -46,6 +46,11 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
     }
     allProceduresName = { procedureNames.begin(), procedureNames.end() };
 
+    // Get all assignment statements:
+    for (auto i : tNodeTypeToTNodesMap[Assign]) {
+        allAssignmentStatements.insert(tNodeToStatementNumber[i]);
+    }
+
     // Follow
     std::tie(followFollowedRelation, followedFollowRelation) = extractor::getFollowRelationship(ast);
     allStatementsThatFollows = extractor::getKeysInMap(followFollowedRelation);
@@ -342,7 +347,19 @@ STATEMENT_NUMBER_LIST
 PKBImplementation::getAllAssignmentStatementsThatMatch(const std::string& assignee,
                                                        const std::string& pattern,
                                                        bool isSubExpr) const {
-    if (pattern.empty()) {
+    std::string strippedPattern = pattern; // local copy
+    std::remove_if(strippedPattern.begin(), strippedPattern.end(), isspace);
+
+    if (strippedPattern.empty() && !isSubExpr) {
+        // pattern a("v", "") is not possible. We simply return an empty result.
+        return {};
+    }
+
+    if (strippedPattern.empty()) {
+        if (assignee == "_") {
+            // since both pattern and assignee is empty, we return all assignment statements.
+            return { allAssignmentStatements.begin(), allAssignmentStatements.end() };
+        }
         // Return all s such that Modifies(assignee, s);
         if (variableToStatementsThatModifyIt.find(assignee) == variableToStatementsThatModifyIt.end()) {
             return STATEMENT_NUMBER_LIST();
@@ -354,7 +371,7 @@ PKBImplementation::getAllAssignmentStatementsThatMatch(const std::string& assign
     }
 
     // Preprocess pattern using the parser, to set precedence.
-    std::string searchPattern = Parser::parseExpr(pattern);
+    std::string searchPattern = Parser::parseExpr(strippedPattern);
     if (searchPattern.empty() || patternsMap.find(searchPattern) == patternsMap.end()) {
         return {};
     }

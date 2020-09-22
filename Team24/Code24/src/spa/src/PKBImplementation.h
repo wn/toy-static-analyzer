@@ -111,5 +111,6 @@ class PKBImplementation : virtual public backend::PKB {
     CONSTANT_NAME_SET allConstantsName;
     PROCEDURE_NAME_LIST allProceduresName;
     STATEMENT_NUMBER_LIST allStatementsNumber;
+    STATEMENT_NUMBER_SET allAssignmentStatements;
 };
 } // namespace backend

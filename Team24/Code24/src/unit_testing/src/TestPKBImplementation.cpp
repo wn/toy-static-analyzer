@@ -654,6 +654,11 @@ TEST_CASE("Test getAllAssignmentStatementsThatMatch multiple assign") {
 
     std::vector<int> actual17 = pkb.getAllAssignmentStatementsThatMatch("z", "(y+q)*r", true);
     std::vector<int> expected17 = {};
+    REQUIRE(actual17 == expected17);
+
+    std::vector<int> actual18 = pkb.getAllAssignmentStatementsThatMatch("_", "", true);
+    std::vector<int> expected18 = { 1, 2, 3, 4 };
+    REQUIRE(actual18 == expected18);
 }
 
 TEST_CASE("Test isEntity") {
