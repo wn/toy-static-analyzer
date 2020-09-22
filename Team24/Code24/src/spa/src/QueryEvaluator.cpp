@@ -396,11 +396,11 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelation(const backe
     VARIABLE_NAME_LIST vars;
     switch (subRelationType) {
     case PREFOLLOWS:
-        stmts = pkb->getDirectFollowedBy(std::stoi(arg));
+        stmts = pkb->getDirectFollow(std::stoi(arg));
         result = castToStrVector<STATEMENT_NUMBER>(stmts);
         break;
     case POSTFOLLOWS:
-        stmts = pkb->getDirectFollow(std::stoi(arg));
+        stmts = pkb->getDirectFollowedBy(std::stoi(arg));
         result = castToStrVector<STATEMENT_NUMBER>(stmts);
         break;
     case PREFOLLOWST:
