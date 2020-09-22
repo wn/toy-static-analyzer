@@ -574,6 +574,7 @@ TEST_CASE("Test getAllAssignmentStatementsThatMatch multiple assign") {
                                         "x = p + q * r;"
                                         "x = y + q * r;"
                                         "z = y + q * r;"
+                                        "w = p + q + r;"
                                         "}";
 
     Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
@@ -628,30 +629,31 @@ TEST_CASE("Test getAllAssignmentStatementsThatMatch multiple assign") {
     std::vector<int> expected11 = {};
     REQUIRE(actual11 == expected11);
 
-    std::vector<int> actual12 = pkb.getAllAssignmentStatementsThatMatch("x", "                 ", false);
-    std::vector<int> expected12 = {};
+    // These are implicit "Modifies" queries since patterns aren't specified.
+    std::vector<int> actual12 = pkb.getAllAssignmentStatementsThatMatch("z", "", true);
+    std::vector<int> expected12 = { 3 };
     REQUIRE(actual12 == expected12);
 
-    std::vector<int> actual13 = pkb.getAllAssignmentStatementsThatMatch("z", "y+(q*r)", true);
-    std::vector<int> expected13 = { 3 };
+    std::vector<int> actual13 = pkb.getAllAssignmentStatementsThatMatch("x", "", true);
+    std::sort(actual13.begin(), actual13.end());
+    std::vector<int> expected13 = { 1, 2 };
     REQUIRE(actual13 == expected13);
 
-    std::vector<int> actual14 = pkb.getAllAssignmentStatementsThatMatch("z", "(y+q)*r", true);
-    std::vector<int> expected14 = {};
+    // Left-assoc
+    std::vector<int> actual14 = pkb.getAllAssignmentStatementsThatMatch("_", "((p+q)+r)", false);
+    std::vector<int> expected14 = { 4 };
     REQUIRE(actual14 == expected14);
 
-    // TODO(remo5000): https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/192
-    //
-    // Test modify-like pattern: getAllAssignmentStatementsThatMatch("x", "", true)
-    //
-    //    std::vector<int> actual10 = pkb.getAllAssignmentStatementsThatMatch("z", "", true);
-    //    std::vector<int> expected10 = { 3 };
-    //    REQUIRE(actual10 == expected10);
-    //
-    //    std::vector<int> actual11 = pkb.getAllAssignmentStatementsThatMatch("x", "", true);
-    //    std::sort(actual11.begin(), actual11.end());
-    //    std::vector<int> expected11 = { 1, 2 };
-    //    REQUIRE(actual11 == expected11);
+    std::vector<int> actual15 = pkb.getAllAssignmentStatementsThatMatch("x", "                 ", false);
+    std::vector<int> expected15 = {};
+    REQUIRE(actual15 == expected15);
+
+    std::vector<int> actual16 = pkb.getAllAssignmentStatementsThatMatch("z", "y+(q*r)", true);
+    std::vector<int> expected16 = { 3 };
+    REQUIRE(actual16 == expected16);
+
+    std::vector<int> actual17 = pkb.getAllAssignmentStatementsThatMatch("z", "(y+q)*r", true);
+    std::vector<int> expected17 = {};
 }
 
 TEST_CASE("Test isEntity") {

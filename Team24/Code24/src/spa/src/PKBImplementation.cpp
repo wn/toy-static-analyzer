@@ -343,9 +343,14 @@ PKBImplementation::getAllAssignmentStatementsThatMatch(const std::string& assign
                                                        const std::string& pattern,
                                                        bool isSubExpr) const {
     if (pattern.empty()) {
-        // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/191):
-        // return modifies(_, v);
-        return STATEMENT_NUMBER_LIST();
+        // Return all s such that Modifies(assignee, s);
+        if (variableToStatementsThatModifyIt.find(assignee) == variableToStatementsThatModifyIt.end()) {
+            return STATEMENT_NUMBER_LIST();
+        }
+        STATEMENT_NUMBER_SET statementsThatModifyAssignee =
+        variableToStatementsThatModifyIt.find(assignee)->second;
+        return STATEMENT_NUMBER_LIST(statementsThatModifyAssignee.begin(),
+                                     statementsThatModifyAssignee.end());
     }
 
     // Preprocess pattern using the parser, to set precedence.
