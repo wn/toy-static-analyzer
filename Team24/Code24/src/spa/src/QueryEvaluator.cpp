@@ -151,18 +151,18 @@ bool SingleQueryEvaluator::evaluateSuchThatClause(const backend::PKB* pkb,
 
     ArgType arg_type_1 = getArgType(pkb, arg1);
     ArgType arg_type_2 = getArgType(pkb, arg2);
+
     if ((arg_type_1 == INVALID_ARG) || (arg_type_2 == INVALID_ARG) || (arg_type_1 == EXPR) ||
         (arg_type_2 == EXPR)) {
         handleError("invalid argument type for such-that clause: " + arg1 + ", " + arg2);
         return false;
     }
 
-    SubRelationType srt;
+    SubRelationType srt = INVALID;
     try {
-        srt = srt_table[rt][arg_type_1][arg_type_2];
+        srt = srt_table.at(rt).at(arg_type_1).at(arg_type_2);
     } catch (const std::out_of_range& oor) {
         handleError("Evaluation for the relation type not implemented.");
-        srt = INVALID;
     }
 
     if (srt == INVALID) {
@@ -180,7 +180,8 @@ bool SingleQueryEvaluator::evaluateSuchThatClause(const backend::PKB* pkb,
         case NUM_ENTITY:
             return evaluateEntitySynonym(pkb, srt, arg2, arg1); // swap the arguments as the called method required
         case NAME_ENTITY:
-            return evaluateEntitySynonym(pkb, srt, arg2, arg1); // swap the arguments as the called method required
+            return evaluateEntitySynonym(pkb, srt, extractQuotedStr(arg2),
+                                         arg1); // swap the arguments as the called method required
         case WILDCARD:
             return evaluateSynonymWildcard(pkb, srt, arg1);
         default:
@@ -188,18 +189,19 @@ bool SingleQueryEvaluator::evaluateSuchThatClause(const backend::PKB* pkb,
             return false;
         }
     } else if (arg_type_1 == NUM_ENTITY || arg_type_1 == NAME_ENTITY) {
+        std::string arg1_str = (arg_type_1 == NAME_ENTITY) ? extractQuotedStr(arg1) : arg1;
         switch (arg_type_2) {
         case STMT_SYNONYM:
         case VAR_SYNONYM:
         case PROC_SYNONYM:
         case CONST_SYNONYM:
-            return evaluateEntitySynonym(pkb, srt, arg1, arg2);
+            return evaluateEntitySynonym(pkb, srt, arg1_str, arg2);
         case NUM_ENTITY:
-            return evaluateEntityEntity(pkb, srt, arg1, arg2);
+            return evaluateEntityEntity(pkb, srt, arg1_str, arg2);
         case NAME_ENTITY:
-            return evaluateEntityEntity(pkb, srt, arg1, arg2);
+            return evaluateEntityEntity(pkb, srt, arg1_str, extractQuotedStr(arg2));
         case WILDCARD:
-            return evaluateEntityWildcard(pkb, srt, arg1);
+            return evaluateEntityWildcard(pkb, srt, arg1_str);
         default:
             handleError("invalid arg2 type: " + arg2);
             return false;
@@ -214,7 +216,7 @@ bool SingleQueryEvaluator::evaluateSuchThatClause(const backend::PKB* pkb,
         case NUM_ENTITY:
             return evaluateEntityWildcard(pkb, srt, arg2);
         case NAME_ENTITY:
-            return evaluateEntityWildcard(pkb, srt, arg2);
+            return evaluateEntityWildcard(pkb, srt, extractQuotedStr(arg2));
         case WILDCARD:
             return evaluateWildcardWildcard(pkb, srt);
         default:
@@ -379,35 +381,57 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelation(const backe
                                                                      std::string const& arg) {
     std::vector<std::string> result;
     STATEMENT_NUMBER_LIST stmts;
+    PROCEDURE_NAME_LIST procs;
+    VARIABLE_NAME_LIST vars;
     switch (subRelationType) {
     case PREFOLLOWS:
         stmts = pkb->getDirectFollowedBy(std::stoi(arg));
+        result = castToStrVector<STATEMENT_NUMBER>(stmts);
         break;
     case POSTFOLLOWS:
         stmts = pkb->getDirectFollow(std::stoi(arg));
+        result = castToStrVector<STATEMENT_NUMBER>(stmts);
         break;
     case PREFOLLOWST:
         stmts = pkb->getStatementsThatFollows(std::stoi(arg));
+        result = castToStrVector<STATEMENT_NUMBER>(stmts);
         break;
     case POSTFOLLOWST:
         stmts = pkb->getStatementsFollowedBy(std::stoi(arg));
+        result = castToStrVector<STATEMENT_NUMBER>(stmts);
         break;
     case PREPARENT:
         stmts = pkb->getChildren(std::stoi(arg));
+        result = castToStrVector<STATEMENT_NUMBER>(stmts);
         break;
     case POSTPARENT:
         stmts = pkb->getParent(std::stoi(arg));
+        result = castToStrVector<STATEMENT_NUMBER>(stmts);
         break;
     case PREPARENTT:
         stmts = pkb->getDescendants(std::stoi(arg));
+        result = castToStrVector<STATEMENT_NUMBER>(stmts);
         break;
     case POSTPARENTT:
         stmts = pkb->getAncestors(std::stoi(arg));
+        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        break;
+    case PREUSESS:
+        result = pkb->getVariablesUsedIn(std::stoi(arg));
+        break;
+    case POSTUSESS:
+        stmts = pkb->getStatementsThatUse(arg);
+        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        break;
+    case PREUSESP:
+        result = pkb->getVariablesUsedIn(arg);
+        break;
+    case POSTUSESP:
+        result = pkb->getProceduresThatUse(arg);
         break;
     default:
         handleError("unknown sub-relation type");
     }
-    result = castToStrVector<STATEMENT_NUMBER>(stmts);
     return result;
 }
 
@@ -437,6 +461,13 @@ SingleQueryEvaluator::inquirePKBForRelationWildcard(const backend::PKB* pkb, Sub
     case POSTPARENT_WILD:
         stmts = pkb->getStatementsThatHaveAncestors();
         result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        break;
+    case USES_WILDCARD:
+        stmts = pkb->getStatementsThatUseSomeVariable();
+        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        break;
+    case USEP_WILDCARD:
+        result = pkb->getProceduresThatUseSomeVariable();
         break;
     default:
         handleError("unknown sub-relation type");

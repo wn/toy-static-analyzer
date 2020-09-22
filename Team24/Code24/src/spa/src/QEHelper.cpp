@@ -32,6 +32,14 @@ bool isExpression(const std::string& str) {
     return false;
 }
 
+std::string extractQuotedStr(const std::string& str) {
+    if (str.size() < 3 || str.front() != '\"' || str.back() != '\"') {
+        return str;
+    } else {
+        return str.substr(1, str.size() - 2);
+    }
+}
+
 SRT_LOOKUP_TABLE generateSrtTable() {
     SRT_LOOKUP_TABLE srt_table = {
         { FOLLOWS,
@@ -50,6 +58,11 @@ SRT_LOOKUP_TABLE generateSrtTable() {
           { { STMT_SYNONYM, { { STMT_SYNONYM, PREPARENTT }, { NUM_ENTITY, POSTPARENTT }, { WILDCARD, PREPARENT_WILD } } },
             { NUM_ENTITY, { { STMT_SYNONYM, PREPARENTT }, { NUM_ENTITY, PREPARENTT }, { WILDCARD, PREPARENT_WILD } } },
             { WILDCARD, { { STMT_SYNONYM, POSTPARENT_WILD }, { NUM_ENTITY, POSTPARENT_WILD }, { WILDCARD, PREPARENT_WILD } } } } },
+        { USES,
+          { { STMT_SYNONYM, { { VAR_SYNONYM, PREUSESS }, { NAME_ENTITY, POSTUSESS }, { WILDCARD, USES_WILDCARD } } },
+            { PROC_SYNONYM, { { VAR_SYNONYM, PREUSESP }, { NAME_ENTITY, POSTUSESP }, { WILDCARD, USEP_WILDCARD } } },
+            { NUM_ENTITY, { { VAR_SYNONYM, PREUSESS }, { NAME_ENTITY, PREUSESS }, { WILDCARD, USES_WILDCARD } } },
+            { NAME_ENTITY, { { VAR_SYNONYM, PREUSESP }, { NAME_ENTITY, PREUSESP }, { WILDCARD, USEP_WILDCARD } } } } }
     };
 
     return srt_table;

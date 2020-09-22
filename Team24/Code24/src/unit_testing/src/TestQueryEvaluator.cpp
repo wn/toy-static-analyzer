@@ -432,5 +432,102 @@ TEST_CASE("Test evaluation of Parent* with invalid arguments") {
     REQUIRE(qe.evaluateQuery(query).empty());
 }
 
+TEST_CASE("Test evaluation of Uses between synonyms") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryUsesStmt = { { { "s", STMT }, { "v", VARIABLE } }, { "s" }, { { USES, "s", "v" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsesStmt), { "1", "2", "4", "5", "6" }));
+    Query queryUsesVar = { { { "s", STMT }, { "v", VARIABLE } }, { "v" }, { { USES, "s", "v" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsesVar), { "x", "z", "m", "n", "count" }));
+
+    Query queryUsepProc = { { { "p", PROCEDURE }, { "v", VARIABLE } }, { "p" }, { { USES, "p", "v" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsepProc), { "foo", "bar" }));
+    Query queryUsepVar = { { { "p", PROCEDURE }, { "v", VARIABLE } }, { "v" }, { { USES, "p", "v" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsepVar), { "x", "z", "m", "n", "count" }));
+}
+
+TEST_CASE("Test evaluation of Uses between entity and synonym") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryUsesStmt = { { { "s", STMT } }, { "s" }, { { USES, "s", "\"n\"" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsesStmt), { "2", "4", "5" }));
+    Query queryUsesVar = { { { "v", VARIABLE } }, { "v" }, { { USES, "2", "v" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsesVar), { "z", "m", "n", "count" }));
+
+    Query queryUsepProc = { { { "p", PROCEDURE } }, { "p" }, { { USES, "p", "\"x\"" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsepProc), { "foo" }));
+    Query queryUsepVar = { { { "v", VARIABLE } }, { "v" }, { { USES, "\"bar\"", "v" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsepVar), { "z", "m", "n", "count" }));
+}
+
+TEST_CASE("Test evaluation of Uses between entities") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryUsesTrue = { { { "s", STMT } }, { "s" }, { { USES, "5", "\"n\"" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsesTrue), { "1", "2", "3", "4", "5", "6" }));
+    Query queryUsesFalse = { { { "s", STMT } }, { "s" }, { { USES, "5", "\"x\"" } }, {} };
+    REQUIRE(qe.evaluateQuery(queryUsesFalse).empty());
+
+    Query queryUsepTrue = { { { "s", STMT } }, { "s" }, { { USES, "\"foo\"", "\"x\"" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsepTrue), { "1", "2", "3", "4", "5", "6" }));
+    Query queryUsepFalse = { { { "s", STMT } }, { "s" }, { { USES, "\"bar\"", "\"x\"" } }, {} };
+    REQUIRE(qe.evaluateQuery(queryUsepFalse).empty());
+}
+
+TEST_CASE("Test evaluation of Uses between synonym and wildcard") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryUsesS = { { { "s", STMT } }, { "s" }, { { USES, "s", "_" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsesS), { "1", "2", "4", "5", "6" }));
+
+    Query queryUseP = { { { "p", PROCEDURE } }, { "p" }, { { USES, "p", "_" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUseP), { "foo", "bar" }));
+}
+
+TEST_CASE("Test evaluation of Uses between entity and wildcard") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryUsesTrue = { { { "s", STMT } }, { "s" }, { { USES, "5", "_" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsesTrue), { "1", "2", "3", "4", "5", "6" }));
+    Query queryUsesFalse = { { { "s", STMT } }, { "s" }, { { USES, "3", "_" } }, {} };
+    REQUIRE(qe.evaluateQuery(queryUsesFalse).empty());
+
+    Query queryUsepTrue = { { { "s", STMT } }, { "s" }, { { USES, "\"foo\"", "_" } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsepTrue), { "1", "2", "3", "4", "5", "6" }));
+    Query queryUsepFalse = { { { "s", STMT } }, { "s" }, { { USES, "\"main\"", "_" } }, {} };
+    REQUIRE(qe.evaluateQuery(queryUsepFalse).empty());
+}
+
+TEST_CASE("Test evaluation of Uses with invalid arguments") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    // invalid query
+    Query queryEmpty = { { { "s", STMT }, { "V", VARIABLE } }, {}, { { USES, "s", "V" } }, {} };
+    REQUIRE(qe.evaluateQuery(queryEmpty).empty());
+
+    // invalid synonym
+    Query queryProc = { { { "s1", STMT }, { "s2", STMT } }, { "s1" }, { { USES, "s1", "s2" } }, {} };
+    REQUIRE(qe.evaluateQuery(queryProc).empty());
+
+    Query queryConst = { { { "c", CONSTANT } }, { "c" }, { { USES, "c", "\"x\"" } }, {} };
+    REQUIRE(qe.evaluateQuery(queryConst).empty());
+
+    // invalid entity
+    Query queryE1 = { { { "s", STMT } }, { "s" }, { { USES, "\"1\"", "\"x\"" } }, {} };
+    REQUIRE(qe.evaluateQuery(queryE1).empty());
+    Query queryE2 = { { { "s", STMT } }, { "s" }, { { USES, "1", "x" } }, {} };
+    REQUIRE(qe.evaluateQuery(queryE2).empty());
+
+    // invalid wildcard
+    Query queryE3 = { { { "s", STMT } }, { "s" }, { { USES, "_", "\"x\"" } }, {} };
+    REQUIRE(qe.evaluateQuery(queryE3).empty());
+}
+
 } // namespace qetest
 } // namespace qpbackend

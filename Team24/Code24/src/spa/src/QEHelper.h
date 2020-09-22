@@ -9,18 +9,24 @@ namespace qpbackend {
 namespace queryevaluator {
 // helper relation type derived from given relation type, used for evaluation
 enum SubRelationType {
-    PREFOLLOWS, // check a1, Follows(a1, a2)
-    POSTFOLLOWS, // check a2, Follows(a1, a2)
-    PREFOLLOWST, // check a1, Follows*(a1, a2)
-    POSTFOLLOWST, // check a2, Follows*(a1, a2)
-    PREFOLLOWS_WILD, // check a1, Follows(a1, _)
-    POSTFOLLOWS_WILD, // check a2, Follows(_, a2)
-    PREPARENT, // check a1, Parents(a1, a2)
-    POSTPARENT, // check a2, Parents(a1, a2)
-    PREPARENTT, // check a1, Parents*(a1, a2)
-    POSTPARENTT, // check a2, Parents*(a1, a2)
-    PREPARENT_WILD, // check a1, Parents(a1, _)
-    POSTPARENT_WILD, // check a2, Parents(_, a2)
+    PREFOLLOWS, // check upon a1, get a2 that Follows(a1, a2)
+    POSTFOLLOWS, // check upon a2, get a1 that Follows(a1, a2)
+    PREFOLLOWST, // check upon a1, get a2 that Follows*(a1, a2)
+    POSTFOLLOWST, // check upon a2, get a1 that Follows*(a1, a2)
+    PREFOLLOWS_WILD, // check upon a1, get Follows(a1, _)
+    POSTFOLLOWS_WILD, // check upon a2, get Follows(_, a2)
+    PREPARENT, // check upon a1, get a2 that Parents(a1, a2)
+    POSTPARENT, // check upon a2, get a1 that Parents(a1, a2)
+    PREPARENTT, // check upon a1, get a2 that Parents*(a1, a2)
+    POSTPARENTT, // check upon a2, get a1 that Parents*(a1, a2)
+    PREPARENT_WILD, // check upon a1, get Parents(a1, _)
+    POSTPARENT_WILD, // check upon a2, get Parents(_, a2)
+    PREUSESS, // check upon s (stmt), get v that Uses(s, v)
+    POSTUSESS, // check upon v, get s (stmt) that Uses(s, v)
+    PREUSESP, // check upon p (procedure), get v that Uses(p, v)
+    POSTUSESP, // check upon v, get p (procedure) that Uses(p, v)
+    USES_WILDCARD, // check upon s (stmt), Uses(s, v)
+    USEP_WILDCARD, // check upon p (procedure), Uses(p, v)
     INVALID // no suitable subrelation to evaluate
 };
 
@@ -49,6 +55,10 @@ bool isPosInt(const std::string& str); // check if the argument is a positive in
 bool isName(const std::string& str); // check if the argument is the name of a variable or procedure
 // TODO : implement pattern expression check
 bool isExpression(const std::string& str); // check if the argument is a pattern expression
+
+// extract quoted part of a string
+// if it's not quoted, return the original string
+std::string extractQuotedStr(const std::string& str);
 
 SRT_LOOKUP_TABLE generateSrtTable(); // generate a mapping from relation and argument types to SubRelationType
 
