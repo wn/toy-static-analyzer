@@ -18,6 +18,7 @@ typedef std::set<STATEMENT_NUMBER> STATEMENT_NUMBER_SET;
 namespace backend {
 class PKB {
   public:
+    PKB() = default;
     /* -- MASS RETRIEVAL OF DESIGN ENTITIES -- */
 
     // Retrieves all statements in the SIMPLE program.

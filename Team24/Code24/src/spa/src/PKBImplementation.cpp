@@ -19,6 +19,10 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
     tNodeTypeToTNodesMap = extractor::getTNodeTypeToTNodes(ast);
     statementNumberToTNodeType = extractor::getStatementNumberToTNodeTypeMap(statementNumberToTNode);
 
+    for (auto i : statementNumberToTNode) {
+        allStatementsNumber.push_back(i.first);
+    }
+
     // Get all constants name:
     for (auto i : tNodeTypeToTNodesMap[Constant]) {
         allConstantsName.insert(i->constant);
@@ -130,7 +134,7 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
 }
 
 const STATEMENT_NUMBER_LIST& PKBImplementation::getAllStatements() const {
-    return STATEMENT_NUMBER_LIST();
+    return allStatementsNumber;
 }
 
 const VARIABLE_NAME_LIST& PKBImplementation::getAllVariables() const {

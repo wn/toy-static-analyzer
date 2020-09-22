@@ -10,6 +10,7 @@
 #include <fstream>
 #include <iterator>
 #include <sstream>
+#include <sys/stat.h>
 
 // implementation code of WrapperFactory - do NOT modify the next 5 lines
 AbstractWrapper* WrapperFactory::wrapper = 0;
@@ -28,23 +29,29 @@ TestWrapper::TestWrapper() {
 
 // method for parsing the SIMPLE source
 void TestWrapper::parse(std::string filename) {
+    struct stat buffer;
+    if (stat(filename.c_str(), &buffer) != 0) {
+        logLine("File does not exist: " + filename);
+        exit(1);
+    }
     std::ifstream inputFileStream;
+    std::cout << "Parsing SIMPLE source file: " + filename << std::endl;
     inputFileStream.open(filename);
-
     backend::TNode ast = backend::Parser(backend::lexer::tokenize(inputFileStream)).parse();
-    logLine("AST:");
-    logTNode(ast);
-    pkb = new backend::PKBImplementation(ast);
-    // call queries on the PKB after this
+    pkb = backend::PKBImplementation(ast);
 }
 
 // method to evaluating a query
 void TestWrapper::evaluate(std::string query, std::list<std::string>& results) {
-    std::stringstream stream(query);
+    std::cout << "Query string: " << query << std::endl;
+    //    for (auto i : pkb.getAllStatements())
+    //        std::cout << i << "aaa" << std::endl;
     try {
-        std::vector<backend::lexer::Token> tokens = backend::lexer::tokenizeWithWhitespace(stream);
+        std::stringstream stream(query);
+        std::vector<backend::lexer::Token> tokens = backend::lexer::tokenize(stream);
         qpbackend::Query queryStruct = querypreprocessor::parseTokens(tokens);
-        qpbackend::queryevaluator::QueryEvaluator queryEvaluator(pkb);
+        std::cout << "Query struct: " << queryStruct.toString() << std::endl;
+        qpbackend::queryevaluator::QueryEvaluator queryEvaluator(&pkb);
         std::vector<std::string> queryResults = queryEvaluator.evaluateQuery(queryStruct);
         std::copy(queryResults.begin(), queryResults.end(), std::back_inserter(results));
     } catch (const std::exception& e) {

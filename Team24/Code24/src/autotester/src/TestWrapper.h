@@ -1,11 +1,9 @@
 #ifndef TESTWRAPPER_H
 #define TESTWRAPPER_H
 
-#include "PKB.h"
+#include "PKBImplementation.h"
 
-#include <iostream>
 #include <list>
-#include <string>
 
 // include your other headers here
 #include "AbstractWrapper.h"
@@ -19,7 +17,7 @@ class TestWrapper : public AbstractWrapper {
     ~TestWrapper();
 
     // PKB to store information of SIMPLE program
-    backend::PKB* pkb;
+    backend::PKBImplementation pkb;
 
     // method for parsing the SIMPLE source
     virtual void parse(std::string filename);

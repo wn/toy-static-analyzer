@@ -9,6 +9,7 @@
 namespace backend {
 class PKBImplementation : virtual public backend::PKB {
   public:
+    PKBImplementation() = default;
     explicit PKBImplementation(const TNode& ast);
     const STATEMENT_NUMBER_LIST& getAllStatements() const override;
     const VARIABLE_NAME_LIST& getAllVariables() const override;
@@ -109,5 +110,6 @@ class PKBImplementation : virtual public backend::PKB {
     VARIABLE_NAME_LIST allVariablesName;
     CONSTANT_NAME_SET allConstantsName;
     PROCEDURE_NAME_LIST allProceduresName;
+    STATEMENT_NUMBER_LIST allStatementsNumber;
 };
 } // namespace backend
