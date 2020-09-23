@@ -29,6 +29,11 @@ SIMPLE_SOURCE_QPL_QUERY_PAIRS = (
                                  ('source', 'queries_simplified')])
 )
 
+# Edit this to change what source and query file pairs should run with failures
+SIMPLE_SOURCE_QPL_QUERY_FAILURE_PAIRS = (
+    [('failure_bee_movie_script', 'trivial_queries'), ('failure_procedures_with_same_name', 'trivial_queries')]
+)
+
 # Named tuple(s)
 AutotesterParameters = namedtuple('AutotesterParameters', ['source_filepath', 'query_filepath', 'output_filepath'])
 # Dev constants
@@ -56,7 +61,7 @@ def autotester_parameters_to_run_from(source_query_pairs):
         source_query_pairs]
 
 
-def execute_autotester(autotester_filepath, autotester_parameters):
+def execute_autotester(autotester_filepath, autotester_parameters, expect_failure=False):
     command = f'{autotester_filepath} {autotester_parameters.source_filepath} {autotester_parameters.query_filepath} {autotester_parameters.output_filepath}'
     # Replace '/' with '\' as Windows uses '\' as separators between directories and files.
     # e.g. unix/unix_file.txt vs windows\windows_file.txt
@@ -65,9 +70,16 @@ def execute_autotester(autotester_filepath, autotester_parameters):
 
     log(f'Executing command: {command}')
     exit_code = os.system(command)
+    if expect_failure:
+        if exit_code == SUCCESS_EXIT_CODE:
+            raise RuntimeError(f'Autotester execution succeeded but failure was expected')
+        log(f"Autotester failed successfully with {command} (-: !")
+        return
+
     if exit_code != SUCCESS_EXIT_CODE:
         raise RuntimeError(f'Autotester execution failed with exit code: {exit_code}')
     check_output_xml(autotester_parameters.output_filepath)
+    log(f"Autotester passed successfully with {command} (-: !")
 
 
 def check_output_xml(output_xml):
@@ -101,6 +113,14 @@ def main():
 
     for autotester_parameters in autotester_parameters_list:
         execute_autotester(autotester_filepath=autotester_filepath, autotester_parameters=autotester_parameters)
+
+    autotester_failure_parameters_list = autotester_parameters_to_run_from(
+        source_query_pairs=SIMPLE_SOURCE_QPL_QUERY_FAILURE_PAIRS)
+    log(f'Autotester expected failure parameters: {autotester_parameters_list}')
+
+    for autotester_parameters in autotester_failure_parameters_list:
+        execute_autotester(autotester_filepath=autotester_filepath, autotester_parameters=autotester_parameters,
+                           expect_failure=True)
 
 
 if __name__ == "__main__":

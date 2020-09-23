@@ -1,0 +1,7 @@
+procedure duplicate {
+  a = 1;
+}
+
+procedure duplicate {
+  b = 2;
+}

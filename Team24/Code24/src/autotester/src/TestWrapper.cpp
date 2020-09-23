@@ -43,17 +43,14 @@ void TestWrapper::parse(std::string filename) {
         backend::TNode ast = backend::Parser(backend::lexer::tokenize(inputFileStream)).parse();
         pkb = backend::PKBImplementation(ast);
     } catch (const std::exception& e) {
-        std::cerr << e.what() << std::endl;
-        hasParseFailed = true;
+        std::cerr << "Unable to parse SIMPLE source file: " << e.what() << std::endl;
+        // Terminate program when parsing fails.
+        exit(1);
     }
 }
 
 // method to evaluating a query
 void TestWrapper::evaluate(std::string query, std::list<std::string>& results) {
-    if (hasParseFailed) {
-        std::cerr << "Can't evaluate query as SIMPLE source parsing has failed." << std::endl;
-        return;
-    }
     std::cout << "Query string: " << query << std::endl;
     //    for (auto i : pkb.getAllStatements())
     //        std::cout << i << "aaa" << std::endl;
@@ -61,12 +58,12 @@ void TestWrapper::evaluate(std::string query, std::list<std::string>& results) {
         std::stringstream stream(query);
         std::vector<backend::lexer::Token> tokens = backend::lexer::tokenize(stream);
         qpbackend::Query queryStruct = querypreprocessor::parseTokens(tokens);
-        std::cout << "Query struct: " << queryStruct.toString() << std::endl;
+        SANITY && (std::cout << "Query struct: " << queryStruct.toString() << std::endl);
         qpbackend::queryevaluator::QueryEvaluator queryEvaluator(&pkb);
         std::vector<std::string> queryResults = queryEvaluator.evaluateQuery(queryStruct);
         std::copy(queryResults.begin(), queryResults.end(), std::back_inserter(results));
     } catch (const std::exception& e) {
-        std::cout << "Invalid query" << std::endl;
+        std::cerr << "Invalid query: " << e.what() << std::endl;
         return;
     }
     // store the answers to the query in the results list (it is initially empty)
