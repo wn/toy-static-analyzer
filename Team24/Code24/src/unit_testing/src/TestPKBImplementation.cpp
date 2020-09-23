@@ -275,7 +275,7 @@ TEST_CASE("Test getStatementsThatHaveDescendants") {
 }
 
 const char USES_AND_MODIFIES_PROGRAM[] = "procedure caller {"
-                                         "while \r\t (y == 3) {" // 1
+                                         "while (y == 3) {" // 1
                                          "gucci = 1;" // 2
                                          "}\n"
 

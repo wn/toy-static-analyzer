@@ -98,10 +98,6 @@ std::vector<Token> tokenize(std::istream& stream, bool willLexWithWhitespace) {
         std::string originalLine = line.substr();
         while (!line.empty()) {
             bool matchedSomething = false;
-            if (!willLexWithWhitespace && !line.empty() && isspace(line[0])) {
-                line = line.substr(1);
-                continue;
-            }
             for (auto const& p : rules) {
                 std::smatch match;
                 if (std::regex_search(line, match, std::regex(p.second))) {
@@ -119,7 +115,13 @@ std::vector<Token> tokenize(std::istream& stream, bool willLexWithWhitespace) {
                             throw std::runtime_error("Trailing zeroes not allowed: " + t.integerValue);
                         }
                     }
-                    result.push_back(t);
+
+                    // If we have a whitespace before the current whitespace,
+                    if (t.type == WHITESPACE && !result.empty() && result.back().type == WHITESPACE) {
+                        // don't push
+                    } else {
+                        result.push_back(t);
+                    }
 
                     if (DEBUG) {
                         std::cout << prettyPrintType(p.first) << "<" << t.line << ", " << t.linePosition << ">";
@@ -142,8 +144,27 @@ std::vector<Token> tokenize(std::istream& stream, bool willLexWithWhitespace) {
                 "> at line: " + std::to_string(lineNumber));
             }
         }
+
+        if (lineNumber != lines.size()) {
+            Token newLine(WHITESPACE);
+            newLine.line = lineNumber;
+            if (!result.empty() && result.back().type != WHITESPACE) {
+                result.push_back(newLine);
+            }
+        }
     }
-    return result;
+
+    if (willLexWithWhitespace) {
+        return result;
+    }
+
+    std::vector<Token> resultWithoutWhitespace;
+    for (auto& t : result) {
+        if (t.type != WHITESPACE) {
+            resultWithoutWhitespace.push_back(t);
+        }
+    }
+    return resultWithoutWhitespace;
 }
 
 // Public API definition

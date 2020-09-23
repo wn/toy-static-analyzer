@@ -52,7 +52,7 @@ TEST_CASE("Empty tokens test") {
     REQUIRE(prettyTypeStr(lexerTokens) == expected);
 }
 
-TEST_CASE("Multiple whitespace tokens") {
+TEST_CASE("Multiple consecutive spaces are recognized as one WHITESPACE") {
     std::stringstream query = std::stringstream("stmt stmt;read read;assign\n"
                                                 "      assign; select\n"
                                                 "stmt such that follows\n"
@@ -63,10 +63,64 @@ TEST_CASE("Multiple whitespace tokens") {
                                                 ";");
     std::string expected =
     "NAME WHITESPACE NAME SEMICOLON NAME WHITESPACE NAME SEMICOLON NAME WHITESPACE NAME SEMICOLON "
-    "WHITESPACE NAME NAME WHITESPACE NAME WHITESPACE NAME WHITESPACE NAME LPAREN NAME WHITESPACE "
-    "COMMA UNDERSCORE WHITESPACE RPAREN SEMICOLON";
+    "WHITESPACE NAME WHITESPACE NAME WHITESPACE NAME WHITESPACE NAME WHITESPACE NAME WHITESPACE "
+    "LPAREN WHITESPACE NAME WHITESPACE "
+    "COMMA WHITESPACE UNDERSCORE WHITESPACE RPAREN WHITESPACE SEMICOLON";
     std::vector<backend::lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(query);
     REQUIRE(prettyTypeStr(lexerTokens) == expected);
+}
+
+TEST_CASE("Multiple consecutive newlines, space and tabs are recognized as one WHITESPACE") {
+    std::stringstream query = std::stringstream("select\n\n" // 2 newlines
+                                                "stmt  " // 2 spaces
+                                                "such\t\t" // 2 tabs
+                                                "that " // 1 space
+                                                "follows\n" // 1 newline
+                                                "* (\nstmt\n  " // 1 newline, 2 space
+                                                ",\r\n\r\n" // 2 CR-CF s
+                                                "_\r\r" // 2 CRs
+                                                ");");
+    std::string expected =
+    // select stmt such that
+    "NAME WHITESPACE NAME WHITESPACE NAME WHITESPACE NAME WHITESPACE "
+    // follows *
+    "NAME WHITESPACE MULT WHITESPACE "
+    // ( stmt
+    "LPAREN WHITESPACE NAME WHITESPACE "
+    // , _ )
+    "COMMA WHITESPACE UNDERSCORE WHITESPACE RPAREN "
+    // ;
+    "SEMICOLON";
+    std::vector<backend::lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(query);
+    REQUIRE(prettyTypeStr(lexerTokens) == expected);
+}
+
+TEST_CASE("Lexer captures line numbers") {
+    std::stringstream query = std::stringstream("apple\n" // line ends with newline
+                                                "ball \t\t\t \r\n" // line ends with CR-CF
+                                                " \r" // CR does not end a line on it's own
+                                                "cat \n"
+                                                "\n" // blank line
+                                                "dog");
+    std::vector<backend::lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(query);
+
+    std::string expected = "NAME WHITESPACE NAME WHITESPACE NAME WHITESPACE NAME";
+    REQUIRE(prettyTypeStr(lexerTokens) == expected);
+
+    REQUIRE(lexerTokens[0].nameValue == "apple");
+    REQUIRE(lexerTokens[0].line == 1);
+
+    // \n causes newline
+    REQUIRE(lexerTokens[2].nameValue == "ball");
+    REQUIRE(lexerTokens[2].line == 2);
+
+    // \r\n causes one newline, and \r does not cause another newline.0
+    REQUIRE(lexerTokens[4].nameValue == "cat");
+    REQUIRE(lexerTokens[4].line == 3);
+
+    // \\n\n causes 2 newlines
+    REQUIRE(lexerTokens[6].nameValue == "dog");
+    REQUIRE(lexerTokens[6].line == 5);
 }
 
 TEST_CASE("Queries with no clauses") {
