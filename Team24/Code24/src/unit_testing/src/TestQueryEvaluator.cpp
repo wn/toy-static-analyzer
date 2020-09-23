@@ -692,6 +692,21 @@ TEST_CASE("Test pattern check") {
     REQUIRE_FALSE(isPattern);
     std::tie(isPattern, patternStr, isSubExpr) = queryevaluator::extractPatternExpr("_x+y\"_");
     REQUIRE_FALSE(isPattern);
+
+    std::tie(isPattern, patternStr, isSubExpr) = queryevaluator::extractPatternExpr("\"x+y\"");
+    REQUIRE(isPattern);
+    REQUIRE(patternStr == "x+y");
+    REQUIRE_FALSE(isSubExpr);
+
+    std::tie(isPattern, patternStr, isSubExpr) = queryevaluator::extractPatternExpr("_\"x+y\"_");
+    REQUIRE(isPattern);
+    REQUIRE(patternStr == "x+y");
+    REQUIRE(isSubExpr);
+
+    std::tie(isPattern, patternStr, isSubExpr) = queryevaluator::extractPatternExpr("_");
+    REQUIRE(isPattern);
+    REQUIRE(patternStr.empty());
+    REQUIRE(isSubExpr);
 }
 
 TEST_CASE("Test pattern of exact match") {

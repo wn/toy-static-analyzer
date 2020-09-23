@@ -39,7 +39,7 @@ std::tuple<bool, std::string, bool> extractPatternExpr(const std::string& str) {
     }
     // non-subexpression case
     if (str.size() > 2 && str[0] == '\"' && str[str.size() - 1] == '\"') {
-        return { true, str.substr(1, str.size() - 2), true };
+        return { true, str.substr(1, str.size() - 2), false };
     }
     // unrecognized pattern
     return { false, "", false };
