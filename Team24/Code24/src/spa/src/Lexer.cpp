@@ -39,18 +39,17 @@ std::string prettyPrintType(TokenType t) {
     return m[t];
 }
 
-std::vector<std::pair<TokenType, std::string>> rules = { { LBRACE, "^\\{" },
-                                                         { RBRACE, "^\\}" },
-                                                         { LPAREN, "^\\(" },
-                                                         { RPAREN, "^\\)" },
-                                                         { SEMICOLON, "^;" },
-                                                         { COMMA, "^," },
+std::vector<std::pair<TokenType, std::string>> rules = { { LBRACE, "^(\\{)" },
+                                                         { RBRACE, "^(\\})" },
+                                                         { LPAREN, "^(\\()" },
+                                                         { RPAREN, "^(\\))" },
+                                                         { SEMICOLON, "^(;)" },
+                                                         { COMMA, "^(,)" },
                                                          { UNDERSCORE, "^(_)" },
                                                          { DOUBLE_QUOTE, "^(\")" },
 
                                                          { NEQ, "^(!=)" },
                                                          { NOT, "^(!)" },
-
                                                          { EQEQ, "^(==)" },
                                                          { SINGLE_EQ, "^(=)" },
 
@@ -69,9 +68,11 @@ std::vector<std::pair<TokenType, std::string>> rules = { { LBRACE, "^\\{" },
                                                          { MOD, "^(%)" },
 
                                                          { NAME, "^([a-zA-Z]\\w*)\\b" },
-                                                         // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/173):
-                                                         // Integers cannot be '00001' Which is permissible by this rule.
-                                                         { INTEGER, "^(0|[1-9]\\d*)\\b" },
+
+                                                         // Captures any set of numbers.
+                                                         // Ensure that trailing zeroes are
+                                                         // not allowed when using this rule.
+                                                         { INTEGER, "^(\\d+)" },
 
                                                          { WHITESPACE, "^(\\s+)" } };
 
@@ -112,6 +113,11 @@ std::vector<Token> tokenize(std::istream& stream, bool willLexWithWhitespace) {
                         t.nameValue = match.str();
                     } else if (p.first == INTEGER) {
                         t.integerValue = match.str();
+                        // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/173):
+                        // Integers cannot be '00001' Which is permissible by this rule.
+                        if (t.integerValue[0] == '0' && t.integerValue.size() > 1) {
+                            throw std::runtime_error("Trailing zeroes not allowed: " + t.integerValue);
+                        }
                     }
                     result.push_back(t);
 

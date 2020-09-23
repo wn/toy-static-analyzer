@@ -224,3 +224,10 @@ TEST_CASE("Queries with underscore in either arguments in a Uses/Modifies relati
     std::vector<backend::lexer::Token> lexerTokens2 = backend::lexer::tokenizeWithWhitespace(query2);
     REQUIRE(prettyTypeStr(lexerTokens2) == expected2);
 }
+
+TEST_CASE("Names and Integers can be immediately followed by other tokens") {
+    std::stringstream query1 = std::stringstream("(_1+1_)");
+    std::string expected1 = "LPAREN UNDERSCORE INTEGER PLUS INTEGER UNDERSCORE RPAREN";
+    std::vector<backend::lexer::Token> lexerTokens1 = backend::lexer::tokenizeWithWhitespace(query1);
+    REQUIRE(prettyTypeStr(lexerTokens1) == expected1);
+}
