@@ -92,6 +92,9 @@ TEST_CASE("Test evaluation of Follows between synonyms") {
     Query queryPost = { { { "s1", STMT }, { "s2", STMT } }, { "s2" }, { { FOLLOWS, "s1", "s2" } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost),
                                        { "2", "3", "4", "5", "7", "8", "9", "10", "13", "14" }));
+
+    Query querySelf = { { { "s", STMT } }, { "s" }, { { FOLLOWS, "s", "s" } }, {} };
+    REQUIRE(qe.evaluateQuery(querySelf).empty());
 }
 
 TEST_CASE("Test evaluation of Follows between entity and synonym") {
@@ -184,6 +187,9 @@ TEST_CASE("Test evaluation of Follows* between synonyms") {
     Query queryPost = { { { "s1", STMT }, { "s2", STMT } }, { "s2" }, { { FOLLOWST, "s1", "s2" } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost),
                                        { "2", "3", "4", "5", "7", "8", "9", "10", "13", "14" }));
+
+    Query querySelf = { { { "s", STMT } }, { "s" }, { { FOLLOWST, "s", "s" } }, {} };
+    REQUIRE(qe.evaluateQuery(querySelf).empty());
 }
 
 TEST_CASE("Test evaluation of Follows* between entity and synonym") {
@@ -273,6 +279,9 @@ TEST_CASE("Test evaluation of Parent between synonyms") {
 
     Query queryPost = { { { "s1", STMT }, { "s2", STMT } }, { "s2" }, { { PARENT, "s1", "s2" } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), { "2", "3", "4", "5", "6" }));
+
+    Query querySelf = { { { "s", STMT } }, { "s" }, { { PARENT, "s", "s" } }, {} };
+    REQUIRE(qe.evaluateQuery(querySelf).empty());
 }
 
 
@@ -359,6 +368,9 @@ TEST_CASE("Test evaluation of Parent* between synonyms") {
 
     Query queryPost = { { { "s1", STMT }, { "s2", STMT } }, { "s2" }, { { PARENTT, "s1", "s2" } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), { "2", "3", "4", "5", "6" }));
+
+    Query querySelf = { { { "s", STMT } }, { "s" }, { { PARENTT, "s", "s" } }, {} };
+    REQUIRE(qe.evaluateQuery(querySelf).empty());
 }
 
 

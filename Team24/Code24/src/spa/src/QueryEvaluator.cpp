@@ -319,6 +319,14 @@ bool SingleQueryEvaluator::evaluateSynonymSynonym(const backend::PKB* pkb,
                                                   std::string const& arg2,
                                                   bool isPattern,
                                                   std::pair<std::string, bool> pattern) {
+    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/246)
+    // note that relation between the synonym and itself is not allowed
+    // however, this does not hold for Next, fix it for the advanced
+    if (arg1 == arg2) {
+        handleError("In basic requirement, the entity has no relation with itself");
+        return false;
+    }
+
     std::vector<std::string> candidates_1 = synonym_candidates[arg1];
     std::vector<std::string> candidates_2 = synonym_candidates[arg2];
 
