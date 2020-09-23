@@ -264,6 +264,23 @@ STATEMENT_NUMBER_LIST PKBMock::getAllStatementsThatFollows() const {
 
 STATEMENT_NUMBER_LIST PKBMock::getParent(STATEMENT_NUMBER statementNumber) const {
     std::vector<int> stmts;
+    if (test_idx == 0) {
+        switch (statementNumber) {
+        case 6:
+        case 7:
+        case 8:
+        case 9:
+            stmts = { 5 };
+            break;
+        case 11:
+        case 12:
+        case 13:
+            stmts = { 10 };
+            break;
+        default:
+            stmts = {};
+        }
+    }
     if (test_idx == 1) {
         switch (statementNumber) {
         case 2:
@@ -288,6 +305,18 @@ STATEMENT_NUMBER_LIST PKBMock::getParent(STATEMENT_NUMBER statementNumber) const
 
 STATEMENT_NUMBER_LIST PKBMock::getChildren(STATEMENT_NUMBER statementNumber) const {
     std::vector<int> stmts;
+    if (test_idx == 0) {
+        switch (statementNumber) {
+        case 5:
+            stmts = { 6, 7, 8, 9 };
+            break;
+        case 10:
+            stmts = { 11, 12, 13 };
+            break;
+        default:
+            stmts = {};
+        }
+    }
     if (test_idx == 1) {
         switch (statementNumber) {
         case 1:
@@ -308,6 +337,23 @@ STATEMENT_NUMBER_LIST PKBMock::getChildren(STATEMENT_NUMBER statementNumber) con
 
 STATEMENT_NUMBER_LIST PKBMock::getAncestors(STATEMENT_NUMBER statementNumber) const {
     std::vector<int> stmts;
+    if (test_idx == 0) {
+        switch (statementNumber) {
+        case 6:
+        case 7:
+        case 8:
+        case 9:
+            stmts = { 5 };
+            break;
+        case 11:
+        case 12:
+        case 13:
+            stmts = { 10 };
+            break;
+        default:
+            stmts = {};
+        }
+    }
     if (test_idx == 1) {
         switch (statementNumber) {
         case 2:
@@ -333,6 +379,9 @@ STATEMENT_NUMBER_LIST PKBMock::getAncestors(STATEMENT_NUMBER statementNumber) co
 STATEMENT_NUMBER_LIST PKBMock::getStatementsThatHaveAncestors() const {
     std::vector<int> stmts;
     if (test_idx == 1) {
+        stmts = { 6, 7, 8, 9, 11, 12, 13 };
+    }
+    if (test_idx == 1) {
         stmts = { 2, 3, 4, 5, 6 };
     }
     return stmts;
@@ -340,6 +389,18 @@ STATEMENT_NUMBER_LIST PKBMock::getStatementsThatHaveAncestors() const {
 
 STATEMENT_NUMBER_LIST PKBMock::getDescendants(STATEMENT_NUMBER statementNumber) const {
     std::vector<int> stmts;
+    if (test_idx == 0) {
+        switch (statementNumber) {
+        case 5:
+            stmts = { 6, 7, 8, 9 };
+            break;
+        case 10:
+            stmts = { 11, 12, 13 };
+            break;
+        default:
+            stmts = {};
+        }
+    }
     if (test_idx == 1) {
         switch (statementNumber) {
         case 1:
@@ -360,6 +421,9 @@ STATEMENT_NUMBER_LIST PKBMock::getDescendants(STATEMENT_NUMBER statementNumber) 
 
 STATEMENT_NUMBER_LIST PKBMock::getStatementsThatHaveDescendants() const {
     std::vector<int> stmts;
+    if (test_idx == 0) {
+        stmts = { 5, 10 };
+    }
     if (test_idx == 1) {
         stmts = { 1, 2, 4 };
     }
@@ -559,10 +623,242 @@ VARIABLE_NAME_LIST PKBMock::getVariablesModifiedBySomeStatement() const {
 
 STATEMENT_NUMBER_LIST
 PKBMock::getAllAssignmentStatementsThatMatch(const std::string& assignee, const std::string& pattern, bool isSubExpr) const {
+    if (test_idx == 0) {
+        if (!isSubExpr) {
+            if (assignee == "_") {
+                if (pattern == "") {
+                    throw std::runtime_error(
+                    "getAllAssignmentStatementsThatMatch: This should not happen!");
+                }
+                if (pattern == "0") {
+                    return { 1, 2, 3 };
+                }
+                if (assignee == "count" && pattern == "count+1") {
+                    return { 6 };
+                }
+                if (assignee == "cenX" && pattern == "cenX+x") {
+                    return { 7 };
+                }
+                if (assignee == "cenY" && pattern == "cenY+y") {
+                    return { 8 };
+                }
+                if (assignee == "flag" && pattern == "1") {
+                    return { 11 };
+                }
+                if (assignee == "cenX" && pattern == "cenX/count") {
+                    return { 12 };
+                }
+                if (assignee == "cenY" && pattern == "cenY/count") {
+                    return { 13 };
+                }
+                if (assignee == "normSq" && pattern == "cenX*cenX+cenY*cenY") {
+                    return { 14 };
+                }
+                return {};
+            }
+            if (assignee == "count" && pattern == "0") {
+                return { 1 };
+            }
+            if (assignee == "cenX" && pattern == "0") {
+                return { 2 };
+            }
+            if (assignee == "cenY" && pattern == "0") {
+                return { 3 };
+            }
+            if (assignee == "count" && pattern == "count+1") {
+                return { 6 };
+            }
+            if (assignee == "cenX" && pattern == "cenX+x") {
+                return { 7 };
+            }
+            if (assignee == "cenY" && pattern == "cenY+y") {
+                return { 8 };
+            }
+            if (assignee == "flag" && pattern == "1") {
+                return { 11 };
+            }
+            if (assignee == "cenX" && pattern == "cenX/count") {
+                return { 12 };
+            }
+            if (assignee == "cenY" && pattern == "cenY/count") {
+                return { 13 };
+            }
+            if (assignee == "normSq" && pattern == "cenX*cenX+cenY*cenY") {
+                return { 14 };
+            }
+            return {};
+        }
+        if (assignee == "_") {
+            if (pattern == "") {
+                return { 1, 2, 3, 6, 7, 8, 11, 12, 13, 14 };
+            }
+            if (pattern == "cenX") {
+                return { 7, 12, 14 };
+            }
+            if (pattern == "cenY") {
+                return { 8, 13, 14 };
+            }
+            if (pattern == "0") {
+                return { 1, 2, 3 };
+            }
+            if (pattern == "1") {
+                return { 6, 11 };
+            }
+            if (pattern == "count") {
+                return { 6, 12, 13 };
+            }
+            if (pattern == "x") {
+                return { 7 };
+            }
+            if (pattern == "y") {
+                return { 8 };
+            }
+            return {};
+        }
+        if (pattern == "") {
+            if (assignee == "count") {
+                return { 1, 6 };
+            }
+            if (assignee == "cenX") {
+                return { 2, 7, 12 };
+            }
+            if (assignee == "cenY") {
+                return { 3, 8, 13 };
+            }
+            if (assignee == "normSq") {
+                return { 14 };
+            }
+            if (assignee == "flag") {
+                return { 11 };
+            }
+            return {};
+        }
+
+        if (assignee == "count" && pattern == "0") {
+            return { 1 };
+        }
+        if (assignee == "cenX" && pattern == "0") {
+            return { 2 };
+        }
+        if (assignee == "cenY" && pattern == "0") {
+            return { 3 };
+        }
+        if (assignee == "count" && pattern == "count+1") {
+            return { 6 };
+        }
+        if (assignee == "count" && pattern == "count") {
+            return { 6 };
+        }
+        if (assignee == "count" && pattern == "1") {
+            return { 6 };
+        }
+        if (assignee == "cenX" && pattern == "cenX+x") {
+            return { 7 };
+        }
+        if (assignee == "cenX" && pattern == "cenX") {
+            return { 7, 12 };
+        }
+        if (assignee == "cenX" && pattern == "x") {
+            return { 7 };
+        }
+        if (assignee == "cenY" && pattern == "cenY+y") {
+            return { 8 };
+        }
+        if (assignee == "cenY" && pattern == "cenY") {
+            return { 8, 13 };
+        }
+        if (assignee == "cenY" && pattern == "y") {
+            return { 8 };
+        }
+        if (assignee == "flag" && pattern == "1") {
+            return { 11 };
+        }
+        if (assignee == "cenX" && pattern == "cenX/count") {
+            return { 12 };
+        }
+        if (assignee == "cenX" && pattern == "cenX/count") {
+            return { 12 };
+        }
+        if (assignee == "cenY" && pattern == "cenY/count") {
+            return { 13 };
+        }
+        if (assignee == "cenY" && pattern == "count") {
+            return { 13 };
+        }
+        if (assignee == "normSq" && pattern == "cenX*cenX+cenY*cenY") {
+            return { 14 };
+        }
+        if (assignee == "normSq" && pattern == "cenX*cenX") {
+            return { 14 };
+        }
+        if (assignee == "normSq" && pattern == "cenY*cenY") {
+            return { 14 };
+        }
+        if (assignee == "normSq" && pattern == "cenX") {
+            return { 14 };
+        }
+        if (assignee == "normSq" && pattern == "cenY") {
+            return { 14 };
+        }
+        return {};
+    }
+
+    if (test_idx == 2) {
+        if (isSubExpr) {
+            if (pattern == "n") {
+                if (assignee == "n" || assignee == "_") {
+                    return { 5 };
+                }
+            } else if (pattern == "1") {
+                if (assignee == "n") {
+                    return { 5 };
+                } else if (assignee == "a") {
+                    return { 9 };
+                } else if (assignee == "_") {
+                    return { 5, 9 };
+                }
+            } else if (pattern == "z") {
+                if (assignee == "y" || assignee == "_") {
+                    return { 6 };
+                }
+            } else if (pattern == "m") {
+                if (assignee == "y" || assignee == "_") {
+                    return { 6 };
+                }
+            } else if (pattern == "") {
+                if (assignee == "n") {
+                    return { 5 };
+                } else if (assignee == "y") {
+                    return { 6 };
+                } else if (assignee == "a") {
+                    return { 9 };
+                } else if (assignee == "_") {
+                    return { 5, 6, 9 };
+                }
+            }
+        } else {
+            if (pattern == "n+1") {
+                if (assignee == "n" || assignee == "_") {
+                    return { 5 };
+                } else if (assignee == "y" || assignee == "_") {
+                    return { 6 };
+                } else if (assignee == "a" || assignee == "_") {
+                    return { 9 };
+                }
+            }
+        }
+    }
+
     return STATEMENT_NUMBER_LIST();
 }
 
 bool PKBMock::isRead(STATEMENT_NUMBER s) const {
+    if (test_idx == 2) {
+        switch (s) {
+        case 3:
+            return true;
+        }
+    }
     if (test_idx == 3) {
         switch (s) {
         case 4:
@@ -573,6 +869,12 @@ bool PKBMock::isRead(STATEMENT_NUMBER s) const {
     return false;
 }
 bool PKBMock::isPrint(STATEMENT_NUMBER s) const {
+    if (test_idx == 1) {
+        switch (s) {
+        case 1:
+            return true;
+        }
+    }
     if (test_idx == 3) {
         switch (s) {
         case 6:
@@ -585,6 +887,19 @@ bool PKBMock::isPrint(STATEMENT_NUMBER s) const {
     return false;
 }
 bool PKBMock::isCall(STATEMENT_NUMBER s) const {
+    if (test_idx == 0) {
+        switch (s) {
+        case 4:
+        case 9:
+            return true;
+        }
+    }
+    if (test_idx == 2) {
+        switch (s) {
+        case 2:
+            return true;
+        }
+    }
     if (test_idx == 3) {
         switch (s) {
         case 2:
@@ -597,6 +912,12 @@ bool PKBMock::isCall(STATEMENT_NUMBER s) const {
     return false;
 }
 bool PKBMock::isWhile(STATEMENT_NUMBER s) const {
+    if (test_idx == 0) {
+        switch (s) {
+        case 5:
+            return true;
+        }
+    }
     if (test_idx == 3) {
         switch (s) {
         case 14:
@@ -613,6 +934,12 @@ bool PKBMock::isWhile(STATEMENT_NUMBER s) const {
     return false;
 }
 bool PKBMock::isIfElse(STATEMENT_NUMBER s) const {
+    if (test_idx == 0) {
+        switch (s) {
+        case 10:
+            return true;
+        }
+    }
     if (test_idx == 3) {
         switch (s) {
         case 19:
@@ -628,6 +955,29 @@ bool PKBMock::isIfElse(STATEMENT_NUMBER s) const {
     return false;
 }
 bool PKBMock::isAssign(STATEMENT_NUMBER s) const {
+    if (test_idx == 0) {
+        switch (s) {
+        case 1:
+        case 2:
+        case 3:
+        case 6:
+        case 7:
+        case 8:
+        case 11:
+        case 12:
+        case 13:
+        case 14:
+            return true;
+        }
+    }
+    if (test_idx == 2) {
+        switch (s) {
+        case 5:
+        case 6:
+        case 9:
+            return true;
+        }
+    }
     if (test_idx == 3) {
         switch (s) {
         case 1:

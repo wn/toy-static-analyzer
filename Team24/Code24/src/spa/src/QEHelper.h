@@ -33,6 +33,7 @@ enum SubRelationType {
     POSTMODIFIESP, // check upon v, get p (procedure) that Modifes(p, v)
     MODIFIESS_WILDCARD, // check upon s (stmt), Modifies(s, v)
     MODIFIESP_WILDCARD, // check upon p (procedure), Modifies(p, v)
+    ASSIGN_PATTERN, // evaluate pattern a(v, ...) or a("v", ...)
     INVALID // no suitable subrelation to evaluate
 };
 
@@ -44,7 +45,6 @@ enum ArgType {
     CONST_SYNONYM, // synonym name of a procedure synonym
     NAME_ENTITY, // name of variable or procedure, e.g. "\"centroidX\"" "\"main\""
     NUM_ENTITY, // constant number or statement number of line number, e.g. "42"
-    EXPR, // expression used in pattern, e.g. "_\"x+y*z\"_"
     WILDCARD, // placeholder sign, e.g. "_"
     INVALID_ARG // invalid argument, not accepted for evaluation
 };
@@ -59,12 +59,14 @@ typedef std::unordered_map<int, FIR_SRT_TABLE> SRT_LOOKUP_TABLE;
 bool isWildCard(const std::string& str); // check if the argument is a wildcard
 bool isPosInt(const std::string& str); // check if the argument is a positive integer
 bool isName(const std::string& str); // check if the argument is the name of a variable or procedure
-// TODO : implement pattern expression check
-bool isExpression(const std::string& str); // check if the argument is a pattern expression
 
 // extract quoted part of a string
 // if it's not quoted, return the original string
 std::string extractQuotedStr(const std::string& str);
+
+// extract the content of pattern string
+// return {isValidPattern, patternContent, isSubExpr}
+std::tuple<bool, std::string, bool> extractPatternExpr(const std::string& str);
 
 SRT_LOOKUP_TABLE generateSrtTable(); // generate a mapping from relation and argument types to SubRelationType
 

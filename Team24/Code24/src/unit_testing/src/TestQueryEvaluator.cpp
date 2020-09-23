@@ -645,7 +645,7 @@ TEST_CASE("Test evaluation of Modifies with invalid arguments") {
     REQUIRE(qe.evaluateQuery(queryE3).empty());
 }
 
-TEST_CASE("test combined Uses and Modifies") {
+TEST_CASE("Test combined Uses and Modifies") {
     PKBMock pkb(2);
     queryevaluator::QueryEvaluator qe(&pkb);
 
@@ -659,6 +659,151 @@ TEST_CASE("test combined Uses and Modifies") {
         { { "s", STMT }, { "v", VARIABLE } }, { "s" }, { { MODIFIES, "s", "v" }, { USES, "s", "v" } }, {}
     };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryDouble), { "2", "4", "5" }));
+}
+
+TEST_CASE("Test pattern check") {
+    bool isPattern, isSubExpr;
+    std::string patternStr;
+
+    // pattern string without double quote on both sides
+    std::tie(isPattern, patternStr, isSubExpr) = queryevaluator::extractPatternExpr("x+y");
+    REQUIRE_FALSE(isPattern);
+    std::tie(isPattern, patternStr, isSubExpr) = queryevaluator::extractPatternExpr("\"x+y");
+    REQUIRE_FALSE(isPattern);
+
+    // single underscore on one side
+    std::tie(isPattern, patternStr, isSubExpr) = queryevaluator::extractPatternExpr("\"x+y\"_");
+    REQUIRE_FALSE(isPattern);
+
+    // no double quote between underscores
+    std::tie(isPattern, patternStr, isSubExpr) = queryevaluator::extractPatternExpr("_x+y_");
+    REQUIRE_FALSE(isPattern);
+    std::tie(isPattern, patternStr, isSubExpr) = queryevaluator::extractPatternExpr("_x+y\"_");
+    REQUIRE_FALSE(isPattern);
+}
+
+TEST_CASE("Test pattern of exact match") {
+    PKBMock pkb(0);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query query1 = { { { "a", ASSIGN } }, { "a" }, {}, { { "a", "_", "\"0\"" } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query1), { "1", "2", "3" }));
+
+    Query query2 = { { { "a", ASSIGN }, { "cl", CALL } }, { "cl" }, {}, { { "a", "\"cenX\"", "\"cenX+x\"" } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query2), { "4", "9" }));
+
+    Query query3 = { { { "a", ASSIGN }, { "v", VARIABLE } }, { "v" }, {}, { { "a", "v", "\"cenX+x\"" } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query3), { "cenX" }));
+}
+
+TEST_CASE("Test pattern of subexpression") {
+    PKBMock pkb(0);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query query1 = { { { "a", ASSIGN } }, { "a" }, {}, { { "a", "_", "_\"count\"_" } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query1), { "6", "12", "13" }));
+
+    Query query2 = { { { "a", ASSIGN }, { "cl", CALL } }, { "a" }, {}, { { "a", "\"count\"", "_\"0\"_" } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query2), { "1" }));
+
+    Query query3 = { { { "a", ASSIGN }, { "v", VARIABLE } }, { "v" }, {}, { { "a", "v", "_\"0\"_" } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query3), { "cenX", "cenY", "count" }));
+}
+
+TEST_CASE("Test pattern of wildcard pattern") {
+    PKBMock pkb(0);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query query1 = { { { "a", ASSIGN } }, { "a" }, {}, { { "a", "_", "_" } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query1),
+                                       { "1", "2", "3", "6", "7", "8", "11", "12", "13", "14" }));
+
+    Query query2 = { { { "a", ASSIGN } }, { "a" }, {}, { { "a", "\"cenX\"", "_" } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query2), { "2", "7", "12" }));
+
+    Query query3 = { { { "a", ASSIGN }, { "v", VARIABLE } }, { "v" }, {}, { { "a", "v", "_" } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query3), { "cenX", "cenY", "count", "normSq", "flag" }));
+}
+
+TEST_CASE("Test invalid pattern") {
+    PKBMock pkb(0);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    // the statment should be an assignment
+    Query query1 = { { { "a", STMT } }, { "a" }, {}, { { "a", "_", "_" } } };
+    REQUIRE(qe.evaluateQuery(query1).empty());
+
+    // assignment should be a synonym
+    Query query2 = { { { "v", VARIABLE } }, { "v" }, {}, { { "1", "v", "_" } } };
+    REQUIRE(qe.evaluateQuery(query2).empty());
+
+    // invalid pattern
+    Query query3 = { { { "a", ASSIGN } }, { "a" }, {}, { { "a", "_", "0" } } };
+    REQUIRE(qe.evaluateQuery(query3).empty());
+}
+
+TEST_CASE("Test Follows/Follows* and Pattern") {
+    PKBMock pkb(0);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query query1 = {
+        { { "s", STMT }, { "a", ASSIGN } }, { "s" }, { { FOLLOWST, "s", "a" } }, { { "a", "\"cenY\"", "_" } }
+    };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query1), { "1", "2", "6", "7", "12" }));
+
+    Query query2 = { { { "a", ASSIGN } }, { "a" }, { { FOLLOWST, "_", "a" } }, { { "a", "\"count\"", "_" } } };
+    REQUIRE(qe.evaluateQuery(query2).empty());
+
+    Query query3 = { { { "v", VARIABLE }, { "a", ASSIGN } }, { "v" }, { { FOLLOWS, "6", "a" } }, { { "a", "v", "_" } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query3), { "cenX" }));
+}
+
+TEST_CASE("Test Parent/Parent* and Pattern") {
+    PKBMock pkb(0);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query query1 = { { { "s", STMT }, { "a", ASSIGN } }, { "a" }, { { PARENTT, "s", "a" } }, { { "a", "_", "_\"cenX\"_" } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query1), { "7", "12" }));
+
+    Query query2 = { { { "a", ASSIGN }, { "w", WHILE } }, { "a" }, { { PARENT, "w", "a" } }, { { "a", "\"count\"", "_" } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query2), { "6" }));
+
+    Query query3 = { { { "ifs", IF }, { "v", VARIABLE }, { "a", ASSIGN } },
+                     { "v" },
+                     { { PARENT, "ifs", "a" } },
+                     { { "a", "v", "_" } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query3), { "flag", "cenX", "cenY" }));
+}
+
+TEST_CASE("Test Uses and Pattern") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query query1 = { { { "a", ASSIGN }, { "v", VARIABLE } }, { "a" }, { { USES, "a", "v" } }, { { "a", "v", "_" } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query1), { "5" }));
+
+    Query query2 = { { { "a", ASSIGN }, { "ifs", IF }, { "v", VARIABLE } },
+                     { "a" },
+                     { { USES, "ifs", "v" } },
+                     { { "a", "v", "_\"1\"_" } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query2), { "5" }));
+
+    Query query3 = { { { "a", ASSIGN } }, { "a" }, { { USES, "a", "\"m\"" } }, { { "a", "_", "_\"z\"_" } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query3), { "6" }));
+}
+
+TEST_CASE("Test Modifies and Pattern") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query query1 = { { { "a", ASSIGN } }, { "a" }, { { MODIFIES, "a", "_" } }, { { "a", "\"y\"", "_" } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query1), { "6" }));
+
+    Query query2 = { { { "a", ASSIGN }, { "ifs", IF }, { "v", VARIABLE } },
+                     { "a" },
+                     { { MODIFIES, "ifs", "v" } },
+                     { { "a", "v", "_\"1\"_" } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query2), { "5" }));
 }
 
 } // namespace qetest

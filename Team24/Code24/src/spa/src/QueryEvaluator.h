@@ -55,13 +55,17 @@ class SingleQueryEvaluator {
     bool evaluateSynonymSynonym(const backend::PKB* pkb,
                                 SubRelationType subrelation,
                                 const std::string& arg1,
-                                const std::string& arg2);
+                                const std::string& arg2,
+                                bool isPattern,
+                                const std::pair<std::string, bool> pattern);
 
     // evaluate entity and list relation
     bool evaluateEntitySynonym(const backend::PKB* pkb,
                                SubRelationType subRelationType,
                                const std::string& arg1,
-                               const std::string& arg2);
+                               const std::string& arg2,
+                               bool isPattern,
+                               const std::pair<std::string, bool> pattern);
 
     // evaluate entity and entity relation
     bool evaluateEntityEntity(const backend::PKB* pkb,
@@ -82,6 +86,11 @@ class SingleQueryEvaluator {
     std::vector<std::string>
     inquirePKBForRelation(const backend::PKB* pkb, SubRelationType subRelationType, const std::string& arg);
     std::vector<std::string> inquirePKBForRelationWildcard(const backend::PKB* pkb, SubRelationType subRelationType);
+    std::vector<std::string> inquirePKBForPattern(const backend::PKB* pkb,
+                                                  SubRelationType subRelationType,
+                                                  const std::string& assignee,
+                                                  const std::string& assigned,
+                                                  bool isSubExpr);
 
     // helper function
     // check and link synonyms to declared entity type

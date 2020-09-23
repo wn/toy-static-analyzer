@@ -27,9 +27,22 @@ bool isName(const std::string& str) {
     }
 }
 
-// TODO: confirm the format of expression
-bool isExpression(const std::string& str) {
-    return false;
+std::tuple<bool, std::string, bool> extractPatternExpr(const std::string& str) {
+    // wildcard case
+    if (isWildCard(str)) {
+        return { true, "", true };
+    }
+    // subexpression case
+    if (str.size() > 4 && str[0] == '_' && str[1] == '\"' && str[str.size() - 1] == '_' &&
+        str[str.size() - 2] == '\"') {
+        return { true, str.substr(2, str.size() - 4), true };
+    }
+    // non-subexpression case
+    if (str.size() > 2 && str[0] == '\"' && str[str.size() - 1] == '\"') {
+        return { true, str.substr(1, str.size() - 2), true };
+    }
+    // unrecognized pattern
+    return { false, "", false };
 }
 
 std::string extractQuotedStr(const std::string& str) {

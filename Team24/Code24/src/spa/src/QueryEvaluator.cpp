@@ -46,6 +46,22 @@ std::vector<std::string> SingleQueryEvaluator::evaluateQuery(const backend::PKB*
         hasClauseFailed = !(evaluatePatternClause(pkb, clause));
     }
 
+    // roll back
+    // TODO: this is just a temporary fix. Fix this for advanced
+    for (auto it = query.patternClauses.rbegin(); it != query.patternClauses.rend(); ++it) {
+        if (hasClauseFailed) {
+            break;
+        }
+        hasClauseFailed = !(evaluatePatternClause(pkb, *it));
+    }
+
+    for (auto it = query.suchThatClauses.rbegin(); it != query.suchThatClauses.rend(); ++it) {
+        if (hasClauseFailed) {
+            break;
+        }
+        hasClauseFailed = !(evaluateSuchThatClause(pkb, *it));
+    }
+
     // prepare output
     hasEvaluationCompleted = true;
     return produceResult();
@@ -156,8 +172,7 @@ bool SingleQueryEvaluator::evaluateSuchThatClause(const backend::PKB* pkb,
     ArgType arg_type_1 = getArgType(pkb, arg1);
     ArgType arg_type_2 = getArgType(pkb, arg2);
 
-    if ((arg_type_1 == INVALID_ARG) || (arg_type_2 == INVALID_ARG) || (arg_type_1 == EXPR) ||
-        (arg_type_2 == EXPR)) {
+    if ((arg_type_1 == INVALID_ARG) || (arg_type_2 == INVALID_ARG)) {
         handleError("invalid argument type for such-that clause: " + arg1 + ", " + arg2);
         return false;
     }
@@ -180,12 +195,12 @@ bool SingleQueryEvaluator::evaluateSuchThatClause(const backend::PKB* pkb,
         case VAR_SYNONYM:
         case PROC_SYNONYM:
         case CONST_SYNONYM:
-            return evaluateSynonymSynonym(pkb, srt, arg1, arg2);
+            return evaluateSynonymSynonym(pkb, srt, arg1, arg2, false, { "", false });
         case NUM_ENTITY:
-            return evaluateEntitySynonym(pkb, srt, arg2, arg1); // swap the arguments as the called method required
+            return evaluateEntitySynonym(pkb, srt, arg2, arg1, false,
+                                         { "", false }); // swap the arguments as the called method required
         case NAME_ENTITY:
-            return evaluateEntitySynonym(pkb, srt, extractQuotedStr(arg2),
-                                         arg1); // swap the arguments as the called method required
+            return evaluateEntitySynonym(pkb, srt, extractQuotedStr(arg2), arg1, false, { "", false }); // swap the arguments as the called method required
         case WILDCARD:
             return evaluateSynonymWildcard(pkb, srt, arg1);
         default:
@@ -199,7 +214,7 @@ bool SingleQueryEvaluator::evaluateSuchThatClause(const backend::PKB* pkb,
         case VAR_SYNONYM:
         case PROC_SYNONYM:
         case CONST_SYNONYM:
-            return evaluateEntitySynonym(pkb, srt, arg1_str, arg2);
+            return evaluateEntitySynonym(pkb, srt, arg1_str, arg2, false, { "", false });
         case NUM_ENTITY:
             return evaluateEntityEntity(pkb, srt, arg1_str, arg2);
         case NAME_ENTITY:
@@ -242,7 +257,51 @@ bool SingleQueryEvaluator::evaluateSuchThatClause(const backend::PKB* pkb,
  */
 bool SingleQueryEvaluator::evaluatePatternClause(const backend::PKB* pkb,
                                                  const std::tuple<std::string, std::string, std::string>& patternClause) {
-    return false;
+    bool isValidPattern, isSubExpr; // if the pattern is sub-expression
+    std::string assigned; // the RHS pattern content
+    std::tie(isValidPattern, assigned, isSubExpr) = extractPatternExpr(std::get<2>(patternClause));
+    if (!isValidPattern) {
+        handleError("unrecognized pattern: " + std::get<2>(patternClause));
+        return false;
+    }
+
+    std::string assignment = std::get<0>(patternClause); // the synonym of assignment statement
+    std::string assignee = std::get<1>(patternClause); // the variable assigned to
+
+    // check if the assignment is of assignment type
+    // TODO: better type check for advanced
+    if (!isSynonym(pkb, assignment)) {
+        handleError("the pattern should start with be a synonym");
+        return false;
+    }
+
+    // check if the assignment is an assign statement
+    SubRelationType subRelationType = INVALID;
+    switch (query.declarationMap[assignment]) {
+    case ASSIGN:
+        subRelationType = ASSIGN_PATTERN;
+        break;
+    default:
+        handleError("the pattern only takes assignment statement");
+        return false;
+    }
+
+    // check if the assignee is valid
+    if (isSynonym(pkb, assignee)) {
+        if (query.declarationMap[assignee] != VARIABLE) {
+            handleError("the assignee should be a variable");
+            return false;
+        }
+        return evaluateSynonymSynonym(pkb, subRelationType, assignee, assignment, true, { assigned, isSubExpr });
+    } else if (isWildCard(assignee)) {
+        return evaluateEntitySynonym(pkb, subRelationType, assignee, assignment, true, { assigned, isSubExpr });
+    } else if (isName(assignee)) {
+        return evaluateEntitySynonym(pkb, subRelationType, extractQuotedStr(assignee), assignment,
+                                     true, { assigned, isSubExpr });
+    } else {
+        handleError("invalid pattern assignee");
+        return false;
+    }
 }
 
 /**
@@ -257,7 +316,9 @@ bool SingleQueryEvaluator::evaluatePatternClause(const backend::PKB* pkb,
 bool SingleQueryEvaluator::evaluateSynonymSynonym(const backend::PKB* pkb,
                                                   SubRelationType subRelationType,
                                                   std::string const& arg1,
-                                                  std::string const& arg2) {
+                                                  std::string const& arg2,
+                                                  bool isPattern,
+                                                  std::pair<std::string, bool> pattern) {
     std::vector<std::string> candidates_1 = synonym_candidates[arg1];
     std::vector<std::string> candidates_2 = synonym_candidates[arg2];
 
@@ -269,7 +330,13 @@ bool SingleQueryEvaluator::evaluateSynonymSynonym(const backend::PKB* pkb,
     std::vector<std::pair<std::string, std::string>> constraintList;
     bool swapped = arg1 > arg2; // check lexical order of synonym
     for (const auto& c1 : candidates_1) {
-        std::vector<std::string> c1_result = inquirePKBForRelation(pkb, subRelationType, c1);
+        std::vector<std::string> c1_result;
+        if (!isPattern) {
+            c1_result = inquirePKBForRelation(pkb, subRelationType, c1);
+        } else {
+            // for pattern, the first argument is always the assignee and second always the assignment
+            c1_result = inquirePKBForPattern(pkb, subRelationType, c1, pattern.first, pattern.second);
+        }
         for (const auto& c2 : candidates_2) {
             if (isFoundInVector<std::string>(c1_result, c2)) {
                 std::pair<std::string, std::string> constraint =
@@ -279,7 +346,7 @@ bool SingleQueryEvaluator::evaluateSynonymSynonym(const backend::PKB* pkb,
         }
     }
 
-    // update constrainsts
+    // update constraints
     std::pair<std::string, std::string> signature =
     (swapped) ? std::make_pair(arg2, arg1) : std::make_pair(arg1, arg2);
     if (pairConstraints.find(signature) != pairConstraints.end()) {
@@ -317,8 +384,16 @@ bool SingleQueryEvaluator::evaluateSynonymSynonym(const backend::PKB* pkb,
 bool SingleQueryEvaluator::evaluateEntitySynonym(const backend::PKB* pkb,
                                                  SubRelationType subRelationType,
                                                  std::string const& arg1,
-                                                 std::string const& arg2) {
-    std::vector<std::string> arg1_result = inquirePKBForRelation(pkb, subRelationType, arg1);
+                                                 std::string const& arg2,
+                                                 bool isPattern,
+                                                 std::pair<std::string, bool> pattern) {
+    std::vector<std::string> arg1_result;
+    if (!isPattern) {
+        arg1_result = inquirePKBForRelation(pkb, subRelationType, arg1);
+    } else {
+        // for pattern, arg1 is always the assignee
+        arg1_result = inquirePKBForPattern(pkb, subRelationType, arg1, pattern.first, pattern.second);
+    }
     synonym_candidates[arg2] = vectorIntersection<std::string>(synonym_candidates[arg2], arg1_result);
     return !(synonym_candidates[arg2]).empty();
 }
@@ -506,6 +581,31 @@ SingleQueryEvaluator::inquirePKBForRelationWildcard(const backend::PKB* pkb, Sub
     return result;
 }
 
+/**
+ * inquire PKB for pattern
+ * @param pkb
+ * @param subRelationType : sub type of pattern (e,g. assign, if, while)
+ * @param assignee : the entity ref of variable assigned to
+ * @param assigned : the patern content
+ * @param isSubExpr : if the pattern is a subexpression
+ * @return : statement numbers of statements that matches the pattern
+ */
+std::vector<std::string> SingleQueryEvaluator::inquirePKBForPattern(const backend::PKB* pkb,
+                                                                    SubRelationType subRelationType,
+                                                                    const std::string& assignee,
+                                                                    const std::string& assigned,
+                                                                    bool isSubExpr) {
+    STATEMENT_NUMBER_LIST stmts;
+    switch (subRelationType) {
+    case ASSIGN_PATTERN:
+        stmts = pkb->getAllAssignmentStatementsThatMatch(assignee, assigned, isSubExpr);
+        break;
+    default:
+        stmts = {};
+    }
+    return castToStrVector<STATEMENT_NUMBER>(stmts);
+}
+
 // TODO: implement error handling other than logging
 /**
  * handle semantic error, exit evaluation properly
@@ -549,11 +649,8 @@ ArgType SingleQueryEvaluator::getArgType(const backend::PKB* pkb, std::string co
         return NUM_ENTITY;
     } else if (isName(arg)) {
         return NAME_ENTITY;
-    } else if (isExpression(arg)) {
-        return EXPR;
-    } else {
-        return INVALID_ARG;
     }
+    { return INVALID_ARG; }
 }
 
 /**
