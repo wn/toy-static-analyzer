@@ -234,6 +234,12 @@ void getUsesMappingHelper(const TNode* currentNode,
                           std::unordered_map<const TNode*, std::unordered_set<std::string>>& usesMapping) {
     std::unordered_set<std::string> variablesUsedByCurrentTNode;
 
+    if (currentNode->type == TNodeType::Read) {
+        // Only in the case of a read statement, we don't want to accumulate the variable name
+        // since we modify it instead of using it.
+        return;
+    }
+
     if (currentNode->type == TNodeType::Variable) {
         // Base case. We want to propagate the usage of a variable upwards.
         variablesUsedByCurrentTNode.insert(currentNode->name);

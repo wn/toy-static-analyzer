@@ -274,6 +274,24 @@ TEST_CASE("Test getUsesMapping with a single procedure") {
         REQUIRE(usesMapping.count(p.first));
         REQUIRE(p.second == usesMapping[p.first]);
     }
+
+    // Regression test to ensure that "read y"; does not register "y" as a used variable.
+    const char program2[] = "procedure AnotherProc {"
+                            "while (x == 1) {"
+                            "read y;"
+                            "y = x + 2;"
+                            "}"
+                            "}";
+
+    parser = testhelpers::GenerateParserFromTokens(program2);
+    ast = TNode(parser.parse());
+    tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    statementNumberToTNode = extractor::getStatementNumberToTNode(tNodeToStatementNumber);
+    usesMapping = extractor::getUsesMapping(tNodeTypeToTNodes);
+
+    std::unordered_set<std::string> expected = { "x" };
+    REQUIRE(usesMapping[statementNumberToTNode[1]] == expected);
 }
 
 TEST_CASE("Test getUsesMapping with multiple procedures") {
