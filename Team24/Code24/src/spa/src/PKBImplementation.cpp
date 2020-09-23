@@ -13,6 +13,12 @@ namespace backend {
 PKBImplementation::PKBImplementation(const TNode& ast) {
     logWord("PKB starting with ast");
     logLine(ast.toString());
+
+    if (!extractor::isValidSimpleProgram(ast)) {
+        throw std::runtime_error("Provided AST does not represent a valid SIMPLE program");
+    }
+
+
     std::unordered_map<const TNode*, int> tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
     std::unordered_map<int, const TNode*> statementNumberToTNode =
     extractor::getStatementNumberToTNode(tNodeToStatementNumber);

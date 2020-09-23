@@ -172,6 +172,42 @@ std::vector<const TNode*>& topologicalOrderOfCalledByGraph) {
     topologicalOrderOfCalledByGraph.push_back(currentNode);
 }
 
+bool cyclicCallExistsHelper(const TNode* currentNode,
+                            const std::unordered_map<const TNode*, std::vector<const TNode*>>& procedureToCallers,
+                            std::unordered_set<const TNode*>& currentlyVisiting) {
+    if (currentlyVisiting.find(currentNode) != currentlyVisiting.end()) {
+        logLine("cyclicCallExistsHelper: Cycle detected at " + currentNode->toShortString());
+        return true;
+    }
+
+    logLine("cyclicCallExistsHelper: visiting " + currentNode->toShortString());
+    currentlyVisiting.insert(currentNode);
+    bool cyclicCallExists = false;
+    if (procedureToCallers.find(currentNode) != procedureToCallers.end()) {
+        for (const TNode* caller : procedureToCallers.find(currentNode)->second) {
+            cyclicCallExists =
+            cyclicCallExists || cyclicCallExistsHelper(caller, procedureToCallers, currentlyVisiting);
+        }
+    }
+    currentlyVisiting.erase(currentNode);
+
+    logWord("cyclicCallExistsHelper: visited " + currentNode->toShortString() + ", cyclic call exists? ");
+    logLine(cyclicCallExists);
+
+    return cyclicCallExists;
+}
+
+bool cyclicCallExists(const std::unordered_map<const TNode*, std::vector<const TNode*>>& procedureToCallers) {
+    for (auto& p : procedureToCallers) {
+        const TNode* currentProcedure = p.first;
+        std::unordered_set<const TNode*> visitedNodes;
+        if (cyclicCallExistsHelper(currentProcedure, procedureToCallers, visitedNodes)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 std::vector<const TNode*> getTopologicalOrderingOfCalledByGraph(
 std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes) {
     const std::unordered_map<const TNode*, std::vector<const TNode*>>& procedureToCallers =
@@ -517,6 +553,37 @@ getStatementNumberToTNodeTypeMap(const std::unordered_map<int, const TNode*>& st
         result[stmtNo] = tNode->type;
     }
     return result;
+}
+
+bool isValidSimpleProgram(const TNode& ast) {
+    auto tNodeTypeToTNodes = getTNodeTypeToTNodes(ast);
+    // Two procedures with the same name is considered an error.
+    std::unordered_set<std::string> procedureNames;
+    for (const TNode* procedure : tNodeTypeToTNodes[Procedure]) {
+        if (procedureNames.find(procedure->name) != procedureNames.end()) {
+            return false;
+        }
+        procedureNames.insert(procedure->name);
+    }
+
+    // Call to a non-existing procedure produces an error
+    for (const TNode* callStatement : tNodeTypeToTNodes[Call]) {
+        std::string calledProcedureName = callStatement->children[0].name;
+        if (procedureNames.find(calledProcedureName) == procedureNames.end()) {
+            return false;
+        }
+    }
+
+    // Cyclic calls are not allowed.
+    // For example, procedure A calls procedure B, procedure B calls C, and C calls A
+    // should not be accepted in a correct SIMPLE code.
+    auto procedureToCallers = getProcedureToCallers(tNodeTypeToTNodes);
+    if (cyclicCallExists(procedureToCallers)) {
+        return false;
+    }
+
+    // The SIMPLE program didn't fail any of the checks, so it is valid.
+    return true;
 }
 
 

@@ -55,6 +55,8 @@ std::unordered_map<int, const TNode*>
 getStatementNumberToTNode(const std::unordered_map<const TNode*, int>& tNodeToStatementNumber);
 std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash> getTNodeTypeToTNodes(const TNode& ast);
 
+bool isValidSimpleProgram(const TNode& ast);
+
 // Return a pair of mapping {{follower : followed}, {followed, follower}}.
 std::pair<std::unordered_map<int, int>, std::unordered_map<int, int>> getFollowRelationship(const TNode& ast);
 // Return a pair of mapping {{child : parent}, {parent, children}}.

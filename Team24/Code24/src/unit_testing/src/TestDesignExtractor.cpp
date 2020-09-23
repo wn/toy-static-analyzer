@@ -630,5 +630,46 @@ TEST_CASE("Test getStatementNumberToTNodeTypeMap") {
     };
     REQUIRE(result == expected);
 }
+
+TEST_CASE("isValidSimpleProgram: Two procedures with the same name is invalid") {
+    const char program[] = "procedure p {x=1;} procedure p{y=1;}";
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    REQUIRE(extractor::isValidSimpleProgram(ast) == false);
+}
+
+TEST_CASE("isValidSimpleProgram: Call to non-existing procedures is invalid") {
+    const char program[] = "procedure p {call q;}";
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    REQUIRE(extractor::isValidSimpleProgram(ast) == false);
+}
+
+TEST_CASE("isValidSimpleProgram: Recursive call is invalid") {
+    const char program[] = "procedure p {call p;}";
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    REQUIRE(extractor::isValidSimpleProgram(ast) == false);
+}
+
+TEST_CASE("isValidSimpleProgram: Cyclic calls are invalid ") {
+    const char program[] = "procedure p {call q;}"
+                           "procedure q {call r;}"
+                           "procedure r {call p;}";
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    REQUIRE(extractor::isValidSimpleProgram(ast) == false);
+}
+
+TEST_CASE("isValidSimpleProgram: Acyclic calls are valid") {
+    const char program[] = "procedure p {call r;}"
+                           "procedure q {call s;}"
+                           "procedure r {call s;}"
+                           "procedure s {x = 1;}";
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    REQUIRE(extractor::isValidSimpleProgram(ast) == true);
+}
+
 } // namespace testextractor
 } // namespace backend
