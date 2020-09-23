@@ -19,9 +19,16 @@ def formatter(prefix, source_qpl_query_pairs):
 
 # Edit this to change what source and query file pairs to run.
 CODE_5_PREFIX = 'code_5_'
-SIMPLE_SOURCE_QPL_QUERY_PAIRS = [('trivial_source', 'trivial_queries')] + formatter(CODE_5_PREFIX,
-                                                                                    [('source', 'queries_follows'),
-                                                                                     ('source', 'queries_simplified')])
+VP6_PREFIX = 'vp6_'
+SIMPLE_SOURCE_QPL_QUERY_PAIRS = (
+        [('trivial_source', 'trivial_queries')]
+        + formatter(CODE_5_PREFIX, [('source', 'queries_follows'),
+                                    ('source',
+                                     'queries_simplified')])
+        + formatter(VP6_PREFIX, [('source', 'follow_parent_queries'),
+                                 ('source', 'queries_simplified')])
+)
+
 # Named tuple(s)
 AutotesterParameters = namedtuple('AutotesterParameters', ['source_filepath', 'query_filepath', 'output_filepath'])
 # Dev constants
