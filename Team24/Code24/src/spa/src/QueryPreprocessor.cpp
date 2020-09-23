@@ -681,6 +681,9 @@ STATE_RESULT_STATUS_TRIPLE parseExpressionSpec(State state) {
         case backend::lexer::DIV:
             expressionSpec += '/';
             break;
+        case backend::lexer::MOD:
+            expressionSpec += '%';
+            break;
         case backend::lexer::DOUBLE_QUOTE:
             expressionSpec += '"';
             doubleQuotesPoppedCount += 1;

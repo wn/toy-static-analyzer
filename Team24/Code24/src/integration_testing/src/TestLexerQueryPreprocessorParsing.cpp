@@ -445,6 +445,18 @@ TEST_CASE("Test pattern clause expression") {
     REQUIRE(expectedQuery == actualQuery);
 }
 
+TEST_CASE("Test pattern clause expression operator") {
+    std::stringstream queryString =
+    std::stringstream("assign a; Select a pattern a (_, \"x+s*g-3%9\")");
+    qpbackend::Query expectedQuery = qpbackend::Query({ { "a", qpbackend::EntityType::ASSIGN } },
+                                                      { "a" }, {}, { { "a", "_", "\"x+s*g-3%9\"" } });
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
 TEST_CASE("Test pattern clause expression white space handling") {
     std::stringstream queryString =
     std::stringstream("assign a; Select a pattern a (_, \"x\r\r\r+s+Follows*\n\r3 8\")");

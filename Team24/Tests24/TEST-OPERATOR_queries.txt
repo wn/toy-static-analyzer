@@ -1,0 +1,50 @@
+1 - Test +
+assign s;
+Select s pattern s (_, "2+2")
+1
+5000
+2 - Test + subexpr
+assign s;
+Select s pattern s (_, _"2+2"_)
+1
+5000
+3 - Test -
+assign s;
+Select s pattern s (_, "2-2")
+3
+5000
+4 - Test - subexpr
+assign s;
+Select s pattern s (_, _"2-2"_)
+3
+5000
+5 - Test *
+assign s;
+Select s pattern s (_, "2*2")
+2
+5000
+6 - Test * subexpr
+assign s;
+Select s pattern s (_, _"2*2"_)
+2
+5000
+7 - Test %
+assign s;
+Select s pattern s (_, "2%2")
+4
+5000
+8 - Test % subexpr
+assign s;
+Select s pattern s (_, _"2%2"_)
+4
+5000
+9 - Test /
+assign s;
+Select s pattern s (_, "2/2")
+5
+5000
+10 - Test / subexpr
+assign s;
+Select s pattern s (_, _"2/2"_)
+5
+5000
