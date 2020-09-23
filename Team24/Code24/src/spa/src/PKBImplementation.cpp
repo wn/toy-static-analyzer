@@ -353,15 +353,15 @@ STATEMENT_NUMBER_LIST
 PKBImplementation::getAllAssignmentStatementsThatMatch(const std::string& assignee,
                                                        const std::string& pattern,
                                                        bool isSubExpr) const {
-    std::string strippedPattern = pattern; // local copy
-    std::remove_if(strippedPattern.begin(), strippedPattern.end(), isspace);
+    std::string strippedPattern = pattern;
+    auto res = std::remove_if(strippedPattern.begin(), strippedPattern.end(), isspace);
+    strippedPattern.erase(res, strippedPattern.end());
 
-    if (strippedPattern.empty() && !isSubExpr) {
-        // pattern a("v", "") is not possible. We simply return an empty result.
-        return {};
-    }
-
+    // catch `pattern = "        "` case
     if (strippedPattern.empty()) {
+        if (!isSubExpr) {
+            return {};
+        }
         if (assignee == "_") {
             // since both pattern and assignee is empty, we return all assignment statements.
             return { allAssignmentStatements.begin(), allAssignmentStatements.end() };
@@ -377,7 +377,7 @@ PKBImplementation::getAllAssignmentStatementsThatMatch(const std::string& assign
     }
 
     // Preprocess pattern using the parser, to set precedence.
-    std::string searchPattern = Parser::parseExpr(strippedPattern);
+    std::string searchPattern = Parser::parseExpr(pattern);
     if (searchPattern.empty() || patternsMap.find(searchPattern) == patternsMap.end()) {
         return {};
     }

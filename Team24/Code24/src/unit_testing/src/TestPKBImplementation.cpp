@@ -661,6 +661,81 @@ TEST_CASE("Test getAllAssignmentStatementsThatMatch multiple assign") {
     REQUIRE(actual18 == expected18);
 }
 
+TEST_CASE("Test invalid getAllAssignmentStatementsThatMatch patterns") {
+    const char STRUCTURED_STATEMENT[] = "procedure MySpecialProc {"
+                                        "x =  q * r + 123 + 1+123;"
+                                        "}";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    std::vector<int> actual1 = pkb.getAllAssignmentStatementsThatMatch("_", "()", true);
+    std::vector<int> expected1 = {};
+    REQUIRE(actual1 == expected1);
+
+    std::vector<int> actual1_f = pkb.getAllAssignmentStatementsThatMatch("_", "()", false);
+    std::vector<int> expected1_f = {};
+    REQUIRE(actual1_f == expected1_f);
+
+
+    std::vector<int> actual2 = pkb.getAllAssignmentStatementsThatMatch("_", "()q*r()", true);
+    std::vector<int> expected2 = {};
+    REQUIRE(actual2 == expected2);
+
+    std::vector<int> actual2_f = pkb.getAllAssignmentStatementsThatMatch("_", "()q*r()", false);
+    std::vector<int> expected2_f = {};
+    REQUIRE(actual2_f == expected2_f);
+
+    std::vector<int> actual3 = pkb.getAllAssignmentStatementsThatMatch("_", "12 3", true);
+    std::vector<int> expected3 = {};
+    REQUIRE(actual3 == expected3);
+
+    std::vector<int> actual3_f = pkb.getAllAssignmentStatementsThatMatch("_", "12 3", false);
+    std::vector<int> expected3_f = {};
+    REQUIRE(actual3_f == expected3_f);
+
+    std::vector<int> actual4 = pkb.getAllAssignmentStatementsThatMatch("_", "q*r+12\n3", true);
+    std::vector<int> expected4 = {};
+    REQUIRE(actual4 == expected4);
+
+    std::vector<int> actual4_f = pkb.getAllAssignmentStatementsThatMatch("_", "q*r+12\n3", false);
+    std::vector<int> expected4_f = {};
+    REQUIRE(actual4_f == expected4_f);
+
+    std::vector<int> actual5 = pkb.getAllAssignmentStatementsThatMatch("_", "q\n*r+123", true);
+    std::vector<int> expected5 = { 1 };
+    REQUIRE(actual5 == expected5);
+
+    std::vector<int> actual5_f = pkb.getAllAssignmentStatementsThatMatch("_", "q\n*r+123", false);
+    std::vector<int> expected5_f = {};
+    REQUIRE(actual5_f == expected5_f);
+
+    std::vector<int> actual6 = pkb.getAllAssignmentStatementsThatMatch("_", "q*r+\n123", true);
+    std::vector<int> expected6 = { 1 };
+    REQUIRE(actual6 == expected6);
+
+    std::vector<int> actual6_f = pkb.getAllAssignmentStatementsThatMatch("_", "q*r+\n123", false);
+    std::vector<int> expected6_f = {};
+    REQUIRE(actual6_f == expected6_f);
+
+    std::vector<int> actual7 = pkb.getAllAssignmentStatementsThatMatch("_", "    ", true);
+    std::vector<int> expected7 = { 1 };
+    REQUIRE(actual7 == expected7);
+
+    std::vector<int> actual7_f = pkb.getAllAssignmentStatementsThatMatch("_", "    ", false);
+    std::vector<int> expected7_f = {};
+    REQUIRE(actual7_f == expected7_f);
+
+    std::vector<int> actual8 = pkb.getAllAssignmentStatementsThatMatch("_", "1+12 3", true);
+    std::vector<int> expected8 = {};
+    REQUIRE(actual8 == expected8);
+
+    std::vector<int> actual8_f = pkb.getAllAssignmentStatementsThatMatch("_", "1+12 3", false);
+    std::vector<int> expected8_f = {};
+    REQUIRE(actual8_f == expected8_f);
+}
+
 TEST_CASE("Test isEntity") {
     const char STRUCTURED_STATEMENT[] = "procedure aoeu {"
 
