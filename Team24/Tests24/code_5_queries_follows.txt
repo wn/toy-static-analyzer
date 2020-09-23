@@ -1,0 +1,100 @@
+1 - (Valid Query) Select statement s that is after statement #2. 
+stmt s;
+Select s such that Follows(2, s)
+3
+5000
+2 - (Valid Query) Select statement s that is before statement #2.
+stmt s;
+Select s such that Follows(s, 2)
+1
+5000
+3 - (Valid Query) Select statement that is after the while statement at #14
+stmt s;
+Select s such that Follows(14, s)
+19
+5000
+4 - (Valid Query) Select statement that appears before (for a statement in a container list)
+stmt s;
+Select s such that Follows(s, 15)
+none
+5000
+5 - (Valid Query) Select assign statement that is after the if statement at #19
+assign a;
+Select a such that Follows(19, a)
+23
+5000
+6 - (Valid Query) Select all assign statements that are before a while statement
+assign a; while w;
+Select a such that Follows*(a, w)
+10, 11, 12
+5000
+7 - (Valid Query) Select all statements that are before a call statement
+stmt s; call c;
+Select s such that Follows*(s, c)
+1, 2, 10, 11, 12, 15, 16, 17
+5000
+8 - (Valid Query) Select all statements that are before a read statement
+stmt s; read r;
+Select s such that Follows(s, r)
+4
+5000+
+9 - (Valid Query) Select all statements that are after a print statement
+stmt s; print pn;
+Select s such that Follows(pn, s)
+7, 8, 9
+5000
+10 - (Valid Query) Test selecting a valid Follows query but empty result
+print pn;
+Select pn such that Follows(14, 15)
+none
+5000
+11 - (Valid Query) Select all statements that appear before stmtNo #3 and in same nesting level
+stmt s;
+Select s such that Follows*(s, 3)
+1, 2
+5000
+12 - (Valid Query) Select all statements as long as there are some statements that are followed by stmtNo #3
+stmt s;
+Select s such that Follows*(_, 3)
+1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23
+5000
+13 - (Valid Query) Select a statement that is after the end of the last statement in a procedure
+stmt s;
+Select s such that Follows(23, s)
+none
+5000
+14 - (Valid Query) Select all statements as long as there are Follows* relation
+stmt s;
+Select s such that Follows*(_,_)
+1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23
+5000
+15 - (Valid Query) Select all variables as long as there is some assign a and stmt s such that Follows*(s, a) holds
+stmt s; assign a; variable v;
+Select v such that Follows*(s, a)
+count, cenX, flag, cenY, x, y, normSq
+5000
+16 - (Valid Query) Select all call statements as long as Follows*(23, _) holds true
+call c;
+Select c such that Follows*(23, _)
+none
+5000
+17 - (Invalid Query) Follows* spelt wrongly  
+stmt s;
+Select s such that Followsadsjadbw*(_, _)
+none
+5000
+18 - (Invalid Query) Invalid design entity  
+magical m;
+Select m such that Follows*(_, m)
+none
+5000
+19 - (Invalid Query) No such that
+stmt s;
+Select s Follows*(s, _)
+none
+5000
+20 - (Invalid Query) Invalid argument
+stmt s;
+Select s such that Follows*("helloWorld", _)
+none
+5000

@@ -12,8 +12,16 @@ import os
 import sys
 from collections import namedtuple, Counter
 
+
+def formatter(prefix, source_qpl_query_pairs):
+    return [(prefix + s, prefix + q) for s, q in source_qpl_query_pairs]
+
+
 # Edit this to change what source and query file pairs to run.
-SIMPLE_SOURCE_QPL_QUERY_PAIRS = [('trivial_source', 'trivial_queries')]
+CODE_5_PREFIX = 'code_5_'
+SIMPLE_SOURCE_QPL_QUERY_PAIRS = [('trivial_source', 'trivial_queries')] + formatter(CODE_5_PREFIX,
+                                                                                    [('source', 'queries_follows'),
+                                                                                     ('source', 'queries_simplified')])
 # Named tuple(s)
 AutotesterParameters = namedtuple('AutotesterParameters', ['source_filepath', 'query_filepath', 'output_filepath'])
 # Dev constants
