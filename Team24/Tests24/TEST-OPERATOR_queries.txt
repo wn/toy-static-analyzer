@@ -48,3 +48,13 @@ assign s;
 Select s pattern s (_, _"2/2"_)
 5
 5000
+11 - Stress test operators
+assign s;
+Select s pattern s (_, "((x - y) * (x + y) + (x + z) * (x - z) + (y - z) * (y - z)) % y")
+6
+5000
+12 - Stress test operators subexpr
+assign s;
+Select s pattern s (_, _"((x - y) * (x + y) + (x + z) * (x - z) + (y - z) * (y - z)) % y"_)
+6
+5000

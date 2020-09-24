@@ -4,4 +4,5 @@ procedure main {
   a = 2-2;
   a = 2%2;
   a = 2/2;
+  v = ((x - y) * (x + y) + (x + z) * (x - z) + (y - z) * (y - z)) % y;
 }
