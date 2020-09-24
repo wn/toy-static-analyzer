@@ -13,7 +13,7 @@
 #include <sys/stat.h>
 
 // Toggle this to false when submitting. SANITY=true enforces stricter checks in this program.
-#define SANITY true
+#define SANITY false
 
 // implementation code of WrapperFactory - do NOT modify the next 5 lines
 AbstractWrapper* WrapperFactory::wrapper = 0;

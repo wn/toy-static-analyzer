@@ -1,0 +1,5 @@
+1 - Trivial Query
+while w;
+Select w
+none
+5000

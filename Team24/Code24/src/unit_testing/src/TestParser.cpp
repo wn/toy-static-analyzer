@@ -425,8 +425,6 @@ TEST_CASE("Test expr precedence: * before +") {
     lCondRHSConst.constant = "1";
     condNode.addChild(lCondRHSConst);
 
-    std::cout << result.toString() << std::endl;
-    std::cout << testhelpers::generateProgramNodeFromCondition(condNode).toString() << std::endl;
     REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 
@@ -464,8 +462,6 @@ TEST_CASE("Test expr left-associativity of +") {
     lCondRHSConst.constant = "1";
     condNode.addChild(lCondRHSConst);
 
-    std::cout << result.toString() << std::endl;
-    std::cout << testhelpers::generateProgramNodeFromCondition(condNode).toString() << std::endl;
     REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 
@@ -503,8 +499,6 @@ TEST_CASE("Test expr left-associativity of *") {
     lCondRHSConst.constant = "1";
     condNode.addChild(lCondRHSConst);
 
-    std::cout << result.toString() << std::endl;
-    std::cout << testhelpers::generateProgramNodeFromCondition(condNode).toString() << std::endl;
     REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 
@@ -542,8 +536,6 @@ TEST_CASE("Test expr precedence: * before + with brackets") {
     lCondRHSConst.constant = "1";
     condNode.addChild(lCondRHSConst);
 
-    std::cout << result.toString() << std::endl;
-    std::cout << testhelpers::generateProgramNodeFromCondition(condNode).toString() << std::endl;
     REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 
@@ -581,8 +573,6 @@ TEST_CASE("Test expr precedence: + before * with brackets") {
     lCondRHSConst.constant = "1";
     condNode.addChild(lCondRHSConst);
 
-    std::cout << result.toString() << std::endl;
-    std::cout << testhelpers::generateProgramNodeFromCondition(condNode).toString() << std::endl;
     REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 
@@ -600,8 +590,6 @@ TEST_CASE("Test expr useless brackets") {
     lCondRHSConst.constant = "1";
     condNode.addChild(lCondRHSConst);
 
-    std::cout << result.toString() << std::endl;
-    std::cout << testhelpers::generateProgramNodeFromCondition(condNode).toString() << std::endl;
     REQUIRE(result == testhelpers::generateProgramNodeFromCondition(condNode));
 }
 

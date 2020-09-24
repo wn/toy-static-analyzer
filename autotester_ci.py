@@ -25,6 +25,7 @@ TEST_BASIC_PREFIX = 'TEST-BASIC_'
 TEST_NESTED_COND_PREFIX = 'TEST-NESTED-COND_'
 TEST_OPERATORS_N_PATTERNS_PREFIX = 'TEST-OPERATORS-N-PATTERNS_'
 TEST_PARSER_KEYWORDS_RECOGNITION = 'TEST-PARSER-KEYWORDS-RECOGNITION_'
+
 SIMPLE_SOURCE_QPL_QUERY_PAIRS = (
         [('trivial_source', 'trivial_queries')]
         + formatter(TEST_OPERATOR_PREFIX, [('source', 'queries')])
@@ -36,9 +37,9 @@ SIMPLE_SOURCE_QPL_QUERY_PAIRS = (
         + formatter(TEST_PARSER_KEYWORDS_RECOGNITION, [('source', 'queries')])
 )
 
-# Edit this to change what source and query file pairs should run with failures
 SIMPLE_SOURCE_QPL_QUERY_FAILURE_PAIRS = (
-    [('failure_bee_movie_script', 'trivial_queries'), ('failure_procedures_with_same_name', 'trivial_queries')]
+        formatter('failure_bee_movie_script', [('source', 'queries')])
+        + formatter('failure_procedures_with_same_name', [('source', 'queries')])
 )
 
 # Named tuple(s)
