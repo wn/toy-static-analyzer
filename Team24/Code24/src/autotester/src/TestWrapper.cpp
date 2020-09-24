@@ -38,7 +38,7 @@ void TestWrapper::parse(std::string filename) {
             throw std::runtime_error("File does not exist: " + filename);
         }
         std::ifstream inputFileStream;
-        std::cout << "Parsing SIMPLE source file: " + filename << std::endl;
+        SANITY&& std::cout << "Parsing SIMPLE source file: " + filename << std::endl;
         inputFileStream.open(filename);
         backend::TNode ast = backend::Parser(backend::lexer::tokenize(inputFileStream)).parse();
         pkb = backend::PKBImplementation(ast);
@@ -51,10 +51,8 @@ void TestWrapper::parse(std::string filename) {
 
 // method to evaluating a query
 void TestWrapper::evaluate(std::string query, std::list<std::string>& results) {
-    std::cout << "Query string: " << query << std::endl;
-    //    for (auto i : pkb.getAllStatements())
-    //        std::cout << i << "aaa" << std::endl;
     try {
+        SANITY && (std::cout << "Query string: " << query << std::endl);
         std::stringstream stream(query);
         std::vector<backend::lexer::Token> tokens = backend::lexer::tokenize(stream);
         qpbackend::Query queryStruct = querypreprocessor::parseTokens(tokens);
