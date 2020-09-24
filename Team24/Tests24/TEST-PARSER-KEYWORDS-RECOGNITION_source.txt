@@ -1,0 +1,12 @@
+procedure procedure {
+  if = while;
+  while = if;
+  call = if;
+  read = print;
+  print = read;
+  call = call;
+  call = read + print + while;
+  else = then;
+  then = if;
+  procedure = if;
+}

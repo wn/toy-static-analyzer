@@ -33,13 +33,18 @@ lexer::Token Parser::assertNameTokenAndPop(int& tokenPos, const std::string& nam
 }
 
 lexer::Token Parser::assertTokenAndPop(int& tokenPos, lexer::TokenType type) {
+    assertTokenIsOfType(tokenPos, type);
     const lexer::Token& tok = peekToken(tokenPos);
     tokenPos++;
+    return tok;
+}
+
+void Parser::assertTokenIsOfType(int tokenPos, lexer::TokenType type) {
+    const lexer::Token& tok = peekToken(tokenPos);
     if (tok.type != type) {
         throw std::runtime_error("expect " + lexer::prettyPrintType(type) + ", got " +
                                  lexer::prettyPrintType(tok.type));
     }
-    return tok;
 }
 
 bool Parser::tokenTypeIs(int tokenPos, lexer::TokenType type) {
@@ -105,6 +110,20 @@ State Parser::parseStatementList(int tokenPos) {
 // stmt: read | print | call | while | if | assign
 State Parser::parseStatement(int tokenPos) {
     logLine("~~in parseStatement~~");
+    // Every statement must have at least 2 tokens.
+    if (!haveTokensLeft(tokenPos + 1)) {
+        throw std::runtime_error(
+        "Failed to parse statement: must have at least 2 tokens remaining");
+    }
+    // If the second token is an equal, we can be sure that this is an assignment statement.
+    if (tokenTypeIs(tokenPos + 1, lexer::SINGLE_EQ)) {
+        return parseAssign(tokenPos);
+    }
+
+    // Ensure that the next token is a name
+    assertTokenIsOfType(tokenPos, lexer::NAME);
+
+    // If this is not an assignment statement, it must be another structured statement.
     if (tokenHasName(tokenPos, constants::READ)) {
         return parseRead(tokenPos);
     } else if (tokenHasName(tokenPos, constants::PRINT)) {
@@ -116,7 +135,8 @@ State Parser::parseStatement(int tokenPos) {
     } else if (tokenHasName(tokenPos, constants::IF)) {
         return parseIf(tokenPos);
     } else {
-        return parseAssign(tokenPos);
+        throw std::runtime_error("Failed to parse statement, with first token that has name " +
+                                 peekToken(tokenPos).nameValue);
     }
 }
 

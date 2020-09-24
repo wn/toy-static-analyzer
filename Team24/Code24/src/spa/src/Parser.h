@@ -49,6 +49,7 @@ class Parser {
     bool tokenHasName(int tokenPos, const std::string& name);
     lexer::Token peekToken(int tokenPos);
     lexer::Token assertTokenAndPop(int& tokenPos, lexer::TokenType);
+    void assertTokenIsOfType(int tokenPos, lexer::TokenType);
     lexer::Token assertNameTokenAndPop(int& tokenPos, const std::string& name);
 
     // -- Parser primitives --
@@ -75,5 +76,6 @@ class Parser {
     State parseRead(int tokenPos);
     State parsePrint(int tokenPos);
     State parseCall(int tokenPos);
+    lexer::Token assertToken(int& tokenPos, lexer::TokenType type);
 };
 } // namespace backend

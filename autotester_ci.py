@@ -24,6 +24,7 @@ TEST_USES_NONE_PREFIX = 'TEST-USES-NONE_'
 TEST_BASIC_PREFIX = 'TEST-BASIC_'
 TEST_NESTED_COND_PREFIX = 'TEST-NESTED-COND_'
 TEST_OPERATORS_N_PATTERNS_PREFIX = 'TEST-OPERATORS-N-PATTERNS_'
+TEST_PARSER_KEYWORDS_RECOGNITION = 'TEST-PARSER-KEYWORDS-RECOGNITION_'
 SIMPLE_SOURCE_QPL_QUERY_PAIRS = (
         [('trivial_source', 'trivial_queries')]
         + formatter(TEST_OPERATOR_PREFIX, [('source', 'queries')])
@@ -32,6 +33,7 @@ SIMPLE_SOURCE_QPL_QUERY_PAIRS = (
         + formatter(TEST_BASIC_PREFIX, [('source', 'queries')])
         + formatter(TEST_NESTED_COND_PREFIX, [('source', 'queries')])
         + formatter(TEST_OPERATORS_N_PATTERNS_PREFIX, [('source', 'queries')])
+        + formatter(TEST_PARSER_KEYWORDS_RECOGNITION, [('source', 'queries')])
 )
 
 # Edit this to change what source and query file pairs should run with failures

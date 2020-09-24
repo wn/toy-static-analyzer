@@ -10,7 +10,8 @@ namespace testparser {
 
 TEST_CASE("Test parseStatementList fails on 0 statements") {
     Parser parser = testhelpers::GenerateParserFromTokens("procedure p{}");
-    REQUIRE_THROWS_WITH(parser.parse(), "expect NAME, got RBRACE");
+    REQUIRE_THROWS_WITH(parser.parse(),
+                        "Failed to parse statement: must have at least 2 tokens remaining");
 }
 
 TEST_CASE("Test procedure with name 'procedure'") {
@@ -646,7 +647,8 @@ TEST_CASE("Test parseAssign") {
 
 TEST_CASE("Test parseAssign wrong LHS") {
     Parser parser = testhelpers::GenerateParserFromTokens("procedure p{x + y = y + 1;}");
-    REQUIRE_THROWS_WITH(parser.parse(), "expect SINGLE_EQ, got PLUS");
+    REQUIRE_THROWS_WITH(parser.parse(),
+                        "Failed to parse statement, with first token that has name x");
 }
 
 TEST_CASE("Test read") {
@@ -710,6 +712,25 @@ TEST_CASE("Test Parser::parseExpr") {
     REQUIRE(Parser::parseExpr("1+y*z+4*3") == "((1+(y*z))+(4*3))");
     REQUIRE(Parser::parseExpr("1+2+3-4") == "(((1+2)+3)-4)");
     REQUIRE(Parser::parseExpr("1*2%3/4") == "(((1*2)%3)/4)");
+}
+
+TEST_CASE("Test statement requires at least 2 tokens to parse") {
+    Parser parser = testhelpers::GenerateParserFromTokens("procedure procedure { read");
+    REQUIRE_THROWS_WITH(parser.parse(),
+                        "Failed to parse statement: must have at least 2 tokens remaining");
+}
+
+TEST_CASE("Test assignment statements with keywords as assignee") {
+    Parser parser = testhelpers::GenerateParserFromTokens("procedure procedure {"
+                                                          "procedure = 1 + 1;"
+                                                          "if = then + else;"
+                                                          "then = else + while;"
+                                                          "else = while + call;"
+                                                          "while = call + print;"
+                                                          "call = print + read;"
+                                                          "print = read + procedure;"
+                                                          "}");
+    REQUIRE_NOTHROW(parser.parse());
 }
 } // namespace testparser
 } // namespace backend
