@@ -1,0 +1,5 @@
+1 - Select statements such that it use some variable
+stmt s;
+Select s such that Uses(s, _)
+none
+5000

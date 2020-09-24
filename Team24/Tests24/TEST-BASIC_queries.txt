@@ -1,0 +1,175 @@
+1 - select read without clause
+read rd;
+Select rd
+3
+5000
+2 - select print without clause
+print pt;
+Select pt
+1
+5000
+3 - select call without clause
+call cl;
+Select cl
+2
+5000
+4 - select while without clause
+while w;
+Select w
+7, 8
+5000
+5 - select if without clause
+if ifs;
+Select ifs
+4
+5000
+6 - select assign without clause
+assign a;
+Select a
+5, 6, 9
+5000
+7 - select follows synonyms
+print pt; stmt s;
+Select s such that Follows(pt, s)
+2
+5000
+8 - select follows* synonyms
+read rd; while w;
+Select w such that Follows*(rd, w)
+7
+5000
+9 - select follows entity
+stmt s;
+Select s such that Follows(7, s)
+none
+5000
+10 - select follows* entity
+stmt s;
+Select s such that Follows*(s, 6)
+none
+5000
+11 - select follows wildcard
+constant c;
+Select c such that Follows(_, _)
+0, 1, 2, 3
+5000
+12 - select follows* wildcard
+stmt s;
+Select s such that Follows*(_, s)
+2, 4, 7
+5000
+13 - select parent synonym
+assign a; if ifs;
+Select a such that Parent(ifs, a)
+5, 6
+5000
+14 - select parent* synonym
+while w; stmt s;
+Select s such that Parent*(w, s)
+8, 9
+5000
+15 - select parent entity
+stmt s;
+Select s such that Parent(s, 9)
+8
+5000
+16 - select parent* entity
+stmt s;
+Select s such that Parent*(s, 9)
+7, 8
+5000
+17 - select parent wildcard
+if ifs; variable v; assign a; stmt s;
+Select ifs such that Parent(ifs, _)
+4
+5000
+18 - select parent* wildcard
+call cl; constant c; while w; stmt s;
+Select s such that Parent*(_, s)
+5, 6, 8, 9
+5000
+18 - select uses statement synonym
+variable v; stmt s;
+Select s such that Uses(s, v)
+1, 2, 4, 5, 6
+5000
+19 - select uses with entity
+variable v;
+Select v such that Uses("foo", v)
+x, count, n, z, m
+5000
+20 - select modifies with synonym
+stmt s; variable v;
+Select s such that Modifies(s, v)
+2, 3, 4, 5, 6, 7, 8, 9
+5000
+21 - select modifies with entity
+variable v;
+Select v such that Modifies("foo", v)
+random, n, y, a
+5000
+22 - select modifies with wildcard
+variable v; stmt s;
+Select s such that Modifies(s, _)
+2, 3, 4, 5, 6, 7, 8, 9
+5000
+23 - select pattern of exact match
+assign a;
+Select a pattern a (_, "   z+m")
+6
+5000
+24 - select pattern of subexpression 
+assign a;
+Select a pattern a("a", _"1"_)
+9
+5000
+25 - select pattern of wildcard
+assign a; variable v;
+Select v pattern a(v, _)
+n, y, a
+5000
+26 - select pattern and follows
+stmt s; assign a;
+Select s such that Follows*(s, a) pattern a (_, _)
+none
+5000
+27 - select pattern and parents
+while w; assign a;
+Select w such that Parent*(w, a) pattern a (_, _"1"_)
+7, 8
+5000
+28 - select pattern and uses
+variable v; assign a;
+Select v such that Uses(a, v) pattern a(v, _)
+n
+5000
+29 - select pattern and modifies
+variable v1; variable v2; assign a;
+Select v1 such that Modifies(a, v1) pattern a(v2, _)
+n, y, a
+5000
+30 - mix case 1
+variable v; assign a; while w; call cl; if ifs; stmt s;
+Select s such that Follows*(ifs, w) pattern a(v, _"1"_)
+1, 2, 3, 4, 5, 6, 7, 8, 9
+5000
+31 - mix case 2
+constant c; assign a; if ifs;
+Select c such that Parent(ifs, a) pattern a("n", _)
+0, 1, 2, 3
+5000
+32 - mix case 3
+constant c; while w; stmt s; variable v; assign a;
+Select s such that Parent(w, s) pattern a(_, _"m"_)
+8, 9
+5000
+33 - mix case 4
+procedure p; variable v;
+Select p such that Modifies(p, v) pattern a(v, "m+z")
+none
+5000
+34 - mix case 5
+stmt s1T2U3y4; variable v; assign a; while w; if ifs;
+Select s1T2U3y4 pattern a(v, _"1"_) suhc that Follows*(s1T2U3y4, w)
+3, 4
+5000

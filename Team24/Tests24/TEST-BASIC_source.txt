@@ -1,0 +1,18 @@
+procedure foo {
+	print x;
+	call bar;
+}
+
+procedure bar {
+	read random;
+	if (count > 0 ) then {
+		n = n + 1;
+	} else {
+		y = z + m;
+	}
+      while (1+1==2) {
+          while (1+2 == 3) {
+              a = 1 + 1;
+          }
+      }
+}
