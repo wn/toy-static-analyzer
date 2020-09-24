@@ -261,13 +261,15 @@ void getUsesMappingHelper(const TNode* currentNode,
         // Retrieve the procedure name
         const TNode* procNameNode = &(currentNode->children[0]);
         auto calledProc = getProcedureFromProcedureName(procNameNode->name, tNodeTypeToTNodes);
-        // We expect the called procedure to have been indexed already
-        if (usesMapping.find(calledProc) == usesMapping.end()) {
-            throw std::runtime_error("Expected Procedure " + calledProc->toShortString() + " to exist in the Uses mapping, as it is called by the call statement " +
-                                     currentNode->toShortString());
+        // Index the variables used in this procedure, if any.
+        // We are guaranteed that getUsesMapping was run on this procedure, by the pre-requisite.
+        if (usesMapping.find(calledProc) != usesMapping.end()) {
+            // This call statement modifies all the variables modified by the called procedure
+            variablesUsedByCurrentTNode.insert(usesMapping[calledProc].begin(),
+                                               usesMapping[calledProc].end());
+        } else {
+            logLine("Procedure " + calledProc->toShortString() + " uses nothing");
         }
-        // This call statement uses all the variables used by the called procedure
-        variablesUsedByCurrentTNode.insert(usesMapping[calledProc].begin(), usesMapping[calledProc].end());
     } else {
         // Accumulate the variables used by currentNode's children (if any), and add them to the variables used by the currentNode
         for (auto& child : currentNode->children) {
@@ -283,8 +285,10 @@ void getUsesMappingHelper(const TNode* currentNode,
         "Current node " + currentNode->toShortString() +
         " has already been indexed, but every TNode should only be indexed once.");
     }
-    usesMapping[currentNode] = std::unordered_set<std::string>(variablesUsedByCurrentTNode.begin(),
-                                                               variablesUsedByCurrentTNode.end());
+    if (!variablesUsedByCurrentTNode.empty()) {
+        usesMapping[currentNode] = std::unordered_set<std::string>(variablesUsedByCurrentTNode.begin(),
+                                                                   variablesUsedByCurrentTNode.end());
+    }
 }
 
 std::unordered_map<const TNode*, std::unordered_set<std::string>>
@@ -326,37 +330,36 @@ getUsesMapping(std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClas
 void getModifiesMappingHelper(const TNode* currentNode,
                               std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes,
                               std::unordered_map<const TNode*, std::unordered_set<std::string>>& modifiesMapping) {
-    std::unordered_set<std::string> variablesUsedByCurrentTNode;
+    std::unordered_set<std::string> variablesModifiedByCurrentTNode;
 
     if (currentNode->type == TNodeType::Assign) {
         std::string variableAssignedTo = currentNode->children.at(0).name;
-        variablesUsedByCurrentTNode.insert(variableAssignedTo);
+        variablesModifiedByCurrentTNode.insert(variableAssignedTo);
         logLine("adding Assigned var name (" + variableAssignedTo + ")");
     } else if (currentNode->type == TNodeType::Read) {
         std::string variableReadTo = currentNode->children.at(0).name;
-        variablesUsedByCurrentTNode.insert(variableReadTo);
+        variablesModifiedByCurrentTNode.insert(variableReadTo);
         logLine("adding Read var name (" + variableReadTo + ")");
     } else if (currentNode->type == TNodeType::Call) {
         // Retrieve the procedure name
         const TNode* procNameNode = &(currentNode->children[0]);
         auto calledProc = getProcedureFromProcedureName(procNameNode->name, tNodeTypeToTNodes);
-        // We expect the called procedure to have been indexed already
-        if (modifiesMapping.find(calledProc) == modifiesMapping.end()) {
-            throw std::runtime_error(
-            "Expected Procedure " + calledProc->toShortString() +
-            " to exist in the Modifies mapping, as it is called by the call statement " +
-            currentNode->toShortString());
+        // Index the variables modified in this procedure, if any.
+        // We are guaranteed that getModifiesMapping was run on this procedure, by the pre-requisite.
+        if (modifiesMapping.find(calledProc) != modifiesMapping.end()) {
+            // This call statement modifies all the variables modified by the called procedure
+            variablesModifiedByCurrentTNode.insert(modifiesMapping[calledProc].begin(),
+                                                   modifiesMapping[calledProc].end());
+        } else {
+            logLine("Procedure " + calledProc->toShortString() + " modifies nothing");
         }
-        // This call statement modifies all the variables used by the called procedure
-        variablesUsedByCurrentTNode.insert(modifiesMapping[calledProc].begin(),
-                                           modifiesMapping[calledProc].end());
     } else {
-        // Accumulate the variables used by currentNode's children (if any), and add them to the variables used by the currentNode
+        // Accumulate the variables modified by currentNode's children (if any), and add them to the variables used by the currentNode
         for (auto& child : currentNode->children) {
             getModifiesMappingHelper(&child, tNodeTypeToTNodes, modifiesMapping);
             if (modifiesMapping.find(&child) != modifiesMapping.end()) {
-                variablesUsedByCurrentTNode.insert(modifiesMapping[&child].begin(),
-                                                   modifiesMapping[&child].end());
+                variablesModifiedByCurrentTNode.insert(modifiesMapping[&child].begin(),
+                                                       modifiesMapping[&child].end());
             }
         }
     }
@@ -366,8 +369,12 @@ void getModifiesMappingHelper(const TNode* currentNode,
         "Current node " + currentNode->toShortString() +
         " has already been indexed, but every TNode should only be indexed once.");
     }
-    modifiesMapping[currentNode] = std::unordered_set<std::string>(variablesUsedByCurrentTNode.begin(),
-                                                                   variablesUsedByCurrentTNode.end());
+
+    if (!variablesModifiedByCurrentTNode.empty()) {
+        modifiesMapping[currentNode] =
+        std::unordered_set<std::string>(variablesModifiedByCurrentTNode.begin(),
+                                        variablesModifiedByCurrentTNode.end());
+    }
 }
 
 std::unordered_map<const TNode*, std::unordered_set<std::string>>

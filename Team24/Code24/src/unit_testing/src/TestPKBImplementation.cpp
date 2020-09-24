@@ -274,25 +274,23 @@ TEST_CASE("Test getStatementsThatHaveDescendants") {
     REQUIRE(expected == actual);
 }
 
-const char USES_AND_MODIFIES_PROGRAM[] = "procedure caller {"
-                                         "while (y == 3) {" // 1
-                                         "gucci = 1;" // 2
+// We use cars and modify jewellery
+const char USES_AND_MODIFIES_PROGRAM[] = "procedure main {"
+                                         "while (2 == nike) {" // 1
+                                         "gucci = adidas;" // 2
+                                         "}"
+                                         "call callee1;" // 3
+                                         "call callee2;" // 4
                                          "}\n"
-
-                                         "if (!(armani == gucci)) then {" // 3
-                                         "armani = 7;" // 4
+                                         "procedure callee1 {"
+                                         "if (3 == 3) then {" // 5
+                                         "pasha = yeezy;" //  6
                                          "} else {"
-                                         "apple = 1;" // 5
-                                         "call callee;" // 6
+                                         "print newBalance;" // 7
                                          "}"
-                                         "some_var = 23 + another_var;" //  7
                                          "}"
-                                         "procedure callee {"
-                                         "microsoft = apple;" //  8
-                                         "google = microsoft;" //  9
-                                         "while(nerf == google) {" //  10
-                                         "nerf = roblox;" // 11
-                                         "}"
+                                         "procedure callee2 {"
+                                         "read armani;" // 8
                                          "}";
 
 TEST_CASE("Test getStatementsThatUse") {
@@ -300,9 +298,7 @@ TEST_CASE("Test getStatementsThatUse") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
     std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_LIST> testCases = {
-        { "another_var", { 7 } },       { "apple", { 3, 6, 8 } }, { "armani", { 3 } },
-        { "google", { 3, 6, 10 } },     { "gucci", { 3 } },       { "nerf", { 3, 6, 10 } },
-        { "roblox", { 3, 6, 10, 11 } }, { "some_var", {} },       { "y", { 1 } }
+        { "nike", { 1 } }, { "adidas", { 1, 2 } }, { "yeezy", { 3, 5, 6 } }, { "newBalance", { 3, 5, 7 } }
     };
     for (auto& p : testCases) {
         VARIABLE_NAME input = p.first;
@@ -316,7 +312,7 @@ TEST_CASE("Test getStatementsThatUseSomeVariable") {
     Parser parser = testhelpers::GenerateParserFromTokens(USES_AND_MODIFIES_PROGRAM);
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
-    STATEMENT_NUMBER_LIST expected = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+    STATEMENT_NUMBER_LIST expected = { 1, 2, 3, 5, 6, 7 };
     STATEMENT_NUMBER_LIST actual = pkb.getStatementsThatUseSomeVariable();
     REQUIRE(actual == expected);
 }
@@ -326,15 +322,14 @@ TEST_CASE("Test getProceduresThatUse") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
     std::unordered_map<VARIABLE_NAME, PROCEDURE_NAME_LIST> testCases = {
-        { "another_var", { "caller" } },
-        { "apple", { "callee", "caller" } },
-        { "armani", { "caller" } },
-        { "google", { "callee", "caller" } },
-        { "gucci", { "caller" } },
-        { "nerf", { "callee", "caller" } },
-        { "roblox", { "callee", "caller" } },
-        { "some_var", {} },
-        { "y", { "caller" } }
+        { "nike", { "main" } },
+        { "adidas", { "main" } },
+        { "yeezy", { "callee1", "main" } },
+        { "newBalance", { "callee1", "main" } },
+        { "gucci", {} },
+        { "pasha", {} },
+        { "armani", {} },
+        { "nonexistentvariable", {} },
     };
     for (auto& p : testCases) {
         VARIABLE_NAME input = p.first;
@@ -348,7 +343,7 @@ TEST_CASE("Test getProceduresThatUseSomeVariable") {
     Parser parser = testhelpers::GenerateParserFromTokens(USES_AND_MODIFIES_PROGRAM);
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
-    PROCEDURE_NAME_LIST expected = { "callee", "caller" };
+    PROCEDURE_NAME_LIST expected = { "callee1", "main" };
     PROCEDURE_NAME_LIST actual = pkb.getProceduresThatUseSomeVariable();
     REQUIRE(actual == expected);
 }
@@ -358,17 +353,10 @@ TEST_CASE("Test getVariablesUsedIn Statement") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
     std::unordered_map<STATEMENT_NUMBER, VARIABLE_NAME_LIST> testCases = {
-        { 1, { "y" } },
-        { 2, {} },
-        { 3, { "apple", "armani", "google", "gucci", "microsoft", "nerf", "roblox" } },
-        { 4, {} },
-        { 5, {} },
-        { 6, { "apple", "google", "microsoft", "nerf", "roblox" } },
-        { 7, { "another_var" } },
-        { 8, { "apple" } },
-        { 9, { "microsoft" } },
-        { 10, { "google", "nerf", "roblox" } },
-        { 11, { "roblox" } }
+        { 1, { "adidas", "nike" } },      { 2, { "adidas" } },
+        { 3, { "newBalance", "yeezy" } }, { 4, {} },
+        { 5, { "newBalance", "yeezy" } }, { 6, { "yeezy" } },
+        { 7, { "newBalance" } },          { 8, {} }
     };
     for (auto& p : testCases) {
         STATEMENT_NUMBER input = p.first;
@@ -382,8 +370,7 @@ TEST_CASE("Test getVariablesUsedBySomeProcedure") {
     Parser parser = testhelpers::GenerateParserFromTokens(USES_AND_MODIFIES_PROGRAM);
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
-    VARIABLE_NAME_LIST expected = { "another_var", "apple", "armani", "google", "gucci",
-                                    "microsoft",   "nerf",  "roblox", "y" };
+    VARIABLE_NAME_LIST expected = { "adidas", "newBalance", "nike", "yeezy" };
     VARIABLE_NAME_LIST actual = pkb.getVariablesUsedBySomeProcedure();
     REQUIRE(actual == expected);
 }
@@ -393,8 +380,9 @@ TEST_CASE("Test getVariablesUsedIn Procedure") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
     std::unordered_map<PROCEDURE_NAME, VARIABLE_NAME_LIST> testCases = {
-        { "caller", { "another_var", "apple", "armani", "google", "gucci", "microsoft", "nerf", "roblox", "y" } },
-        { "callee", { "apple", "google", "microsoft", "nerf", "roblox" } }
+        { "main", { "adidas", "newBalance", "nike", "yeezy" } },
+        { "callee1", { "newBalance", "yeezy" } },
+        { "callee2", {} }
     };
     for (auto& p : testCases) {
         PROCEDURE_NAME input = p.first;
@@ -408,8 +396,7 @@ TEST_CASE("Test getVariablesUsedBySomeStatement") {
     Parser parser = testhelpers::GenerateParserFromTokens(USES_AND_MODIFIES_PROGRAM);
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
-    VARIABLE_NAME_LIST expected = { "another_var", "apple", "armani", "google", "gucci",
-                                    "microsoft",   "nerf",  "roblox", "y" };
+    VARIABLE_NAME_LIST expected = { "adidas", "newBalance", "nike", "yeezy" };
     VARIABLE_NAME_LIST actual = pkb.getVariablesUsedBySomeStatement();
     REQUIRE(actual == expected);
 }
@@ -419,9 +406,10 @@ TEST_CASE("Test getStatementsThatModify") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
     std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_LIST> testCases = {
-        { "another_var", {} },     { "apple", { 3, 5 } }, { "armani", { 3, 4 } },
-        { "google", { 3, 6, 9 } }, { "gucci", { 1, 2 } }, { "nerf", { 3, 6, 10, 11 } },
-        { "roblox", {} },          { "some_var", { 7 } }, { "y", {} }
+        { "nike", {} },         { "adidas", {} },
+        { "yeezy", {} },        { "newBalance", {} },
+        { "gucci", { 1, 2 } },  { "pasha", { 3, 5, 6 } },
+        { "armani", { 4, 8 } }, { "nonexistentvariable", {} },
     };
     for (auto& p : testCases) {
         VARIABLE_NAME input = p.first;
@@ -435,7 +423,7 @@ TEST_CASE("Test getStatementsThatModifySomeVariable") {
     Parser parser = testhelpers::GenerateParserFromTokens(USES_AND_MODIFIES_PROGRAM);
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
-    STATEMENT_NUMBER_LIST expected = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+    STATEMENT_NUMBER_LIST expected = { 1, 2, 3, 4, 5, 6, 8 };
     STATEMENT_NUMBER_LIST actual = pkb.getStatementsThatModifySomeVariable();
     REQUIRE(actual == expected);
 }
@@ -444,15 +432,16 @@ TEST_CASE("Test getProceduresThatModify") {
     Parser parser = testhelpers::GenerateParserFromTokens(USES_AND_MODIFIES_PROGRAM);
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
-    std::unordered_map<VARIABLE_NAME, PROCEDURE_NAME_LIST> testCases = { { "another_var", {} },
-                                                                         { "apple", { "caller" } },
-                                                                         { "armani", { "caller" } },
-                                                                         { "google", { "callee", "caller" } },
-                                                                         { "gucci", { "caller" } },
-                                                                         { "nerf", { "callee", "caller" } },
-                                                                         { "roblox", {} },
-                                                                         { "some_var", { "caller" } },
-                                                                         { "y", {} } };
+    std::unordered_map<VARIABLE_NAME, PROCEDURE_NAME_LIST> testCases = {
+        { "nike", {} },
+        { "adidas", {} },
+        { "yeezy", {} },
+        { "newBalance", {} },
+        { "gucci", { "main" } },
+        { "pasha", { "callee1", "main" } },
+        { "armani", { "callee2", "main" } },
+        { "nonexistentvariable", {} },
+    };
     for (auto& p : testCases) {
         VARIABLE_NAME input = p.first;
         PROCEDURE_NAME_LIST expected = p.second;
@@ -465,7 +454,7 @@ TEST_CASE("Test getProceduresThatModifySomeVariable") {
     Parser parser = testhelpers::GenerateParserFromTokens(USES_AND_MODIFIES_PROGRAM);
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
-    PROCEDURE_NAME_LIST expected = { "callee", "caller" };
+    PROCEDURE_NAME_LIST expected = { "callee1", "callee2", "main" };
     PROCEDURE_NAME_LIST actual = pkb.getProceduresThatModifySomeVariable();
     REQUIRE(actual == expected);
 }
@@ -475,17 +464,8 @@ TEST_CASE("Test getVariablesModifiedBy Statement") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
     std::unordered_map<STATEMENT_NUMBER, VARIABLE_NAME_LIST> testCases = {
-        { 1, { "gucci" } },
-        { 2, { "gucci" } },
-        { 3, { "apple", "armani", "google", "microsoft", "nerf" } },
-        { 4, { "armani" } },
-        { 5, { "apple" } },
-        { 6, { "google", "microsoft", "nerf" } },
-        { 7, { "some_var" } },
-        { 8, { "microsoft" } },
-        { 9, { "google" } },
-        { 10, { "nerf" } },
-        { 11, { "nerf" } }
+        { 1, { "gucci" } }, { 2, { "gucci" } }, { 3, { "pasha" } }, { 4, { "armani" } },
+        { 5, { "pasha" } }, { 6, { "pasha" } }, { 7, {} },          { 8, { "armani" } },
     };
     for (auto& p : testCases) {
         STATEMENT_NUMBER input = p.first;
@@ -499,8 +479,7 @@ TEST_CASE("Test getVariablesModifiedBySomeProcedure") {
     Parser parser = testhelpers::GenerateParserFromTokens(USES_AND_MODIFIES_PROGRAM);
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
-    VARIABLE_NAME_LIST expected = { "apple",     "armani", "google",  "gucci",
-                                    "microsoft", "nerf",   "some_var" };
+    VARIABLE_NAME_LIST expected = { "armani", "gucci", "pasha" };
     VARIABLE_NAME_LIST actual = pkb.getVariablesModifiedBySomeProcedure();
     REQUIRE(actual == expected);
 }
@@ -510,8 +489,7 @@ TEST_CASE("Test getVariablesModifiedBy Procedure") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
     std::unordered_map<PROCEDURE_NAME, VARIABLE_NAME_LIST> testCases = {
-        { "caller", { "apple", "armani", "google", "gucci", "microsoft", "nerf", "some_var" } },
-        { "callee", { "google", "microsoft", "nerf" } }
+        { "main", { "armani", "gucci", "pasha" } }, { "callee1", { "pasha" } }, { "callee2", { "armani" } }
     };
     for (auto& p : testCases) {
         PROCEDURE_NAME input = p.first;
@@ -525,8 +503,7 @@ TEST_CASE("Test getVariablesModifiedBySomeStatement") {
     Parser parser = testhelpers::GenerateParserFromTokens(USES_AND_MODIFIES_PROGRAM);
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
-    VARIABLE_NAME_LIST expected = { "apple",     "armani", "google",  "gucci",
-                                    "microsoft", "nerf",   "some_var" };
+    VARIABLE_NAME_LIST expected = { "armani", "gucci", "pasha" };
     VARIABLE_NAME_LIST actual = pkb.getVariablesModifiedBySomeStatement();
     REQUIRE(actual == expected);
 }

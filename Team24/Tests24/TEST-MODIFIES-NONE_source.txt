@@ -1,0 +1,19 @@
+procedure main {
+  print x;
+  if (1 == 1) then {
+    print x;
+  } else {
+    print x;
+  }
+}
+
+procedure simp {
+  print x;
+  print y;
+  if (1 == 1) then {
+    print xXTentacionXx;
+  } else {
+    print yeehee;
+  }
+  print x;
+}

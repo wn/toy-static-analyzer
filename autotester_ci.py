@@ -21,6 +21,7 @@ def formatter(prefix, source_qpl_query_pairs):
 CODE_5_PREFIX = 'code_5_'
 VP6_PREFIX = 'vp6_'
 TEST_OPERATOR_PREFIX = 'TEST-OPERATOR_'
+TEST_MODIFIES_NONE_PREFIX = 'TEST-MODIFIES-NONE_'
 SIMPLE_SOURCE_QPL_QUERY_PAIRS = (
         [('trivial_source', 'trivial_queries')]
         + formatter(CODE_5_PREFIX, [('source', 'queries_follows'),
@@ -29,6 +30,7 @@ SIMPLE_SOURCE_QPL_QUERY_PAIRS = (
         + formatter(VP6_PREFIX, [('source', 'follow_parent_queries'),
                                  ('source', 'queries_simplified')])
         + formatter(TEST_OPERATOR_PREFIX, [('source', 'queries')])
+        + formatter(TEST_MODIFIES_NONE_PREFIX, [('source', 'queries')])
 )
 
 # Edit this to change what source and query file pairs should run with failures

@@ -1,0 +1,15 @@
+1 - Test should modifies nothing
+stmt s;
+Select s such that Modifies(s,_)
+none
+5000
+2 - Test should modifies nothing (semantic error, invalid query), catch at QPP
+stmt s;
+Select s such that Modifies(_,s)
+none
+5000
+3 - Test should modifies nothing (semantic error, invalid query), catch at QE
+stmt s; stmt s1;
+Select s such that Modifies(s1 ,s)
+none
+5000

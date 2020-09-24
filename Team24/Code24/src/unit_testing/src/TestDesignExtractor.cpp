@@ -269,10 +269,14 @@ TEST_CASE("Test getUsesMapping with a single procedure") {
     expectedUsesMappingForStatements[statementNumberToTNode[14]] = { "n" };
 
     auto usesMapping = extractor::getUsesMapping(tNodeTypeToTNodes);
-    REQUIRE(usesMapping.size() == 15);
+    REQUIRE(usesMapping.size() == 9);
     for (auto& p : expectedUsesMappingForStatements) {
-        REQUIRE(usesMapping.count(p.first));
-        REQUIRE(p.second == usesMapping[p.first]);
+        if (p.second.empty()) {
+            REQUIRE(usesMapping.find(p.first) == usesMapping.end());
+        } else {
+            REQUIRE(usesMapping.find(p.first) != usesMapping.end());
+            REQUIRE(usesMapping[p.first] == p.second);
+        }
     }
 
     // Regression test to ensure that "read y"; does not register "y" as a used variable.
@@ -346,6 +350,44 @@ TEST_CASE("Test getUsesMapping with multiple procedures") {
     }
 }
 
+TEST_CASE("Test getUsesMapping does not register empty sets") {
+    const char program[] = "procedure Proc {"
+                           "while (2 == 2) {"
+                           "a = 1 + 2;" // nothing used
+                           "read y;" // nothing used
+                           "call AnotherProc;" // nothing used
+                           "}"
+                           "}"
+                           "procedure AnotherProc {"
+                           "read z;"
+                           "b = 3+(4*5);"
+                           "}";
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto statementNumberToTNode = extractor::getStatementNumberToTNode(tNodeToStatementNumber);
+    auto usesMapping = extractor::getUsesMapping(tNodeTypeToTNodes);
+
+    // Proc uses nothing
+    REQUIRE(usesMapping.find(&ast.children[0]) == usesMapping.end());
+    // While statement uses nothing
+    REQUIRE(usesMapping.find(statementNumberToTNode[1]) == usesMapping.end());
+    // Assign statement uses nothing
+    REQUIRE(usesMapping.find(statementNumberToTNode[2]) == usesMapping.end());
+    // Read statement uses nothing
+    REQUIRE(usesMapping.find(statementNumberToTNode[3]) == usesMapping.end());
+    // Call statement uses nothing
+    REQUIRE(usesMapping.find(statementNumberToTNode[4]) == usesMapping.end());
+
+    // AnotherProc uses nothing
+    REQUIRE(usesMapping.find(&ast.children[1]) == usesMapping.end());
+    // Read statement uses nothing
+    REQUIRE(usesMapping.find(statementNumberToTNode[5]) == usesMapping.end());
+    // Assign statement uses nothing
+    REQUIRE(usesMapping.find(statementNumberToTNode[6]) == usesMapping.end());
+}
+
 TEST_CASE("Test getModifiesMapping with a single procedure") {
     const char program[] = "procedure MySpecialProc {"
                            "while (a == 1) {"
@@ -407,7 +449,12 @@ TEST_CASE("Test getModifiesMapping with a single procedure") {
     auto modifiesMapping = extractor::getModifiesMapping(tNodeTypeToTNodes);
     REQUIRE(modifiesMapping.size() == 15);
     for (auto& p : expectedModifiesMappingForStatements) {
-        REQUIRE(modifiesMapping[p.first] == p.second);
+        if (p.second.empty()) {
+            REQUIRE(modifiesMapping.find(p.first) == modifiesMapping.end());
+        } else {
+            REQUIRE(modifiesMapping.find(p.first) != modifiesMapping.end());
+            REQUIRE(modifiesMapping[p.first] == p.second);
+        }
     }
 }
 
@@ -462,6 +509,42 @@ TEST_CASE("Test getModifiesMapping with multiple procedures") {
         REQUIRE(p.second == ModifiesMapping[p.first]);
     }
 }
+
+TEST_CASE("Test getModifiesMapping does not register empty sets") {
+    const char program[] = "procedure Proc {"
+                           "while (x == (y + z)) {" // nothing modified
+                           "print a;" // nothing modified
+                           "print b;" // nothing modified
+                           "call AnotherProc;" // nothing modified
+                           "}"
+                           "}"
+                           "procedure AnotherProc {"
+                           "print c;"
+                           "}";
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto statementNumberToTNode = extractor::getStatementNumberToTNode(tNodeToStatementNumber);
+    auto modifiesMapping = extractor::getModifiesMapping(tNodeTypeToTNodes);
+
+    // Proc uses nothing
+    REQUIRE(modifiesMapping.find(&ast.children[0]) == modifiesMapping.end());
+    // While statement uses nothing
+    REQUIRE(modifiesMapping.find(statementNumberToTNode[1]) == modifiesMapping.end());
+    // Print statement uses nothing
+    REQUIRE(modifiesMapping.find(statementNumberToTNode[2]) == modifiesMapping.end());
+    // Print statement uses nothing
+    REQUIRE(modifiesMapping.find(statementNumberToTNode[3]) == modifiesMapping.end());
+    // Call statement uses nothing
+    REQUIRE(modifiesMapping.find(statementNumberToTNode[4]) == modifiesMapping.end());
+
+    // AnotherProc uses nothing
+    REQUIRE(modifiesMapping.find(&ast.children[0]) == modifiesMapping.end());
+    // Print statement modifies nothing
+    REQUIRE(modifiesMapping.find(statementNumberToTNode[5]) == modifiesMapping.end());
+}
+
 
 TEST_CASE("Test getFollowRelationship") {
     Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
