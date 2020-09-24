@@ -310,11 +310,11 @@ STATESTATUSPAIR parseSingleSuchThatClause(State state) {
     state.popToNextNonWhitespaceToken();
     if (!state.hasTokensLeftToParse()) return STATESTATUSPAIR(state, false);
     TOKEN suchToken = state.popUntilNonWhitespaceToken();
-    if (suchToken.type != backend::lexer::NAME && suchToken.nameValue != "such") {
+    if (suchToken.type != backend::lexer::NAME || suchToken.nameValue != "such") {
         return STATESTATUSPAIR(state, false);
     }
     TOKEN thatToken = state.popUntilNonWhitespaceToken();
-    if (thatToken.type != backend::lexer::NAME && thatToken.nameValue != "that") {
+    if (thatToken.type != backend::lexer::NAME || thatToken.nameValue != "that") {
         return STATESTATUSPAIR(state, false);
     }
     return parseRelRef(state);

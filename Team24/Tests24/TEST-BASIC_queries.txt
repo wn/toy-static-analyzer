@@ -170,6 +170,9 @@ none
 5000
 34 - mix case 5
 stmt s1T2U3y4; variable v; assign a; while w; if ifs;
+Select s1T2U3y4 pattern a(v, _"1"_) such that Follows*(s1T2U3y4, w)
+3, 4
+35 - (invalid such that) mix case 5
+stmt s1T2U3y4; variable v; assign a; while w; if ifs;
 Select s1T2U3y4 pattern a(v, _"1"_) suhc that Follows*(s1T2U3y4, w)
 3, 4
-5000

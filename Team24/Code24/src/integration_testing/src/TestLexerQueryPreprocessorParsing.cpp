@@ -105,6 +105,19 @@ TEST_CASE("Test such that relation(synonym, synonym)") {
     REQUIRE(expectedQuery == actualQuery);
 }
 
+TEST_CASE("Test such that relation(synonym, synonym) autotester format") {
+    std::stringstream queryString =
+    std::stringstream("procedure s, w;\nSelect s such that Follows(s,w)");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "s", qpbackend::EntityType::PROCEDURE }, { "w", qpbackend::EntityType::PROCEDURE } },
+                     { "s" }, { { qpbackend::RelationType::FOLLOWS, "s", "w" } }, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
 TEST_CASE("Test such that clause handles whitespace") {
     std::stringstream queryString =
     std::stringstream("variable\fv;\n\n call\tcl; Select \n\n\n\nv \t\r\n\n\n such\rthat  "
@@ -817,6 +830,18 @@ TEST_CASE("Test parsing relation with whitespace separating keyword failure") {
 TEST_CASE("Test parsing non-existing relation keyword failure") {
     requireParsingInvalidQPLQueryToReturnEmptyQuery(
     "assign a; while w; Select a such that Patrick*(w, a)");
+}
+
+TEST_CASE("Test such that relation invalid such failure") {
+    requireParsingInvalidQPLQueryToReturnEmptyQuery(
+    "stmt s1T2U3y4; variable v; assign a; while w; if ifs;\nSelect s1T2U3y4 pattern a(v, _\"1\"_) "
+    "suhc that Follows*(s1T2U3y4, w)");
+}
+
+TEST_CASE("Test such that relation invalid that failure") {
+    requireParsingInvalidQPLQueryToReturnEmptyQuery(
+    "stmt s1T2U3y4; variable v; assign a; while w; if ifs;\nSelect s1T2U3y4 pattern a(v, _\"1\"_) "
+    "such tht Follows*(s1T2U3y4, w)");
 }
 
 TEST_CASE("Test star relations whitespace sensitivity causing invalid query (Parent *)") {
