@@ -1,5 +1,7 @@
 #include "Query.h"
 
+#include "QPTypes.h"
+
 #include <algorithm>
 #include <map>
 #include <sstream>

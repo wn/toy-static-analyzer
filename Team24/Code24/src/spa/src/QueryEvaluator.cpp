@@ -1,6 +1,7 @@
 #include "QueryEvaluator.h"
 
 #include "Logger.h"
+#include "QPTypes.h"
 
 #include <set>
 #include <stdexcept>

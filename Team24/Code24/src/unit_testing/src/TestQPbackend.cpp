@@ -1,3 +1,4 @@
+#include "QPTypes.h"
 #include "catch.hpp"
 
 #include <Query.h>

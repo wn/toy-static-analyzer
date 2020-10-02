@@ -3,6 +3,7 @@
 
 #include "PKB.h"
 #include "QEHelper.h"
+#include "QPTypes.h"
 #include "Query.h"
 
 #include <map>

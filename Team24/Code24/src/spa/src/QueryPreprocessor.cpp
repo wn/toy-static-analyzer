@@ -2,6 +2,7 @@
 
 #include "Lexer.h"
 #include "Logger.h"
+#include "QPTypes.h"
 #include "Query.h"
 
 #include <sstream>

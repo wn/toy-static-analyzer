@@ -1,4 +1,5 @@
 #include "Lexer.h"
+#include "QPTypes.h"
 #include "Query.h"
 #include "QueryPreprocessor.h"
 #include "catch.hpp"
