@@ -24,7 +24,8 @@ class State;
 // <state of parser, isValidState>
 typedef std::pair<State, bool> STATESTATUSPAIR;
 // <state of parser, string representation of parsed token(s), isValidState>
-typedef std::tuple<State, std::string, bool> STATE_RESULT_STATUS_TRIPLE;
+typedef std::tuple<State, std::string, bool> STATE_STRING_RESULT_STATUS_TRIPLE;
+typedef std::tuple<State, qpbackend::ARG, bool> STATE_ARG_RESULT_STATUS_TRIPLE;
 void throwIfTokenDoesNotHaveExpectedTokenType(backend::lexer::TokenType expectedTokenType, const TOKEN& token);
 static qpbackend::EntityType getEntityTypeFromToken(const TOKEN& token);
 State parseSelect(State state);
@@ -37,12 +38,12 @@ STATESTATUSPAIR parseSingleSuchThatClause(State state);
 STATESTATUSPAIR parseRelRef(State state);
 STATESTATUSPAIR parseRelationStmtStmt(State state, qpbackend::ClauseType relationType);
 STATESTATUSPAIR parseRelationStmtEntOrEntEnt(State state, qpbackend::ClauseType relationType);
-std::string getStmtRefStringValue(const TOKEN& token);
+qpbackend::ARG extractArgFromStmtRefToken(const TOKEN& token, State& state);
 bool isStmtRefToken(const TOKEN& token);
-STATE_RESULT_STATUS_TRIPLE parseEntRef(State state);
+STATE_ARG_RESULT_STATUS_TRIPLE parseEntRef(State state);
 // Declarations for patten clauses
 STATESTATUSPAIR parseSinglePatternClause(State state);
-STATE_RESULT_STATUS_TRIPLE parseExpressionSpec(State state);
+STATE_STRING_RESULT_STATUS_TRIPLE parseExpressionSpec(State state);
 bool isSynAssignToken(const TOKEN& token, State& state);
 
 // Helper methods
@@ -148,6 +149,38 @@ class State {
         return tokenPos < tokens.size();
     }
 
+    // Query arg extraction
+    qpbackend::ARG getArgFromSynonymString(const std::string& synonymString) {
+        auto iterator = query.declarationMap.find(synonymString);
+        if (iterator == query.declarationMap.end()) {
+            logLine(kQppErrorPrefix + "getArgFromSynonymString: declarationMap does not contain synonym: " + synonymString);
+            return qpbackend::ARG(qpbackend::ArgType::INVALID_ARG, "");
+        }
+        qpbackend::EntityType entityType = iterator->second;
+        qpbackend::ArgType argType = qpbackend::INVALID_ARG;
+        switch (entityType) {
+        case qpbackend::IF:
+        case qpbackend::ASSIGN:
+        case qpbackend::PRINT:
+        case qpbackend::CALL:
+        case qpbackend::WHILE:
+        case qpbackend::READ:
+        case qpbackend::STMT: {
+            return { qpbackend::STMT_SYNONYM, synonymString };
+        }
+        case qpbackend::VARIABLE: {
+            return { qpbackend::VAR_SYNONYM, synonymString };
+        }
+        case qpbackend::CONSTANT: {
+            return { qpbackend::CONST_SYNONYM, synonymString };
+        }
+        case qpbackend::PROCEDURE: {
+            return { qpbackend::PROC_SYNONYM, synonymString };
+        }
+        }
+    }
+
+
     // Query struct manipulation
 
     void addSynonymToQueryDeclarationMap(qpbackend::EntityType entityType, const TOKEN& token) {
@@ -170,14 +203,14 @@ class State {
         query.synonymsToReturn.push_back(token.nameValue);
     }
 
-    void addSuchThatClause(qpbackend::ClauseType relationType, std::string arg1, std::string arg2) {
+    void addSuchThatClause(qpbackend::ClauseType relationType, const qpbackend::ARG& arg1, const qpbackend::ARG& arg2) {
         query.suchThatClauses.emplace_back(relationType, arg1, arg2);
     }
 
     void addPatternClause(std::string assignmentSynonym, std::string variableName, std::string expressionSpec) {
         query.patternClauses.emplace_back(assignmentSynonym, variableName, expressionSpec);
     }
-};
+}; // namespace querypreprocessor
 
 // Parser / Business logic methods
 
@@ -269,8 +302,8 @@ STATESTATUSPAIR parseSingleDeclaration(State state) {
 /**
  * Checks for the following tokens (',' | ';').
  *
- * In parsing a declaration, a ',' is expected as a delimiter between synonyms, or a ';' is expected
- * as a terminator for the declaration. No other delimeter is expected.
+ * In parsing a declaration, a ',' is expected as a delimiter between synonyms, or a ';' is
+ * expected as a terminator for the declaration. No other delimeter is expected.
  * @return True if it's one of the tokens, otherwise false.
  */
 bool isValidDeclarationDelimiter(const TOKEN& token) {
@@ -402,23 +435,24 @@ STATESTATUSPAIR parseRelationStmtStmt(State state, qpbackend::ClauseType relatio
                 backend::lexer::prettyPrintType(rParenToken.type));
         return STATESTATUSPAIR(state, false);
     }
-    state.addSuchThatClause(relationType, getStmtRefStringValue(stmt1Token), getStmtRefStringValue(stmt2Token));
+    state.addSuchThatClause(relationType, extractArgFromStmtRefToken(stmt1Token, state),
+                            extractArgFromStmtRefToken(stmt2Token, state));
     return STATESTATUSPAIR(state, true);
 }
 
 
 // Helper methods for stmtRef : synonym | ‘_’ | INTEGER
 
-std::string getStmtRefStringValue(const TOKEN& token) {
+qpbackend::ARG extractArgFromStmtRefToken(const TOKEN& token, State& state) {
     switch (token.type) {
     case backend::lexer::INTEGER:
-        return token.integerValue;
+        return { qpbackend::ArgType::NUM_ENTITY, token.integerValue };
     case backend::lexer::UNDERSCORE:
-        return "_";
+        return { qpbackend::ArgType::WILDCARD, "_" };
     case backend::lexer::NAME:
-        return token.nameValue;
+        return state.getArgFromSynonymString(token.nameValue);
     default:
-        throw std::invalid_argument(kQppErrorPrefix + "getStmtRefStringValue: A non StmtRef token is supplied of type:" +
+        throw std::invalid_argument(kQppErrorPrefix + "extractArgFromStmtRefToken: A non StmtRef token is supplied of type:" +
                                     backend::lexer::prettyPrintType(token.type));
     }
 }
@@ -443,9 +477,9 @@ bool isStmtRefToken(const TOKEN& token) {
  */
 STATESTATUSPAIR parseRelationStmtEntOrEntEnt(State state, qpbackend::ClauseType relationType) {
     // Mutable variables in function.
-    std::string stmtOrEntString;
+    qpbackend::ARG stmtOrEntArg;
     bool isValidState = true;
-    std::string entString;
+    qpbackend::ARG entArg;
     // state argument is also mutable.
 
     TOKEN lParenToken = state.popUntilNonWhitespaceToken();
@@ -460,16 +494,16 @@ STATESTATUSPAIR parseRelationStmtEntOrEntEnt(State state, qpbackend::ClauseType 
     // Check the current token to see if it should be handled as an EntRef or StmtRef
     state.popIfCurrentTokenIsWhitespaceToken();
     if (!state.hasTokensLeftToParse()) {
-        logLine(kQppLogWarnPrefix +
-                "parseRelationStmtEntOrEntEnt: Expected more tokens but finished consuming tokens");
+        logLine(kQppLogWarnPrefix + "parseRelationStmtEntOrEntEnt: Expected more tokens but "
+                                    "finished consuming tokens");
         return STATESTATUSPAIR(state, false);
     }
     TOKEN stmtOrEntToken = state.peekToken();
     if (isStmtRefToken(stmtOrEntToken)) {
         state.popToken();
-        stmtOrEntString = getStmtRefStringValue(stmtOrEntToken);
+        stmtOrEntArg = extractArgFromStmtRefToken(stmtOrEntToken, state);
     } else {
-        std::tie(state, stmtOrEntString, isValidState) = parseEntRef(state);
+        std::tie(state, stmtOrEntArg, isValidState) = parseEntRef(state);
     }
     if (!isValidState || !state.hasTokensLeftToParse()) {
         logLine(kQppLogWarnPrefix +
@@ -478,7 +512,7 @@ STATESTATUSPAIR parseRelationStmtEntOrEntEnt(State state, qpbackend::ClauseType 
                 backend::lexer::prettyPrintType(stmtOrEntToken.type));
         return STATESTATUSPAIR(state, false);
     }
-    if (stmtOrEntString == "_") {
+    if (stmtOrEntArg.first == qpbackend::WILDCARD) {
         logLine(kQppLogWarnPrefix + "parseRelationStmtEntOrEntEnt: Semantically invalid to have a"
                                     " UNDERSCORE('_') as USES/MODIFIES first argument ");
         return STATESTATUSPAIR(state, false);
@@ -493,12 +527,12 @@ STATESTATUSPAIR parseRelationStmtEntOrEntEnt(State state, qpbackend::ClauseType 
         return STATESTATUSPAIR(state, false);
     }
 
-    std::tie(state, entString, isValidState) = parseEntRef(state);
+    std::tie(state, entArg, isValidState) = parseEntRef(state);
     if (!isValidState || !state.hasTokensLeftToParse()) {
         logLine(kQppLogWarnPrefix +
                 "parseRelationStmtEntOrEntEnt: Expected more tokens but finished "
                 "consuming tokens or ENT not found. Obtained token of value:" +
-                entString);
+                entArg.second);
         return STATESTATUSPAIR(state, false);
     }
 
@@ -508,7 +542,7 @@ STATESTATUSPAIR parseRelationStmtEntOrEntEnt(State state, qpbackend::ClauseType 
                 backend::lexer::prettyPrintType(rParenToken.type));
         return STATESTATUSPAIR(state, false);
     }
-    state.addSuchThatClause(relationType, stmtOrEntString, entString);
+    state.addSuchThatClause(relationType, stmtOrEntArg, entArg);
     return STATESTATUSPAIR(state, true);
 }
 
@@ -516,39 +550,64 @@ STATESTATUSPAIR parseRelationStmtEntOrEntEnt(State state, qpbackend::ClauseType 
  * entRef : synonym | ‘_’ | ‘"’ IDENT ‘"’
  * @return <state of parser, string representation of valid ent ref, isValidState>
  */
-STATE_RESULT_STATUS_TRIPLE parseEntRef(State state) {
+STATE_ARG_RESULT_STATUS_TRIPLE parseEntRef(State state) {
     TOKEN firstToken = state.popUntilNonWhitespaceToken();
     // Handle (synonym | '_')
     switch (firstToken.type) {
-    case backend::lexer::NAME:
-        return STATE_RESULT_STATUS_TRIPLE(state, firstToken.nameValue, true);
-    case backend::lexer::UNDERSCORE:
-        return STATE_RESULT_STATUS_TRIPLE(state, "_", true);
+    case backend::lexer::NAME: {
+        qpbackend::ARG arg = state.getArgFromSynonymString(firstToken.nameValue);
+        return STATE_ARG_RESULT_STATUS_TRIPLE(state, arg, arg.first != qpbackend::INVALID_ARG);
+    }
+    case backend::lexer::UNDERSCORE: {
+        return STATE_ARG_RESULT_STATUS_TRIPLE(state, qpbackend::ARG(qpbackend::ArgType::WILDCARD, "_"), true);
+    }
+    case backend::lexer::LBRACE:
+    case backend::lexer::RBRACE:
+    case backend::lexer::LPAREN:
+    case backend::lexer::RPAREN:
+    case backend::lexer::SEMICOLON:
+    case backend::lexer::COMMA:
+    case backend::lexer::DOUBLE_QUOTE:
+    case backend::lexer::SINGLE_EQ:
+    case backend::lexer::NOT:
+    case backend::lexer::ANDAND:
+    case backend::lexer::OROR:
+    case backend::lexer::EQEQ:
+    case backend::lexer::NEQ:
+    case backend::lexer::GT:
+    case backend::lexer::GTE:
+    case backend::lexer::LT:
+    case backend::lexer::LTE:
+    case backend::lexer::PLUS:
+    case backend::lexer::MINUS:
+    case backend::lexer::MULT:
+    case backend::lexer::DIV:
+    case backend::lexer::MOD:
+    case backend::lexer::INTEGER:
+    case backend::lexer::WHITESPACE:
+        break;
     }
 
     // Handle ‘"’ IDENT ‘"’
     if (firstToken.type != backend::lexer::DOUBLE_QUOTE || !state.hasTokensLeftToParse()) {
         logLine(kQppLogWarnPrefix + "parseEntRef: Either ran out of tokens or expected DOUBLE_QUOTE Token, found " +
                 backend::lexer::prettyPrintType(firstToken.type));
-        return STATE_RESULT_STATUS_TRIPLE(state, "", false);
+        return STATE_ARG_RESULT_STATUS_TRIPLE(state, qpbackend::ARG(qpbackend::INVALID_ARG, ""), false);
     }
     TOKEN identToken = state.popToken();
     if (identToken.type != backend::lexer::NAME || !state.hasTokensLeftToParse()) {
         logLine(kQppLogWarnPrefix + "parseEntRef: Either ran out of tokens or expected NAME Token, found " +
                 backend::lexer::prettyPrintType(identToken.type));
-        return STATE_RESULT_STATUS_TRIPLE(state, "", false);
+        return STATE_ARG_RESULT_STATUS_TRIPLE(state, qpbackend::ARG(qpbackend::INVALID_ARG, ""), false);
     }
     TOKEN closingDoubleQuoteToken = state.popToken();
     state.popIfCurrentTokenIsWhitespaceToken();
     if (closingDoubleQuoteToken.type != backend::lexer::DOUBLE_QUOTE || !state.hasTokensLeftToParse()) {
         logLine(kQppLogWarnPrefix + "parseEntRef: Either ran out of tokens or expected DOUBLE_QUOTE Token, found " +
                 backend::lexer::prettyPrintType(closingDoubleQuoteToken.type));
-        return STATE_RESULT_STATUS_TRIPLE(state, "", false);
+        return STATE_ARG_RESULT_STATUS_TRIPLE(state, qpbackend::ARG(qpbackend::INVALID_ARG, ""), false);
     }
-    std::string result = "\"";
-    result += identToken.nameValue;
-    result += "\"";
-    return STATE_RESULT_STATUS_TRIPLE(state, result, true);
+    return STATE_ARG_RESULT_STATUS_TRIPLE(state, qpbackend::ARG(qpbackend::NAME_ENTITY, identToken.nameValue), true);
 }
 
 /**
@@ -562,7 +621,7 @@ STATESTATUSPAIR parseSinglePatternClause(State state) {
     if (!state.hasTokensLeftToParse()) return STATESTATUSPAIR(state, false);
     // Mutable vars
     bool isValidState;
-    std::string entRefString;
+    qpbackend::ARG entRefArg;
     std::string expressionSpecString;
     // state is also mutable
     logLine(kQppLogInfoPrefix + "parseSinglePatternClause: Begin");
@@ -584,7 +643,7 @@ STATESTATUSPAIR parseSinglePatternClause(State state) {
         return STATESTATUSPAIR(state, false);
     }
 
-    std::tie(state, entRefString, isValidState) = parseEntRef(state);
+    std::tie(state, entRefArg, isValidState) = parseEntRef(state);
     if (!isValidState) return STATESTATUSPAIR(state, false);
 
     TOKEN commaToken = state.popUntilNonWhitespaceToken();
@@ -600,7 +659,12 @@ STATESTATUSPAIR parseSinglePatternClause(State state) {
         return STATESTATUSPAIR(state, false);
     }
 
-    state.addPatternClause(synAssignToken.nameValue, entRefString, expressionSpecString);
+    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/272):
+    // Modify State::addPatternClause to take in an ARG rather than value strings.
+    state.addPatternClause(synAssignToken.nameValue,
+                           entRefArg.first == qpbackend::NAME_ENTITY ? '\"' + entRefArg.second + '\"' :
+                                                                       entRefArg.second,
+                           expressionSpecString);
     state.popIfCurrentTokenIsWhitespaceToken();
     logLine(kQppLogInfoPrefix + "parseSinglePatternClause: Success End");
     return STATESTATUSPAIR(state, true);
@@ -624,10 +688,10 @@ bool isSynAssignToken(const TOKEN& token, State& state) {
  * expr will be parsed by the PKB's parser to build an AST tree.
  * @return _"<expr>"_ | "<expr>"
  */
-STATE_RESULT_STATUS_TRIPLE parseExpressionSpec(State state) {
+STATE_STRING_RESULT_STATUS_TRIPLE parseExpressionSpec(State state) {
     const TOKEN& firstToken = state.popUntilNonWhitespaceToken();
 
-    if (!state.hasTokensLeftToParse()) return STATE_RESULT_STATUS_TRIPLE(state, "", false);
+    if (!state.hasTokensLeftToParse()) return STATE_STRING_RESULT_STATUS_TRIPLE(state, "", false);
     state.popToNextNonWhitespaceToken();
     const TOKEN& secondToken = state.peekToken();
 
@@ -645,9 +709,9 @@ STATE_RESULT_STATUS_TRIPLE parseExpressionSpec(State state) {
         isSubExpression = true;
         expressionSpec += '_';
     } else if (firstToken.type == backend::lexer::UNDERSCORE) {
-        return STATE_RESULT_STATUS_TRIPLE(state, "_", true);
+        return STATE_STRING_RESULT_STATUS_TRIPLE(state, "_", true);
     } else {
-        return STATE_RESULT_STATUS_TRIPLE(state, "", false);
+        return STATE_STRING_RESULT_STATUS_TRIPLE(state, "", false);
     }
 
     // Stringify all tokens that are in between the double quotes
@@ -695,14 +759,14 @@ STATE_RESULT_STATUS_TRIPLE parseExpressionSpec(State state) {
             expressionSpec += ' ';
             break;
         default:
-            return STATE_RESULT_STATUS_TRIPLE(state, "", false);
+            return STATE_STRING_RESULT_STATUS_TRIPLE(state, "", false);
         }
     }
 
     if (nonWhitespaceTokensInExpr == 0) {
         logLine(kQppLogWarnPrefix + "parseExpressionSpec: no EXPR is matched between 2 "
                                     "DOUBLE_QUOTE tokens.");
-        return STATE_RESULT_STATUS_TRIPLE(state, "", false);
+        return STATE_STRING_RESULT_STATUS_TRIPLE(state, "", false);
     }
 
 
@@ -711,13 +775,13 @@ STATE_RESULT_STATUS_TRIPLE parseExpressionSpec(State state) {
         if (endingUnderscoreToken.type != backend::lexer::UNDERSCORE) {
             logLine(kQppLogWarnPrefix +
                     "parseExpressionSpec: Missing ending UNDERSCORE for _\"expr\"_ group.");
-            return STATE_RESULT_STATUS_TRIPLE(state, "", false);
+            return STATE_STRING_RESULT_STATUS_TRIPLE(state, "", false);
         }
         expressionSpec += '_';
     }
 
     state.popIfCurrentTokenIsWhitespaceToken();
-    return STATE_RESULT_STATUS_TRIPLE(state, expressionSpec, true);
+    return STATE_STRING_RESULT_STATUS_TRIPLE(state, expressionSpec, true);
 }
 
 // QueryPreprocessor API definitions.
@@ -729,8 +793,8 @@ STATE_RESULT_STATUS_TRIPLE parseExpressionSpec(State state) {
  * tokens can be converted to an rvalue reference for optimization in the future.
  * `Tokens` are currently copied within state.
  *
- * @return A Query struct representing the valid QPL query. If the QPL query is invalid, return
- * an empty Query struct.
+ * @return A Query struct representing the valid QPL query. If the QPL query is invalid,
+ * return an empty Query struct.
  */
 qpbackend::Query parseTokens(const TOKENS& tokens) {
     State initialState = State(tokens);

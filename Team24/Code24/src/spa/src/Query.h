@@ -16,7 +16,7 @@ struct Query {
     std::vector<RELATIONTUPLE> suchThatClauses;
     std::vector<PATTERNTUPLE> patternClauses;
 
-    explicit Query() : declarationMap(), suchThatClauses(), patternClauses(), synonymsToReturn(){};
+    explicit Query() : declarationMap(), synonymsToReturn(), suchThatClauses(), patternClauses(){};
     Query(const std::unordered_map<std::string, EntityType>& declarationMap,
           const std::vector<std::string>& synonymsToReturn,
           const std::vector<RELATIONTUPLE>& suchThatClauses,

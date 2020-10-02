@@ -42,12 +42,11 @@ class SingleQueryEvaluator {
     std::vector<std::string> produceResult();
 
     // methods to initialize synonyms and link variables
-    void initializeSynonym(const backend::PKB* pkb, const std::string& synonymName);
+    void initializeIfSynonym(const backend::PKB* pkb, const std::string& synonymName);
     void initializeCandidate(const backend::PKB* pkb, const std::string& synonymName, EntityType entityType);
 
     // methods to evaluate generate clause
-    bool evaluateSuchThatClause(const backend::PKB* pkb,
-                                const std::tuple<ClauseType, std::string, std::string>& suchThatClause);
+    bool evaluateSuchThatClause(const backend::PKB* pkb, const RELATIONTUPLE& suchThatClause);
     // TODO
     bool evaluatePatternClause(const backend::PKB* pkb,
                                const std::tuple<std::string, std::string, std::string>& patternClause);

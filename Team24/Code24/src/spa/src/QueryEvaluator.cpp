@@ -29,7 +29,7 @@ std::vector<std::string> SingleQueryEvaluator::evaluateQuery(const backend::PKB*
     }
 
     for (const auto& requested : query.synonymsToReturn) {
-        initializeSynonym(pkb, requested);
+        initializeIfSynonym(pkb, requested);
     }
 
     // process all such that clauses
@@ -90,7 +90,7 @@ std::vector<std::string> SingleQueryEvaluator::produceResult() {
  * @param pkb : the pkb to look up for synonym's candidate values.
  * @param synonym : the name of th synonym. i.e., for synonym x, "x" is its name.
  */
-void SingleQueryEvaluator::initializeSynonym(const backend::PKB* pkb, std::string const& synonymName) {
+void SingleQueryEvaluator::initializeIfSynonym(const backend::PKB* pkb, std::string const& synonymName) {
     if ((query.declarationMap.find(synonymName) != query.declarationMap.end()) &&
         (synonym_candidates.find(synonymName) == synonym_candidates.end())) {
         initializeCandidate(pkb, synonymName, query.declarationMap[synonymName]);
@@ -165,14 +165,14 @@ void SingleQueryEvaluator::initializeCandidate(const backend::PKB* pkb,
  * @param suchThatClause
  * @return return false if (i) semantic errors encountered (ii) no result found
  */
-bool SingleQueryEvaluator::evaluateSuchThatClause(const backend::PKB* pkb,
-                                                  const std::tuple<ClauseType, std::string, std::string>& suchThatClause) {
+bool SingleQueryEvaluator::evaluateSuchThatClause(const backend::PKB* pkb, const RELATIONTUPLE& suchThatClause) {
     ClauseType rt = std::get<0>(suchThatClause);
-    std::string arg1 = std::get<1>(suchThatClause);
-    std::string arg2 = std::get<2>(suchThatClause);
 
-    ArgType arg_type_1 = getArgType(pkb, arg1);
-    ArgType arg_type_2 = getArgType(pkb, arg2);
+    ArgType arg_type_1 = std::get<1>(suchThatClause).first;
+    ArgType arg_type_2 = std::get<2>(suchThatClause).first;
+
+    std::string arg1 = std::get<1>(suchThatClause).second;
+    std::string arg2 = std::get<2>(suchThatClause).second;
 
     if ((arg_type_1 == INVALID_ARG) || (arg_type_2 == INVALID_ARG)) {
         handleError("invalid argument type for such-that clause: " + arg1 + ", " + arg2);
@@ -191,6 +191,12 @@ bool SingleQueryEvaluator::evaluateSuchThatClause(const backend::PKB* pkb,
         return false;
     }
 
+    // Initializes arguments if they point to declared synonyms.
+    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/280):
+    // Could be refactored in the interest of readability.
+    initializeIfSynonym(pkb, arg1);
+    initializeIfSynonym(pkb, arg2);
+
     if (isSynonym(pkb, arg1)) {
         switch (arg_type_2) {
         case STMT_SYNONYM:
@@ -202,7 +208,8 @@ bool SingleQueryEvaluator::evaluateSuchThatClause(const backend::PKB* pkb,
             return evaluateEntitySynonym(pkb, srt, arg2, arg1, false,
                                          { "", false }); // swap the arguments as the called method required
         case NAME_ENTITY:
-            return evaluateEntitySynonym(pkb, srt, extractQuotedStr(arg2), arg1, false, { "", false }); // swap the arguments as the called method required
+            return evaluateEntitySynonym(pkb, srt, arg2, arg1, false,
+                                         { "", false }); // swap the arguments as the called method required
         case WILDCARD:
             return evaluateSynonymWildcard(pkb, srt, arg1);
         default:
@@ -210,19 +217,18 @@ bool SingleQueryEvaluator::evaluateSuchThatClause(const backend::PKB* pkb,
             return false;
         }
     } else if (arg_type_1 == NUM_ENTITY || arg_type_1 == NAME_ENTITY) {
-        std::string arg1_str = (arg_type_1 == NAME_ENTITY) ? extractQuotedStr(arg1) : arg1;
         switch (arg_type_2) {
         case STMT_SYNONYM:
         case VAR_SYNONYM:
         case PROC_SYNONYM:
         case CONST_SYNONYM:
-            return evaluateEntitySynonym(pkb, srt, arg1_str, arg2, false, { "", false });
+            return evaluateEntitySynonym(pkb, srt, arg1, arg2, false, { "", false });
         case NUM_ENTITY:
-            return evaluateEntityEntity(pkb, srt, arg1_str, arg2);
+            return evaluateEntityEntity(pkb, srt, arg1, arg2);
         case NAME_ENTITY:
-            return evaluateEntityEntity(pkb, srt, arg1_str, extractQuotedStr(arg2));
+            return evaluateEntityEntity(pkb, srt, arg1, arg2);
         case WILDCARD:
-            return evaluateEntityWildcard(pkb, srt, arg1_str);
+            return evaluateEntityWildcard(pkb, srt, arg1);
         default:
             handleError("invalid arg2 type: " + arg2);
             return false;
@@ -237,7 +243,7 @@ bool SingleQueryEvaluator::evaluateSuchThatClause(const backend::PKB* pkb,
         case NUM_ENTITY:
             return evaluateEntityWildcard(pkb, srt, arg2);
         case NAME_ENTITY:
-            return evaluateEntityWildcard(pkb, srt, extractQuotedStr(arg2));
+            return evaluateEntityWildcard(pkb, srt, arg2);
         case WILDCARD:
             return evaluateWildcardWildcard(pkb, srt);
         default:
@@ -631,7 +637,7 @@ void SingleQueryEvaluator::handleError(std::string const& msg) {
  * @return true if it's the name of a synonym, otherwis fakse
  */
 bool SingleQueryEvaluator::isSynonym(const backend::PKB* pkb, std::string const& str) {
-    initializeSynonym(pkb, str);
+    initializeIfSynonym(pkb, str);
     return (synonym_candidates.find(str) != synonym_candidates.end());
 }
 

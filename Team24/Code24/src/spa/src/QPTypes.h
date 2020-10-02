@@ -48,9 +48,9 @@ enum ArgType {
     INVALID_ARG // invalid argument, not accepted for evaluation
 };
 
-typedef std::tuple<ClauseType, std::string, std::string> RELATIONTUPLE;
-typedef std::tuple<std::string, std::string, std::string> PATTERNTUPLE;
 typedef std::pair<ArgType, std::string /*argValue*/> ARG;
+typedef std::tuple<ClauseType, ARG, ARG> RELATIONTUPLE;
+typedef std::tuple<std::string, std::string, std::string> PATTERNTUPLE;
 typedef std::tuple<ClauseType, ARG, ARG, std::string /*expr*/> CLAUSE;
 typedef std::vector<CLAUSE> CLAUSE_LIST;
 typedef std::pair<ReturnType, std::string /*synonymName*/> RETURN_CANDIDATE;

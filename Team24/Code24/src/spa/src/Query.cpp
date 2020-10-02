@@ -105,11 +105,13 @@ std::string Query::toString() const {
 
     stringstream << "\nSuch that clauses: ";
     ClauseType relationType;
-    std::string arg1;
-    std::string arg2;
+    qpbackend::ARG arg1;
+    qpbackend::ARG arg2;
     for (const RELATIONTUPLE& suchThatClause : suchThatClauses) {
         std::tie(relationType, arg1, arg2) = suchThatClause;
-        stringstream << "{" << stringFromRelationType(relationType) << ", " << arg1 << ", " << arg2 << "} ";
+        stringstream << "{" << stringFromRelationType(relationType) << ", " << '<'
+                     << prettyPrintArgType(arg1.first) << ", " << arg1.second << ">"
+                     << ", " << '<' << prettyPrintArgType(arg1.first) << ", " << arg2.second << '>' << "} ";
     }
 
     stringstream << "\nPattern clauses: ";

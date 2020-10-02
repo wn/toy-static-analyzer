@@ -85,15 +85,23 @@ TEST_CASE("Test evaluation of Follows between synonyms") {
     PKBMock pkb(0);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryPre = { { { "s1", STMT }, { "s2", STMT } }, { "s1" }, { { FOLLOWS, "s1", "s2" } }, {} };
+    Query queryPre = { { { "s1", STMT }, { "s2", STMT } },
+                       { "s1" },
+                       { { FOLLOWS, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                       {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre),
                                        { "1", "2", "3", "4", "5", "6", "7", "8", "10", "12" }));
 
-    Query queryPost = { { { "s1", STMT }, { "s2", STMT } }, { "s2" }, { { FOLLOWS, "s1", "s2" } }, {} };
+    Query queryPost = { { { "s1", STMT }, { "s2", STMT } },
+                        { "s2" },
+                        { { FOLLOWS, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                        {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost),
                                        { "2", "3", "4", "5", "7", "8", "9", "10", "13", "14" }));
 
-    Query querySelf = { { { "s", STMT } }, { "s" }, { { FOLLOWS, "s", "s" } }, {} };
+    Query querySelf = {
+        { { "s", STMT } }, { "s" }, { { FOLLOWS, { STMT_SYNONYM, "s" }, { STMT_SYNONYM, "s" } } }, {}
+    };
     REQUIRE(qe.evaluateQuery(querySelf).empty());
 }
 
@@ -101,10 +109,10 @@ TEST_CASE("Test evaluation of Follows between entity and synonym") {
     PKBMock pkb(0);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryPre = { { { "s", STMT } }, { "s" }, { { FOLLOWS, "6", "s" } }, {} };
+    Query queryPre = { { { "s", STMT } }, { "s" }, { { FOLLOWS, { NUM_ENTITY, "6" }, { STMT_SYNONYM, "s" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre), { "7" }));
 
-    Query queryPost = { { { "s", STMT } }, { "s" }, { { FOLLOWS, "s", "4" } }, {} };
+    Query queryPost = { { { "s", STMT } }, { "s" }, { { FOLLOWS, { STMT_SYNONYM, "s" }, { NUM_ENTITY, "4" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), { "3" }));
 }
 
@@ -112,11 +120,11 @@ TEST_CASE("Test evaluation of Follows between entities") {
     PKBMock pkb(0);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryTrue = { { { "s", STMT } }, { "s" }, { { FOLLOWS, "7", "8" } }, {} };
+    Query queryTrue = { { { "s", STMT } }, { "s" }, { { FOLLOWS, { NUM_ENTITY, "7" }, { NUM_ENTITY, "8" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryTrue), { "1", "2", "3", "4", "5", "6", "7", "8",
                                                                       "9", "10", "11", "12", "13", "14" }));
 
-    Query queryFalse = { { { "s", STMT } }, { "s" }, { { FOLLOWS, "7", "9" } }, {} };
+    Query queryFalse = { { { "s", STMT } }, { "s" }, { { FOLLOWS, { NUM_ENTITY, "7" }, { NUM_ENTITY, "9" } } }, {} };
     REQUIRE(qe.evaluateQuery(queryFalse).empty());
 }
 
@@ -124,11 +132,11 @@ TEST_CASE("Test evaluation of Follows between synonym and wildcard") {
     PKBMock pkb(0);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryPre = { { { "s", STMT } }, { "s" }, { { FOLLOWS, "s", "_" } }, {} };
+    Query queryPre = { { { "s", STMT } }, { "s" }, { { FOLLOWS, { STMT_SYNONYM, "s" }, { WILDCARD, "_" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre),
                                        { "1", "2", "3", "4", "5", "6", "7", "8", "10", "12" }));
 
-    Query queryPost = { { { "s", STMT } }, { "s" }, { { FOLLOWS, "_", "s" } }, {} };
+    Query queryPost = { { { "s", STMT } }, { "s" }, { { FOLLOWS, { WILDCARD, "_" }, { STMT_SYNONYM, "s" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost),
                                        { "2", "3", "4", "5", "7", "8", "9", "10", "13", "14" }));
 }
@@ -137,18 +145,18 @@ TEST_CASE("Test evaluation of Follows between entity and wildcard") {
     PKBMock pkb(0);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryTrue = { { { "s", STMT } }, { "s" }, { { FOLLOWS, "7", "_" } }, {} };
+    Query queryTrue = { { { "s", STMT } }, { "s" }, { { FOLLOWS, { NUM_ENTITY, "7" }, { WILDCARD, "_" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryTrue), { "1", "2", "3", "4", "5", "6", "7", "8",
                                                                       "9", "10", "11", "12", "13", "14" }));
 
-    Query queryFalse = { { { "s", STMT } }, { "s" }, { { FOLLOWS, "_", "6" } }, {} };
+    Query queryFalse = { { { "s", STMT } }, { "s" }, { { FOLLOWS, { WILDCARD, "_" }, { NUM_ENTITY, "6" } } }, {} };
     REQUIRE(qe.evaluateQuery(queryFalse).empty());
 }
 
 TEST_CASE("Test evaluation of Follows(_, _)") {
     PKBMock pkb(0);
     queryevaluator::QueryEvaluator qe(&pkb);
-    Query query = { { { "s", STMT } }, { "s" }, { { FOLLOWS, "_", "_" } }, {} };
+    Query query = { { { "s", STMT } }, { "s" }, { { FOLLOWS, { WILDCARD, "_" }, { WILDCARD, "_" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query), { "1", "2", "3", "4", "5", "6", "7", "8",
                                                                   "9", "10", "11", "12", "13", "14" }));
 }
@@ -158,21 +166,34 @@ TEST_CASE("Test evaluation of Follows with invalid arguments") {
     queryevaluator::QueryEvaluator qe(&pkb);
 
     // invalid query
-    Query query_empty = { { { "s1", STMT }, { "s2", STMT } }, {}, { { FOLLOWS, "s1", "s2" } }, {} };
+    Query query_empty = { { { "s1", STMT }, { "s2", STMT } },
+                          {},
+                          { { FOLLOWS, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                          {} };
     REQUIRE(qe.evaluateQuery(query_empty).empty());
 
     // invalid synonym
-    Query query_proc = { { { "s1", STMT }, { "s2", PROCEDURE } }, { "s1" }, { { FOLLOWS, "s1", "s2" } }, {} };
+    Query query_proc = { { { "s1", STMT }, { "s2", PROCEDURE } },
+                         { "s1" },
+                         { { FOLLOWS, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                         {} };
     REQUIRE(qe.evaluateQuery(query_proc).empty());
 
-    Query query_const = { { { "s", CONSTANT } }, { "s" }, { { FOLLOWS, "1", "s" } }, {} };
+    Query query_const = {
+        { { "s", CONSTANT } }, { "s" }, { { FOLLOWS, { NUM_ENTITY, "1" }, { CONST_SYNONYM, "s" } } }, {}
+    };
     REQUIRE(qe.evaluateQuery(query_const).empty());
 
-    Query query_var = { { { "s", VARIABLE } }, { "s" }, { { FOLLOWS, "s", "_" } }, {} };
+    Query query_var = {
+        { { "s", VARIABLE } }, { "s" }, { { FOLLOWS, { STMT_SYNONYM, "s" }, { WILDCARD, "_" } } }, {}
+    };
     REQUIRE(qe.evaluateQuery(query_var).empty());
 
     // invalid entity
-    Query query = { { { "s", STMT } }, { "s" }, { { FOLLOWS, "name1", "name2" } }, {} };
+    Query query = { { { "s", STMT } },
+                    { "s" },
+                    { { FOLLOWS, { STMT_SYNONYM, "name1" }, { STMT_SYNONYM, "name2" } } },
+                    {} };
     REQUIRE(qe.evaluateQuery(query).empty());
 }
 
@@ -180,15 +201,23 @@ TEST_CASE("Test evaluation of Follows* between synonyms") {
     PKBMock pkb(0);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryPre = { { { "s1", STMT }, { "s2", STMT } }, { "s1" }, { { FOLLOWST, "s1", "s2" } }, {} };
+    Query queryPre = { { { "s1", STMT }, { "s2", STMT } },
+                       { "s1" },
+                       { { FOLLOWST, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                       {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre),
                                        { "1", "2", "3", "4", "5", "6", "7", "8", "10", "12" }));
 
-    Query queryPost = { { { "s1", STMT }, { "s2", STMT } }, { "s2" }, { { FOLLOWST, "s1", "s2" } }, {} };
+    Query queryPost = { { { "s1", STMT }, { "s2", STMT } },
+                        { "s2" },
+                        { { FOLLOWST, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                        {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost),
                                        { "2", "3", "4", "5", "7", "8", "9", "10", "13", "14" }));
 
-    Query querySelf = { { { "s", STMT } }, { "s" }, { { FOLLOWST, "s", "s" } }, {} };
+    Query querySelf = {
+        { { "s", STMT } }, { "s" }, { { FOLLOWST, { STMT_SYNONYM, "s" }, { STMT_SYNONYM, "s" } } }, {}
+    };
     REQUIRE(qe.evaluateQuery(querySelf).empty());
 }
 
@@ -196,10 +225,12 @@ TEST_CASE("Test evaluation of Follows* between entity and synonym") {
     PKBMock pkb(0);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryPre = { { { "s", STMT } }, { "s" }, { { FOLLOWST, "6", "s" } }, {} };
+    Query queryPre = { { { "s", STMT } }, { "s" }, { { FOLLOWST, { NUM_ENTITY, "6" }, { STMT_SYNONYM, "s" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre), { "7", "8", "9" }));
 
-    Query queryPost = { { { "s", STMT } }, { "s" }, { { FOLLOWST, "s", "9" } }, {} };
+    Query queryPost = {
+        { { "s", STMT } }, { "s" }, { { FOLLOWST, { STMT_SYNONYM, "s" }, { NUM_ENTITY, "9" } } }, {}
+    };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), { "6", "7", "8" }));
 }
 
@@ -207,11 +238,11 @@ TEST_CASE("Test evaluation of Follows* between entities") {
     PKBMock pkb(0);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryTrue = { { { "s", STMT } }, { "s" }, { { FOLLOWST, "7", "9" } }, {} };
+    Query queryTrue = { { { "s", STMT } }, { "s" }, { { FOLLOWST, { NUM_ENTITY, "7" }, { NUM_ENTITY, "9" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryTrue), { "1", "2", "3", "4", "5", "6", "7", "8",
                                                                       "9", "10", "11", "12", "13", "14" }));
 
-    Query queryFalse = { { { "s", STMT } }, { "s" }, { { FOLLOWST, "1", "9" } }, {} };
+    Query queryFalse = { { { "s", STMT } }, { "s" }, { { FOLLOWST, { NUM_ENTITY, "1" }, { NUM_ENTITY, "9" } } }, {} };
     REQUIRE(qe.evaluateQuery(queryFalse).empty());
 }
 
@@ -219,11 +250,11 @@ TEST_CASE("Test evaluation of Follows* between synonym and wildcard") {
     PKBMock pkb(0);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryPre = { { { "s", STMT } }, { "s" }, { { FOLLOWST, "s", "_" } }, {} };
+    Query queryPre = { { { "s", STMT } }, { "s" }, { { FOLLOWST, { STMT_SYNONYM, "s" }, { WILDCARD, "_" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre),
                                        { "1", "2", "3", "4", "5", "6", "7", "8", "10", "12" }));
 
-    Query queryPost = { { { "s", STMT } }, { "s" }, { { FOLLOWST, "_", "s" } }, {} };
+    Query queryPost = { { { "s", STMT } }, { "s" }, { { FOLLOWST, { WILDCARD, "_" }, { STMT_SYNONYM, "s" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost),
                                        { "2", "3", "4", "5", "7", "8", "9", "10", "13", "14" }));
 }
@@ -232,18 +263,18 @@ TEST_CASE("Test evaluation of Follows* between entity and wildcard") {
     PKBMock pkb(0);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryTrue = { { { "s", STMT } }, { "s" }, { { FOLLOWST, "7", "_" } }, {} };
+    Query queryTrue = { { { "s", STMT } }, { "s" }, { { FOLLOWST, { NUM_ENTITY, "7" }, { WILDCARD, "_" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryTrue), { "1", "2", "3", "4", "5", "6", "7", "8",
                                                                       "9", "10", "11", "12", "13", "14" }));
 
-    Query queryFalse = { { { "s", STMT } }, { "s" }, { { FOLLOWST, "_", "6" } }, {} };
+    Query queryFalse = { { { "s", STMT } }, { "s" }, { { FOLLOWST, { WILDCARD, "_" }, { NUM_ENTITY, "6" } } }, {} };
     REQUIRE(qe.evaluateQuery(queryFalse).empty());
 }
 
 TEST_CASE("Test evaluation of Follows*(_, _)") {
     PKBMock pkb(0);
     queryevaluator::QueryEvaluator qe(&pkb);
-    Query query = { { { "s", STMT } }, { "s" }, { { FOLLOWST, "_", "_" } }, {} };
+    Query query = { { { "s", STMT } }, { "s" }, { { FOLLOWST, { WILDCARD, "_" }, { WILDCARD, "_" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query), { "1", "2", "3", "4", "5", "6", "7", "8",
                                                                   "9", "10", "11", "12", "13", "14" }));
 }
@@ -253,20 +284,33 @@ TEST_CASE("Test evaluation of Follows* with invalid arguments") {
     queryevaluator::QueryEvaluator qe(&pkb);
 
     // invalid query
-    Query query_empty = { { { "s1", STMT }, { "s2", STMT } }, {}, { { FOLLOWST, "s1", "s2" } }, {} };
+    Query query_empty = { { { "s1", STMT }, { "s2", STMT } },
+                          {},
+                          { { FOLLOWST, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                          {} };
     REQUIRE(qe.evaluateQuery(query_empty).empty());
 
     // invalid synonym
-    Query query_proc = { { { "s1", STMT }, { "s2", PROCEDURE } }, { "s1" }, { { FOLLOWST, "s1", "s2" } }, {} };
+    Query query_proc = { { { "s1", STMT }, { "s2", PROCEDURE } },
+                         { "s1" },
+                         { { FOLLOWST, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                         {} };
     REQUIRE(qe.evaluateQuery(query_proc).empty());
 
-    Query query_const = { { { "s", CONSTANT } }, { "s" }, { { FOLLOWST, "1", "s" } }, {} };
+    Query query_const = {
+        { { "s", CONSTANT } }, { "s" }, { { FOLLOWST, { NUM_ENTITY, "1" }, { STMT_SYNONYM, "s" } } }, {}
+    };
     REQUIRE(qe.evaluateQuery(query_const).empty());
 
-    Query query_var = { { { "s", VARIABLE } }, { "s" }, { { FOLLOWST, "s", "_" } }, {} };
+    Query query_var = {
+        { { "s", VARIABLE } }, { "s" }, { { FOLLOWST, { STMT_SYNONYM, "s" }, { WILDCARD, "_" } } }, {}
+    };
     REQUIRE(qe.evaluateQuery(query_var).empty());
 
-    Query query = { { { "s", STMT } }, { "s" }, { { FOLLOWST, "name1", "name2" } }, {} };
+    Query query = { { { "s", STMT } },
+                    { "s" },
+                    { { FOLLOWST, { NAME_ENTITY, "name1" }, { NAME_ENTITY, "name2" } } },
+                    {} };
     REQUIRE(qe.evaluateQuery(query).empty());
 }
 
@@ -274,13 +318,21 @@ TEST_CASE("Test evaluation of Parent between synonyms") {
     PKBMock pkb(1);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryPre = { { { "s1", STMT }, { "s2", STMT } }, { "s1" }, { { PARENT, "s1", "s2" } }, {} };
+    Query queryPre = { { { "s1", STMT }, { "s2", STMT } },
+                       { "s1" },
+                       { { PARENT, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                       {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre), { "1", "2", "4" }));
 
-    Query queryPost = { { { "s1", STMT }, { "s2", STMT } }, { "s2" }, { { PARENT, "s1", "s2" } }, {} };
+    Query queryPost = { { { "s1", STMT }, { "s2", STMT } },
+                        { "s2" },
+                        { { PARENT, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                        {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), { "2", "3", "4", "5", "6" }));
 
-    Query querySelf = { { { "s", STMT } }, { "s" }, { { PARENT, "s", "s" } }, {} };
+    Query querySelf = {
+        { { "s", STMT } }, { "s" }, { { PARENT, { STMT_SYNONYM, "s" }, { STMT_SYNONYM, "s" } } }, {}
+    };
     REQUIRE(qe.evaluateQuery(querySelf).empty());
 }
 
@@ -289,10 +341,10 @@ TEST_CASE("Test evaluation of Parent between entity and synonym") {
     PKBMock pkb(1);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryPre = { { { "s", STMT } }, { "s" }, { { PARENT, "1", "s" } }, {} };
+    Query queryPre = { { { "s", STMT } }, { "s" }, { { PARENT, { NUM_ENTITY, "1" }, { STMT_SYNONYM, "s" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre), { "2", "4" }));
 
-    Query queryPost = { { { "s", STMT } }, { "s" }, { { PARENT, "s", "5" } }, {} };
+    Query queryPost = { { { "s", STMT } }, { "s" }, { { PARENT, { STMT_SYNONYM, "s" }, { NUM_ENTITY, "5" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), { "4" }));
 }
 
@@ -301,10 +353,10 @@ TEST_CASE("Test evaluation of Parent between entities") {
     PKBMock pkb(1);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryTrue = { { { "s", STMT } }, { "s" }, { { PARENT, "2", "3" } }, {} };
+    Query queryTrue = { { { "s", STMT } }, { "s" }, { { PARENT, { NUM_ENTITY, "2" }, { NUM_ENTITY, "3" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryTrue), { "1", "2", "3", "4", "5", "6" }));
 
-    Query queryFalse = { { { "s", STMT } }, { "s" }, { { PARENT, "1", "5" } }, {} };
+    Query queryFalse = { { { "s", STMT } }, { "s" }, { { PARENT, { NUM_ENTITY, "1" }, { NUM_ENTITY, "5" } } }, {} };
     REQUIRE(qe.evaluateQuery(queryFalse).empty());
 }
 
@@ -312,10 +364,10 @@ TEST_CASE("Test evaluation of Parent between synonym and wildcard") {
     PKBMock pkb(1);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryPre = { { { "s", STMT } }, { "s" }, { { PARENT, "s", "_" } }, {} };
+    Query queryPre = { { { "s", STMT } }, { "s" }, { { PARENT, { STMT_SYNONYM, "s" }, { WILDCARD, "_" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre), { "1", "2", "4" }));
 
-    Query queryPost = { { { "s", STMT } }, { "s" }, { { PARENT, "_", "s" } }, {} };
+    Query queryPost = { { { "s", STMT } }, { "s" }, { { PARENT, { WILDCARD, "_" }, { STMT_SYNONYM, "s" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), { "2", "3", "4", "5", "6" }));
 }
 
@@ -323,17 +375,17 @@ TEST_CASE("Test evaluation of Parent between entity and wildcard") {
     PKBMock pkb(1);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryTrue = { { { "s", STMT } }, { "s" }, { { PARENT, "2", "_" } }, {} };
+    Query queryTrue = { { { "s", STMT } }, { "s" }, { { PARENT, { NUM_ENTITY, "2" }, { WILDCARD, "_" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryTrue), { "1", "2", "3", "4", "5", "6" }));
 
-    Query queryFalse = { { { "s", STMT } }, { "s" }, { { PARENT, "_", "1" } }, {} };
+    Query queryFalse = { { { "s", STMT } }, { "s" }, { { PARENT, { WILDCARD, "_" }, { NUM_ENTITY, "1" } } }, {} };
     REQUIRE(qe.evaluateQuery(queryFalse).empty());
 }
 
 TEST_CASE("Test evaluation of Parent(_, _)") {
     PKBMock pkb(1);
     queryevaluator::QueryEvaluator qe(&pkb);
-    Query query = { { { "s", STMT } }, { "s" }, { { PARENT, "_", "_" } }, {} };
+    Query query = { { { "s", STMT } }, { "s" }, { { PARENT, { WILDCARD, "_" }, { WILDCARD, "_" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query), { "1", "2", "3", "4", "5", "6" }));
 }
 
@@ -342,20 +394,33 @@ TEST_CASE("Test evaluation of Parent with invalid arguments") {
     queryevaluator::QueryEvaluator qe(&pkb);
 
     // invalid query
-    Query query_empty = { { { "s1", STMT }, { "s2", STMT } }, {}, { { PARENT, "s1", "s2" } }, {} };
+    Query query_empty = { { { "s1", STMT }, { "s2", STMT } },
+                          {},
+                          { { PARENT, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                          {} };
     REQUIRE(qe.evaluateQuery(query_empty).empty());
 
     // invalid synonym
-    Query query_proc = { { { "s1", STMT }, { "s2", PROCEDURE } }, { "s1" }, { { PARENT, "s1", "s2" } }, {} };
+    Query query_proc = { { { "s1", STMT }, { "s2", PROCEDURE } },
+                         { "s1" },
+                         { { PARENT, { STMT_SYNONYM, "s1" }, { PROC_SYNONYM, "s2" } } },
+                         {} };
     REQUIRE(qe.evaluateQuery(query_proc).empty());
 
-    Query query_const = { { { "s", CONSTANT } }, { "s" }, { { PARENT, "1", "s" } }, {} };
+    Query query_const = {
+        { { "s", CONSTANT } }, { "s" }, { { PARENT, { NUM_ENTITY, "1" }, { CONST_SYNONYM, "s" } } }, {}
+    };
     REQUIRE(qe.evaluateQuery(query_const).empty());
 
-    Query query_var = { { { "s", VARIABLE } }, { "s" }, { { PARENT, "s", "_" } }, {} };
+    Query query_var = {
+        { { "s", VARIABLE } }, { "s" }, { { PARENT, { STMT_SYNONYM, "s" }, { WILDCARD, "_" } } }, {}
+    };
     REQUIRE(qe.evaluateQuery(query_var).empty());
 
-    Query query = { { { "s", STMT } }, { "s" }, { { PARENT, "name1", "name2" } }, {} };
+    Query query = { { { "s", STMT } },
+                    { "s" },
+                    { { PARENT, { STMT_SYNONYM, "name1" }, { STMT_SYNONYM, "name2" } } },
+                    {} };
     REQUIRE(qe.evaluateQuery(query).empty());
 }
 
@@ -363,13 +428,21 @@ TEST_CASE("Test evaluation of Parent* between synonyms") {
     PKBMock pkb(1);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryPre = { { { "s1", STMT }, { "s2", STMT } }, { "s1" }, { { PARENTT, "s1", "s2" } }, {} };
+    Query queryPre = { { { "s1", STMT }, { "s2", STMT } },
+                       { "s1" },
+                       { { PARENTT, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                       {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre), { "1", "2", "4" }));
 
-    Query queryPost = { { { "s1", STMT }, { "s2", STMT } }, { "s2" }, { { PARENTT, "s1", "s2" } }, {} };
+    Query queryPost = { { { "s1", STMT }, { "s2", STMT } },
+                        { "s2" },
+                        { { PARENTT, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                        {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), { "2", "3", "4", "5", "6" }));
 
-    Query querySelf = { { { "s", STMT } }, { "s" }, { { PARENTT, "s", "s" } }, {} };
+    Query querySelf = {
+        { { "s", STMT } }, { "s" }, { { PARENTT, { STMT_SYNONYM, "s" }, { STMT_SYNONYM, "s" } } }, {}
+    };
     REQUIRE(qe.evaluateQuery(querySelf).empty());
 }
 
@@ -378,10 +451,10 @@ TEST_CASE("Test evaluation of Parent* between entity and synonym") {
     PKBMock pkb(1);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryPre = { { { "s", STMT } }, { "s" }, { { PARENTT, "1", "s" } }, {} };
+    Query queryPre = { { { "s", STMT } }, { "s" }, { { PARENTT, { NUM_ENTITY, "1" }, { STMT_SYNONYM, "s" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre), { "2", "3", "4", "5", "6" }));
 
-    Query queryPost = { { { "s", STMT } }, { "s" }, { { PARENTT, "s", "5" } }, {} };
+    Query queryPost = { { { "s", STMT } }, { "s" }, { { PARENTT, { STMT_SYNONYM, "s" }, { NUM_ENTITY, "5" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), { "1", "4" }));
 }
 
@@ -390,10 +463,10 @@ TEST_CASE("Test evaluation of Parent* between entities") {
     PKBMock pkb(1);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryTrue = { { { "s", STMT } }, { "s" }, { { PARENTT, "1", "5" } }, {} };
+    Query queryTrue = { { { "s", STMT } }, { "s" }, { { PARENTT, { NUM_ENTITY, "1" }, { NUM_ENTITY, "5" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryTrue), { "1", "2", "3", "4", "5", "6" }));
 
-    Query queryFalse = { { { "s", STMT } }, { "s" }, { { PARENTT, "5", "1" } }, {} };
+    Query queryFalse = { { { "s", STMT } }, { "s" }, { { PARENTT, { NUM_ENTITY, "5" }, { NUM_ENTITY, "1" } } }, {} };
     REQUIRE(qe.evaluateQuery(queryFalse).empty());
 }
 
@@ -401,10 +474,10 @@ TEST_CASE("Test evaluation of Parent* between synonym and wildcard") {
     PKBMock pkb(1);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryPre = { { { "s", STMT } }, { "s" }, { { PARENTT, "s", "_" } }, {} };
+    Query queryPre = { { { "s", STMT } }, { "s" }, { { PARENTT, { STMT_SYNONYM, "s" }, { WILDCARD, "_" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre), { "1", "2", "4" }));
 
-    Query queryPost = { { { "s", STMT } }, { "s" }, { { PARENTT, "_", "s" } }, {} };
+    Query queryPost = { { { "s", STMT } }, { "s" }, { { PARENTT, { WILDCARD, "_" }, { STMT_SYNONYM, "s" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), { "2", "3", "4", "5", "6" }));
 }
 
@@ -412,17 +485,17 @@ TEST_CASE("Test evaluation of Parent* between entity and wildcard") {
     PKBMock pkb(1);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryTrue = { { { "s", STMT } }, { "s" }, { { PARENTT, "2", "_" } }, {} };
+    Query queryTrue = { { { "s", STMT } }, { "s" }, { { PARENTT, { NUM_ENTITY, "2" }, { WILDCARD, "_" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryTrue), { "1", "2", "3", "4", "5", "6" }));
 
-    Query queryFalse = { { { "s", STMT } }, { "s" }, { { PARENTT, "_", "1" } }, {} };
+    Query queryFalse = { { { "s", STMT } }, { "s" }, { { PARENTT, { WILDCARD, "_" }, { NUM_ENTITY, "1" } } }, {} };
     REQUIRE(qe.evaluateQuery(queryFalse).empty());
 }
 
 TEST_CASE("Test evaluation of Parent*(_, _)") {
     PKBMock pkb(1);
     queryevaluator::QueryEvaluator qe(&pkb);
-    Query query = { { { "s", STMT } }, { "s" }, { { PARENTT, "_", "_" } }, {} };
+    Query query = { { { "s", STMT } }, { "s" }, { { PARENTT, { WILDCARD, "_" }, { WILDCARD, "_" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query), { "1", "2", "3", "4", "5", "6" }));
 }
 
@@ -431,20 +504,33 @@ TEST_CASE("Test evaluation of Parent* with invalid arguments") {
     queryevaluator::QueryEvaluator qe(&pkb);
 
     // invalid query
-    Query query_empty = { { { "s1", STMT }, { "s2", STMT } }, {}, { { PARENTT, "s1", "s2" } }, {} };
+    Query query_empty = { { { "s1", STMT }, { "s2", STMT } },
+                          {},
+                          { { PARENTT, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                          {} };
     REQUIRE(qe.evaluateQuery(query_empty).empty());
 
     // invalid synonym
-    Query query_proc = { { { "s1", STMT }, { "s2", PROCEDURE } }, { "s1" }, { { PARENTT, "s1", "s2" } }, {} };
+    Query query_proc = { { { "s1", STMT }, { "s2", PROCEDURE } },
+                         { "s1" },
+                         { { PARENTT, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                         {} };
     REQUIRE(qe.evaluateQuery(query_proc).empty());
 
-    Query query_const = { { { "s", CONSTANT } }, { "s" }, { { PARENTT, "1", "s" } }, {} };
+    Query query_const = {
+        { { "s", CONSTANT } }, { "s" }, { { PARENTT, { NUM_ENTITY, "1" }, { CONST_SYNONYM, "s" } } }, {}
+    };
     REQUIRE(qe.evaluateQuery(query_const).empty());
 
-    Query query_var = { { { "s", VARIABLE } }, { "s" }, { { PARENTT, "s", "_" } }, {} };
+    Query query_var = {
+        { { "s", VARIABLE } }, { "s" }, { { PARENTT, { VAR_SYNONYM, "s" }, { WILDCARD, "_" } } }, {}
+    };
     REQUIRE(qe.evaluateQuery(query_var).empty());
 
-    Query query = { { { "s", STMT } }, { "s" }, { { PARENTT, "name1", "name2" } }, {} };
+    Query query = { { { "s", STMT } },
+                    { "s" },
+                    { { PARENTT, { STMT_SYNONYM, "name1" }, { STMT_SYNONYM, "name2" } } },
+                    {} };
     REQUIRE(qe.evaluateQuery(query).empty());
 }
 
@@ -452,14 +538,26 @@ TEST_CASE("Test evaluation of Uses between synonyms") {
     PKBMock pkb(2);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryUsesStmt = { { { "s", STMT }, { "v", VARIABLE } }, { "s" }, { { USES, "s", "v" } }, {} };
+    Query queryUsesStmt = { { { "s", STMT }, { "v", VARIABLE } },
+                            { "s" },
+                            { { USES, { STMT_SYNONYM, "s" }, { VAR_SYNONYM, "v" } } },
+                            {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsesStmt), { "1", "2", "4", "5", "6" }));
-    Query queryUsesVar = { { { "s", STMT }, { "v", VARIABLE } }, { "v" }, { { USES, "s", "v" } }, {} };
+    Query queryUsesVar = { { { "s", STMT }, { "v", VARIABLE } },
+                           { "v" },
+                           { { USES, { STMT_SYNONYM, "s" }, { VAR_SYNONYM, "v" } } },
+                           {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsesVar), { "x", "z", "m", "n", "count" }));
 
-    Query queryUsepProc = { { { "p", PROCEDURE }, { "v", VARIABLE } }, { "p" }, { { USES, "p", "v" } }, {} };
+    Query queryUsepProc = { { { "p", PROCEDURE }, { "v", VARIABLE } },
+                            { "p" },
+                            { { USES, { PROC_SYNONYM, "p" }, { VAR_SYNONYM, "v" } } },
+                            {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsepProc), { "foo", "bar" }));
-    Query queryUsepVar = { { { "p", PROCEDURE }, { "v", VARIABLE } }, { "v" }, { { USES, "p", "v" } }, {} };
+    Query queryUsepVar = { { { "p", PROCEDURE }, { "v", VARIABLE } },
+                           { "v" },
+                           { { USES, { PROC_SYNONYM, "p" }, { VAR_SYNONYM, "v" } } },
+                           {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsepVar), { "x", "z", "m", "n", "count" }));
 }
 
@@ -467,14 +565,22 @@ TEST_CASE("Test evaluation of Uses between entity and synonym") {
     PKBMock pkb(2);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryUsesStmt = { { { "s", STMT } }, { "s" }, { { USES, "s", "\"n\"" } }, {} };
+    Query queryUsesStmt = {
+        { { "s", STMT } }, { "s" }, { { USES, { STMT_SYNONYM, "s" }, { NAME_ENTITY, "n" } } }, {}
+    };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsesStmt), { "2", "4", "5" }));
-    Query queryUsesVar = { { { "v", VARIABLE } }, { "v" }, { { USES, "2", "v" } }, {} };
+    Query queryUsesVar = {
+        { { "v", VARIABLE } }, { "v" }, { { USES, { NUM_ENTITY, "2" }, { VAR_SYNONYM, "v" } } }, {}
+    };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsesVar), { "z", "m", "n", "count" }));
 
-    Query queryUsepProc = { { { "p", PROCEDURE } }, { "p" }, { { USES, "p", "\"x\"" } }, {} };
+    Query queryUsepProc = {
+        { { "p", PROCEDURE } }, { "p" }, { { USES, { PROC_SYNONYM, "p" }, { NAME_ENTITY, "x" } } }, {}
+    };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsepProc), { "foo" }));
-    Query queryUsepVar = { { { "v", VARIABLE } }, { "v" }, { { USES, "\"bar\"", "v" } }, {} };
+    Query queryUsepVar = {
+        { { "v", VARIABLE } }, { "v" }, { { USES, { NAME_ENTITY, "bar" }, { VAR_SYNONYM, "v" } } }, {}
+    };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsepVar), { "z", "m", "n", "count" }));
 }
 
@@ -482,16 +588,22 @@ TEST_CASE("Test evaluation of Uses between entities") {
     PKBMock pkb(2);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryUsesTrue = { { { "s", STMT } }, { "s" }, { { USES, "5", "\"n\"" } }, {} };
+    Query queryUsesTrue = { { { "s", STMT } }, { "s" }, { { USES, { NUM_ENTITY, "5" }, { NAME_ENTITY, "n" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsesTrue),
                                        { "1", "2", "3", "4", "5", "6", "7", "8", "9" }));
-    Query queryUsesFalse = { { { "s", STMT } }, { "s" }, { { USES, "5", "\"x\"" } }, {} };
+    Query queryUsesFalse = {
+        { { "s", STMT } }, { "s" }, { { USES, { NUM_ENTITY, "5" }, { NAME_ENTITY, "x" } } }, {}
+    };
     REQUIRE(qe.evaluateQuery(queryUsesFalse).empty());
 
-    Query queryUsepTrue = { { { "s", STMT } }, { "s" }, { { USES, "\"foo\"", "\"x\"" } }, {} };
+    Query queryUsepTrue = {
+        { { "s", STMT } }, { "s" }, { { USES, { NAME_ENTITY, "foo" }, { NAME_ENTITY, "x" } } }, {}
+    };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsepTrue),
                                        { "1", "2", "3", "4", "5", "6", "7", "8", "9" }));
-    Query queryUsepFalse = { { { "s", STMT } }, { "s" }, { { USES, "\"bar\"", "\"x\"" } }, {} };
+    Query queryUsepFalse = {
+        { { "s", STMT } }, { "s" }, { { USES, { NAME_ENTITY, "bar" }, { NAME_ENTITY, "x" } } }, {}
+    };
     REQUIRE(qe.evaluateQuery(queryUsepFalse).empty());
 }
 
@@ -499,10 +611,10 @@ TEST_CASE("Test evaluation of Uses between synonym and wildcard") {
     PKBMock pkb(2);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryUsesS = { { { "s", STMT } }, { "s" }, { { USES, "s", "_" } }, {} };
+    Query queryUsesS = { { { "s", STMT } }, { "s" }, { { USES, { STMT_SYNONYM, "s" }, { WILDCARD, "_" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsesS), { "1", "2", "4", "5", "6" }));
 
-    Query queryUseP = { { { "p", PROCEDURE } }, { "p" }, { { USES, "p", "_" } }, {} };
+    Query queryUseP = { { { "p", PROCEDURE } }, { "p" }, { { USES, { PROC_SYNONYM, "p" }, { WILDCARD, "_" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUseP), { "foo", "bar" }));
 }
 
@@ -510,16 +622,18 @@ TEST_CASE("Test evaluation of Uses between entity and wildcard") {
     PKBMock pkb(2);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryUsesTrue = { { { "s", STMT } }, { "s" }, { { USES, "5", "_" } }, {} };
+    Query queryUsesTrue = { { { "s", STMT } }, { "s" }, { { USES, { NUM_ENTITY, "5" }, { WILDCARD, "_" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsesTrue),
                                        { "1", "2", "3", "4", "5", "6", "7", "8", "9" }));
-    Query queryUsesFalse = { { { "s", STMT } }, { "s" }, { { USES, "3", "_" } }, {} };
+    Query queryUsesFalse = { { { "s", STMT } }, { "s" }, { { USES, { NUM_ENTITY, "3" }, { WILDCARD, "_" } } }, {} };
     REQUIRE(qe.evaluateQuery(queryUsesFalse).empty());
 
-    Query queryUsepTrue = { { { "s", STMT } }, { "s" }, { { USES, "\"foo\"", "_" } }, {} };
+    Query queryUsepTrue = { { { "s", STMT } }, { "s" }, { { USES, { NAME_ENTITY, "foo" }, { WILDCARD, "_" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsepTrue),
                                        { "1", "2", "3", "4", "5", "6", "7", "8", "9" }));
-    Query queryUsepFalse = { { { "s", STMT } }, { "s" }, { { USES, "\"main\"", "_" } }, {} };
+    Query queryUsepFalse = {
+        { { "s", STMT } }, { "s" }, { { USES, { NAME_ENTITY, "main" }, { WILDCARD, "_" } } }, {}
+    };
     REQUIRE(qe.evaluateQuery(queryUsepFalse).empty());
 }
 
@@ -528,24 +642,32 @@ TEST_CASE("Test evaluation of Uses with invalid arguments") {
     queryevaluator::QueryEvaluator qe(&pkb);
 
     // invalid query
-    Query queryEmpty = { { { "s", STMT }, { "V", VARIABLE } }, {}, { { USES, "s", "V" } }, {} };
+    Query queryEmpty = { { { "s", STMT }, { "V", VARIABLE } },
+                         {},
+                         { { USES, { STMT_SYNONYM, "s" }, { VAR_SYNONYM, "V" } } },
+                         {} };
     REQUIRE(qe.evaluateQuery(queryEmpty).empty());
 
     // invalid synonym
-    Query queryProc = { { { "s1", STMT }, { "s2", STMT } }, { "s1" }, { { USES, "s1", "s2" } }, {} };
+    Query queryProc = { { { "s1", STMT }, { "s2", STMT } },
+                        { "s1" },
+                        { { USES, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                        {} };
     REQUIRE(qe.evaluateQuery(queryProc).empty());
 
-    Query queryConst = { { { "c", CONSTANT } }, { "c" }, { { USES, "c", "\"x\"" } }, {} };
+    Query queryConst = {
+        { { "c", CONSTANT } }, { "c" }, { { USES, { CONST_SYNONYM, "c" }, { NAME_ENTITY, "x" } } }, {}
+    };
     REQUIRE(qe.evaluateQuery(queryConst).empty());
 
     // invalid entity
-    Query queryE1 = { { { "s", STMT } }, { "s" }, { { USES, "\"1\"", "\"x\"" } }, {} };
+    Query queryE1 = { { { "s", STMT } }, { "s" }, { { USES, { NAME_ENTITY, "1" }, { NAME_ENTITY, "x" } } }, {} };
     REQUIRE(qe.evaluateQuery(queryE1).empty());
-    Query queryE2 = { { { "s", STMT } }, { "s" }, { { USES, "1", "x" } }, {} };
+    Query queryE2 = { { { "s", STMT } }, { "s" }, { { USES, { NUM_ENTITY, "1" }, { STMT_SYNONYM, "x" } } }, {} };
     REQUIRE(qe.evaluateQuery(queryE2).empty());
 
     // invalid wildcard
-    Query queryE3 = { { { "s", STMT } }, { "s" }, { { USES, "_", "\"x\"" } }, {} };
+    Query queryE3 = { { { "s", STMT } }, { "s" }, { { USES, { WILDCARD, "_" }, { NAME_ENTITY, "x" } } }, {} };
     REQUIRE(qe.evaluateQuery(queryE3).empty());
 }
 
@@ -553,21 +675,39 @@ TEST_CASE("Test evaluation of Modifies between synonyms") {
     PKBMock pkb(2);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryModsStmt = { { { "s", STMT }, { "v", VARIABLE } }, { "s" }, { { MODIFIES, "s", "v" } }, {} };
+    Query queryModsStmt = { { { "s", STMT }, { "v", VARIABLE } },
+                            { "s" },
+                            { { MODIFIES, { STMT_SYNONYM, "s" }, { VAR_SYNONYM, "v" } } },
+                            {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryModsStmt),
                                        { "2", "3", "4", "5", "6", "7", "8", "9" }));
-    Query queryUsesVar = { { { "s", STMT }, { "v", VARIABLE } }, { "v" }, { { MODIFIES, "s", "v" } }, {} };
+    Query queryUsesVar = { { { "s", STMT }, { "v", VARIABLE } },
+                           { "v" },
+                           { { MODIFIES, { STMT_SYNONYM, "s" }, { VAR_SYNONYM, "v" } } },
+                           {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsesVar), { "a", "n", "random", "y" }));
 
-    Query queryModpProc = { { { "p", PROCEDURE }, { "v", VARIABLE } }, { "p" }, { { MODIFIES, "p", "v" } }, {} };
+    Query queryModpProc = { { { "p", PROCEDURE }, { "v", VARIABLE } },
+                            { "p" },
+                            { { MODIFIES, { PROC_SYNONYM, "p" }, { VAR_SYNONYM, "v" } } },
+                            {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryModpProc), { "foo", "bar" }));
 
-    Query queryModIf = { { { "ifs", IF }, { "v", VARIABLE } }, { "ifs" }, { { MODIFIES, "ifs", "v" } }, {} };
+    Query queryModIf = { { { "ifs", IF }, { "v", VARIABLE } },
+                         { "ifs" },
+                         { { MODIFIES, { STMT_SYNONYM, "ifs" }, { VAR_SYNONYM, "v" } } },
+                         {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryModIf), { "4" }));
-    Query queryModWhile = { { { "w", WHILE }, { "v", VARIABLE } }, { "w" }, { { MODIFIES, "w", "v" } }, {} };
+    Query queryModWhile = { { { "w", WHILE }, { "v", VARIABLE } },
+                            { "w" },
+                            { { MODIFIES, { STMT_SYNONYM, "w" }, { VAR_SYNONYM, "v" } } },
+                            {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryModWhile), { "7", "8" }));
 
-    Query queryModpVar = { { { "p", PROCEDURE }, { "v", VARIABLE } }, { "v" }, { { MODIFIES, "p", "v" } }, {} };
+    Query queryModpVar = { { { "p", PROCEDURE }, { "v", VARIABLE } },
+                           { "v" },
+                           { { MODIFIES, { PROC_SYNONYM, "p" }, { VAR_SYNONYM, "v" } } },
+                           {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryModpVar), { "a", "n", "random", "y" }));
 }
 
@@ -575,14 +715,22 @@ TEST_CASE("Test evaluation of Modifies between entity and synonym") {
     PKBMock pkb(2);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryModsStmt = { { { "s", STMT } }, { "s" }, { { MODIFIES, "s", "\"n\"" } }, {} };
+    Query queryModsStmt = {
+        { { "s", STMT } }, { "s" }, { { MODIFIES, { STMT_SYNONYM, "s" }, { NAME_ENTITY, "n" } } }, {}
+    };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryModsStmt), { "2", "4", "5" }));
-    Query queryModsVar = { { { "v", VARIABLE } }, { "v" }, { { MODIFIES, "2", "v" } }, {} };
+    Query queryModsVar = {
+        { { "v", VARIABLE } }, { "v" }, { { MODIFIES, { NUM_ENTITY, "2" }, { VAR_SYNONYM, "v" } } }, {}
+    };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryModsVar), { "n", "random", "y" }));
 
-    Query queryModpProc = { { { "p", PROCEDURE } }, { "p" }, { { MODIFIES, "p", "\"y\"" } }, {} };
+    Query queryModpProc = {
+        { { "p", PROCEDURE } }, { "p" }, { { MODIFIES, { PROC_SYNONYM, "p" }, { NAME_ENTITY, "y" } } }, {}
+    };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryModpProc), { "foo", "bar" }));
-    Query queryModpVar = { { { "v", VARIABLE } }, { "v" }, { { MODIFIES, "\"bar\"", "v" } }, {} };
+    Query queryModpVar = {
+        { { "v", VARIABLE } }, { "v" }, { { MODIFIES, { NAME_ENTITY, "bar" }, { VAR_SYNONYM, "v" } } }, {}
+    };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryModpVar), { "a", "n", "random", "y" }));
 }
 
@@ -590,16 +738,24 @@ TEST_CASE("Test evaluation of Modifies between entities") {
     PKBMock pkb(2);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryModsTrue = { { { "s", STMT } }, { "s" }, { { MODIFIES, "5", "\"n\"" } }, {} };
+    Query queryModsTrue = {
+        { { "s", STMT } }, { "s" }, { { MODIFIES, { NUM_ENTITY, "5" }, { NAME_ENTITY, "n" } } }, {}
+    };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryModsTrue),
                                        { "1", "2", "3", "4", "5", "6", "7", "8", "9" }));
-    Query queryModsFalse = { { { "s", STMT } }, { "s" }, { { MODIFIES, "5", "\"x\"" } }, {} };
+    Query queryModsFalse = {
+        { { "s", STMT } }, { "s" }, { { MODIFIES, { NUM_ENTITY, "5" }, { NAME_ENTITY, "x" } } }, {}
+    };
     REQUIRE(qe.evaluateQuery(queryModsFalse).empty());
 
-    Query queryModpTrue = { { { "s", STMT } }, { "s" }, { { MODIFIES, "\"foo\"", "\"y\"" } }, {} };
+    Query queryModpTrue = {
+        { { "s", STMT } }, { "s" }, { { MODIFIES, { NAME_ENTITY, "foo" }, { NAME_ENTITY, "y" } } }, {}
+    };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryModpTrue),
                                        { "1", "2", "3", "4", "5", "6", "7", "8", "9" }));
-    Query queryModpFalse = { { { "s", STMT } }, { "s" }, { { MODIFIES, "\"foo\"", "\"x\"" } }, {} };
+    Query queryModpFalse = {
+        { { "s", STMT } }, { "s" }, { { MODIFIES, { NAME_ENTITY, "foo" }, { NAME_ENTITY, "x" } } }, {}
+    };
     REQUIRE(qe.evaluateQuery(queryModpFalse).empty());
 }
 
@@ -607,10 +763,12 @@ TEST_CASE("Test evaluation of Modifies between synonym and wildcard") {
     PKBMock pkb(2);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryUsesS = { { { "s", STMT } }, { "s" }, { { MODIFIES, "s", "_" } }, {} };
+    Query queryUsesS = { { { "s", STMT } }, { "s" }, { { MODIFIES, { STMT_SYNONYM, "s" }, { WILDCARD, "_" } } }, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUsesS), { "2", "3", "4", "5", "6", "7", "8", "9" }));
 
-    Query queryUseP = { { { "p", PROCEDURE } }, { "p" }, { { MODIFIES, "p", "_" } }, {} };
+    Query queryUseP = {
+        { { "p", PROCEDURE } }, { "p" }, { { MODIFIES, { PROC_SYNONYM, "p" }, { WILDCARD, "_" } } }, {}
+    };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUseP), { "foo", "bar" }));
 }
 
@@ -618,16 +776,24 @@ TEST_CASE("Test evaluation of Modifies between entity and wildcard") {
     PKBMock pkb(2);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryModsTrue = { { { "s", STMT } }, { "s" }, { { MODIFIES, "5", "_" } }, {} };
+    Query queryModsTrue = {
+        { { "s", STMT } }, { "s" }, { { MODIFIES, { NUM_ENTITY, "5" }, { WILDCARD, "_" } } }, {}
+    };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryModsTrue),
                                        { "1", "2", "3", "4", "5", "6", "7", "8", "9" }));
-    Query queryModsFalse = { { { "s", STMT } }, { "s" }, { { MODIFIES, "1", "_" } }, {} };
+    Query queryModsFalse = {
+        { { "s", STMT } }, { "s" }, { { MODIFIES, { NUM_ENTITY, "1" }, { WILDCARD, "_" } } }, {}
+    };
     REQUIRE(qe.evaluateQuery(queryModsFalse).empty());
 
-    Query queryModpTrue = { { { "s", STMT } }, { "s" }, { { MODIFIES, "\"foo\"", "_" } }, {} };
+    Query queryModpTrue = {
+        { { "s", STMT } }, { "s" }, { { MODIFIES, { NAME_ENTITY, "foo" }, { WILDCARD, "_" } } }, {}
+    };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryModpTrue),
                                        { "1", "2", "3", "4", "5", "6", "7", "8", "9" }));
-    Query queryModpFalse = { { { "s", STMT } }, { "s" }, { { MODIFIES, "\"main\"", "_" } }, {} };
+    Query queryModpFalse = {
+        { { "s", STMT } }, { "s" }, { { MODIFIES, { NAME_ENTITY, "main" }, { WILDCARD, "_" } } }, {}
+    };
     REQUIRE(qe.evaluateQuery(queryModpFalse).empty());
 }
 
@@ -636,24 +802,32 @@ TEST_CASE("Test evaluation of Modifies with invalid arguments") {
     queryevaluator::QueryEvaluator qe(&pkb);
 
     // invalid query
-    Query queryEmpty = { { { "s", STMT }, { "V", VARIABLE } }, {}, { { MODIFIES, "s", "V" } }, {} };
+    Query queryEmpty = { { { "s", STMT }, { "V", VARIABLE } },
+                         {},
+                         { { MODIFIES, { STMT_SYNONYM, "s" }, { VAR_SYNONYM, "V" } } },
+                         {} };
     REQUIRE(qe.evaluateQuery(queryEmpty).empty());
 
     // invalid synonym
-    Query queryProc = { { { "s1", STMT }, { "s2", STMT } }, { "s1" }, { { MODIFIES, "s1", "s2" } }, {} };
+    Query queryProc = { { { "s1", STMT }, { "s2", STMT } },
+                        { "s1" },
+                        { { MODIFIES, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                        {} };
     REQUIRE(qe.evaluateQuery(queryProc).empty());
 
-    Query queryConst = { { { "c", CONSTANT } }, { "c" }, { { MODIFIES, "c", "\"x\"" } }, {} };
+    Query queryConst = {
+        { { "c", CONSTANT } }, { "c" }, { { MODIFIES, { CONST_SYNONYM, "c" }, { NAME_ENTITY, "x" } } }, {}
+    };
     REQUIRE(qe.evaluateQuery(queryConst).empty());
 
     // invalid entity
-    Query queryE1 = { { { "s", STMT } }, { "s" }, { { MODIFIES, "\"1\"", "\"x\"" } }, {} };
+    Query queryE1 = { { { "s", STMT } }, { "s" }, { { MODIFIES, { NAME_ENTITY, "1" }, { NAME_ENTITY, "x" } } }, {} };
     REQUIRE(qe.evaluateQuery(queryE1).empty());
-    Query queryE2 = { { { "s", STMT } }, { "s" }, { { MODIFIES, "1", "x" } }, {} };
+    Query queryE2 = { { { "s", STMT } }, { "s" }, { { MODIFIES, { NUM_ENTITY, "1" }, { STMT_SYNONYM, "x" } } }, {} };
     REQUIRE(qe.evaluateQuery(queryE2).empty());
 
     // invalid wildcard
-    Query queryE3 = { { { "s", STMT } }, { "s" }, { { MODIFIES, "_", "\"x\"" } }, {} };
+    Query queryE3 = { { { "s", STMT } }, { "s" }, { { MODIFIES, { WILDCARD, "_" }, { NAME_ENTITY, "x" } } }, {} };
     REQUIRE(qe.evaluateQuery(queryE3).empty());
 }
 
@@ -661,15 +835,23 @@ TEST_CASE("Test combined Uses and Modifies") {
     PKBMock pkb(2);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query queryUse = { { { "s", STMT }, { "v", VARIABLE } }, { "s" }, { { USES, "s", "v" } }, {} };
+    Query queryUse = { { { "s", STMT }, { "v", VARIABLE } },
+                       { "s" },
+                       { { USES, { STMT_SYNONYM, "s" }, { VAR_SYNONYM, "v" } } },
+                       {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryUse), { "1", "2", "4", "5", "6" }));
 
-    Query queryMod = { { { "s", STMT }, { "v", VARIABLE } }, { "s" }, { { MODIFIES, "s", "v" } }, {} };
+    Query queryMod = { { { "s", STMT }, { "v", VARIABLE } },
+                       { "s" },
+                       { { MODIFIES, { STMT_SYNONYM, "s" }, { VAR_SYNONYM, "v" } } },
+                       {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryMod), { "2", "3", "4", "5", "6", "7", "8", "9" }));
 
-    Query queryDouble = {
-        { { "s", STMT }, { "v", VARIABLE } }, { "s" }, { { MODIFIES, "s", "v" }, { USES, "s", "v" } }, {}
-    };
+    Query queryDouble = { { { "s", STMT }, { "v", VARIABLE } },
+                          { "s" },
+                          { { MODIFIES, { STMT_SYNONYM, "s" }, { VAR_SYNONYM, "v" } },
+                            { USES, { STMT_SYNONYM, "s" }, { VAR_SYNONYM, "v" } } },
+                          {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryDouble), { "2", "4", "5" }));
 }
 
@@ -773,15 +955,22 @@ TEST_CASE("Test Follows/Follows* and Pattern") {
     PKBMock pkb(0);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query query1 = {
-        { { "s", STMT }, { "a", ASSIGN } }, { "s" }, { { FOLLOWST, "s", "a" } }, { { "a", "\"cenY\"", "_" } }
-    };
+    Query query1 = { { { "s", STMT }, { "a", ASSIGN } },
+                     { "s" },
+                     { { FOLLOWST, { STMT_SYNONYM, "s" }, { STMT_SYNONYM, "a" } } },
+                     { { "a", "\"cenY\"", "_" } } };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query1), { "1", "2", "6", "7", "12" }));
 
-    Query query2 = { { { "a", ASSIGN } }, { "a" }, { { FOLLOWST, "_", "a" } }, { { "a", "\"count\"", "_" } } };
+    Query query2 = { { { "a", ASSIGN } },
+                     { "a" },
+                     { { FOLLOWST, { WILDCARD, "_" }, { STMT_SYNONYM, "a" } } },
+                     { { "a", "\"count\"", "_" } } };
     REQUIRE(qe.evaluateQuery(query2).empty());
 
-    Query query3 = { { { "v", VARIABLE }, { "a", ASSIGN } }, { "v" }, { { FOLLOWS, "6", "a" } }, { { "a", "v", "_" } } };
+    Query query3 = { { { "v", VARIABLE }, { "a", ASSIGN } },
+                     { "v" },
+                     { { FOLLOWS, { NUM_ENTITY, "6" }, { STMT_SYNONYM, "a" } } },
+                     { { "a", "v", "_" } } };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query3), { "cenX" }));
 }
 
@@ -789,15 +978,21 @@ TEST_CASE("Test Parent/Parent* and Pattern") {
     PKBMock pkb(0);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query query1 = { { { "s", STMT }, { "a", ASSIGN } }, { "a" }, { { PARENTT, "s", "a" } }, { { "a", "_", "_\"cenX\"_" } } };
+    Query query1 = { { { "s", STMT }, { "a", ASSIGN } },
+                     { "a" },
+                     { { PARENTT, { STMT_SYNONYM, "s" }, { STMT_SYNONYM, "a" } } },
+                     { { "a", "_", "_\"cenX\"_" } } };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query1), { "7", "12" }));
 
-    Query query2 = { { { "a", ASSIGN }, { "w", WHILE } }, { "a" }, { { PARENT, "w", "a" } }, { { "a", "\"count\"", "_" } } };
+    Query query2 = { { { "a", ASSIGN }, { "w", WHILE } },
+                     { "a" },
+                     { { PARENT, { STMT_SYNONYM, "w" }, { STMT_SYNONYM, "a" } } },
+                     { { "a", "\"count\"", "_" } } };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query2), { "6" }));
 
     Query query3 = { { { "ifs", IF }, { "v", VARIABLE }, { "a", ASSIGN } },
                      { "v" },
-                     { { PARENT, "ifs", "a" } },
+                     { { PARENT, { STMT_SYNONYM, "ifs" }, { STMT_SYNONYM, "a" } } },
                      { { "a", "v", "_" } } };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query3), { "flag", "cenX", "cenY" }));
 }
@@ -806,16 +1001,22 @@ TEST_CASE("Test Uses and Pattern") {
     PKBMock pkb(2);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query query1 = { { { "a", ASSIGN }, { "v", VARIABLE } }, { "a" }, { { USES, "a", "v" } }, { { "a", "v", "_" } } };
+    Query query1 = { { { "a", ASSIGN }, { "v", VARIABLE } },
+                     { "a" },
+                     { { USES, { STMT_SYNONYM, "a" }, { VAR_SYNONYM, "v" } } },
+                     { { "a", "v", "_" } } };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query1), { "5" }));
 
     Query query2 = { { { "a", ASSIGN }, { "ifs", IF }, { "v", VARIABLE } },
                      { "a" },
-                     { { USES, "ifs", "v" } },
+                     { { USES, { STMT_SYNONYM, "ifs" }, { VAR_SYNONYM, "v" } } },
                      { { "a", "v", "_\"1\"_" } } };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query2), { "5" }));
 
-    Query query3 = { { { "a", ASSIGN } }, { "a" }, { { USES, "a", "\"m\"" } }, { { "a", "_", "_\"z\"_" } } };
+    Query query3 = { { { "a", ASSIGN } },
+                     { "a" },
+                     { { USES, { STMT_SYNONYM, "a" }, { NAME_ENTITY, "m" } } },
+                     { { "a", "_", "_\"z\"_" } } };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query3), { "6" }));
 }
 
@@ -823,12 +1024,15 @@ TEST_CASE("Test Modifies and Pattern") {
     PKBMock pkb(2);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query query1 = { { { "a", ASSIGN } }, { "a" }, { { MODIFIES, "a", "_" } }, { { "a", "\"y\"", "_" } } };
+    Query query1 = { { { "a", ASSIGN } },
+                     { "a" },
+                     { { MODIFIES, { STMT_SYNONYM, "a" }, { WILDCARD, "_" } } },
+                     { { "a", "\"y\"", "_" } } };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query1), { "6" }));
 
     Query query2 = { { { "a", ASSIGN }, { "ifs", IF }, { "v", VARIABLE } },
                      { "a" },
-                     { { MODIFIES, "ifs", "v" } },
+                     { { MODIFIES, { STMT_SYNONYM, "ifs" }, { VAR_SYNONYM, "v" } } },
                      { { "a", "v", "_\"1\"_" } } };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query2), { "5" }));
 }
