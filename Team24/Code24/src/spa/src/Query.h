@@ -33,9 +33,9 @@ bool isEntityString(const std::string& string);
 
 EntityType entityTypeFromString(const std::string& entityString);
 
-bool isRelationString(const std::string& string);
+bool isRelationClauseString(const std::string& string);
 
-RelationType relationTypeFromString(const std::string& relationString);
+ClauseType relationClauseTypeFromString(const std::string& relationClauseString);
 
 } // namespace qpbackend
 #endif // QUERY_H

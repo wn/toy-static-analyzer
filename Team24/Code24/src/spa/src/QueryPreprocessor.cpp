@@ -35,8 +35,8 @@ State parseFilteringClauses(State state);
 // Declarations for such that clauses
 STATESTATUSPAIR parseSingleSuchThatClause(State state);
 STATESTATUSPAIR parseRelRef(State state);
-STATESTATUSPAIR parseRelationStmtStmt(State state, qpbackend::RelationType relationType);
-STATESTATUSPAIR parseRelationStmtEntOrEntEnt(State state, qpbackend::RelationType relationType);
+STATESTATUSPAIR parseRelationStmtStmt(State state, qpbackend::ClauseType relationType);
+STATESTATUSPAIR parseRelationStmtEntOrEntEnt(State state, qpbackend::ClauseType relationType);
 std::string getStmtRefStringValue(const TOKEN& token);
 bool isStmtRefToken(const TOKEN& token);
 STATE_RESULT_STATUS_TRIPLE parseEntRef(State state);
@@ -170,7 +170,7 @@ class State {
         query.synonymsToReturn.push_back(token.nameValue);
     }
 
-    void addSuchThatClause(qpbackend::RelationType relationType, std::string arg1, std::string arg2) {
+    void addSuchThatClause(qpbackend::ClauseType relationType, std::string arg1, std::string arg2) {
         query.suchThatClauses.emplace_back(relationType, arg1, arg2);
     }
 
@@ -338,10 +338,10 @@ STATESTATUSPAIR parseRelRef(State state) {
         stringstream << "*";
     }
     std::string possibleRelationString = stringstream.str();
-    if (!qpbackend::isRelationString(possibleRelationString)) {
+    if (!qpbackend::isRelationClauseString(possibleRelationString)) {
         return STATESTATUSPAIR(state, false);
     }
-    qpbackend::RelationType relationType = qpbackend::relationTypeFromString(possibleRelationString);
+    qpbackend::ClauseType relationType = qpbackend::relationClauseTypeFromString(possibleRelationString);
     switch (relationType) {
     case qpbackend::FOLLOWS:
     case qpbackend::FOLLOWST:
@@ -363,7 +363,7 @@ STATESTATUSPAIR parseRelRef(State state) {
  * ParentT : ... ‘(’ stmtRef ‘,’ stmtRef ‘)’
  * @return <state of parser, isStateInvalid>
  */
-STATESTATUSPAIR parseRelationStmtStmt(State state, qpbackend::RelationType relationType) {
+STATESTATUSPAIR parseRelationStmtStmt(State state, qpbackend::ClauseType relationType) {
     TOKEN lParenToken = state.popUntilNonWhitespaceToken();
     if (lParenToken.type != backend::lexer::LPAREN || !state.hasTokensLeftToParse()) {
         logLine(kQppLogWarnPrefix +
@@ -441,7 +441,7 @@ bool isStmtRefToken(const TOKEN& token) {
  * ModifiesP : ... ‘(’ entRef ‘,’ entRef ‘)’
  * @return <state of parser, isStateInvalid>
  */
-STATESTATUSPAIR parseRelationStmtEntOrEntEnt(State state, qpbackend::RelationType relationType) {
+STATESTATUSPAIR parseRelationStmtEntOrEntEnt(State state, qpbackend::ClauseType relationType) {
     // Mutable variables in function.
     std::string stmtOrEntString;
     bool isValidState = true;

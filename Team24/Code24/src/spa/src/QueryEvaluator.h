@@ -47,7 +47,7 @@ class SingleQueryEvaluator {
 
     // methods to evaluate generate clause
     bool evaluateSuchThatClause(const backend::PKB* pkb,
-                                const std::tuple<RelationType, std::string, std::string>& suchThatClause);
+                                const std::tuple<ClauseType, std::string, std::string>& suchThatClause);
     // TODO
     bool evaluatePatternClause(const backend::PKB* pkb,
                                const std::tuple<std::string, std::string, std::string>& patternClause);

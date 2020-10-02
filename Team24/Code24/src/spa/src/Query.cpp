@@ -18,10 +18,10 @@ const std::map<std::string, EntityType> kEntityStringToTypeMap = {
     { "constant", EntityType::CONSTANT }, { "procedure", EntityType::PROCEDURE },
 };
 
-const std::vector<std::pair<std::string, RelationType>> kRelationStringRelationTypePairs = {
-    { "Follows", RelationType::FOLLOWS }, { "Follows*", RelationType::FOLLOWST },
-    { "Parent", RelationType::PARENT },   { "Parent*", RelationType::PARENTT },
-    { "Uses", RelationType::USES },       { "Modifies", RelationType::MODIFIES },
+const std::vector<std::pair<std::string, ClauseType>> kRelationClauseStringClauseTypePairs = {
+    { "Follows", ClauseType::FOLLOWS }, { "Follows*", ClauseType::FOLLOWST },
+    { "Parent", ClauseType::PARENT },   { "Parent*", ClauseType::PARENTT },
+    { "Uses", ClauseType::USES },       { "Modifies", ClauseType::MODIFIES },
 };
 
 bool isEntityString(const std::string& string) {
@@ -45,24 +45,26 @@ std::string stringFromEntityType(EntityType entityType) {
     return "UNKNOWN ENTITY TYPE";
 }
 
-bool isRelationString(const std::string& string) {
-    return std::any_of(kRelationStringRelationTypePairs.begin(), kRelationStringRelationTypePairs.end(),
-                       [&](const std::pair<std::string, RelationType>& pair) {
+bool isRelationClauseString(const std::string& string) {
+    return std::any_of(kRelationClauseStringClauseTypePairs.begin(),
+                       kRelationClauseStringClauseTypePairs.end(),
+                       [&](const std::pair<std::string, ClauseType>& pair) {
                            return pair.first == string;
                        });
 }
 
-RelationType relationTypeFromString(const std::string& relationString) {
-    for (const auto& relationStringRelationTypePair : kRelationStringRelationTypePairs) {
-        if (relationStringRelationTypePair.first == relationString) {
+ClauseType relationClauseTypeFromString(const std::string& relationClauseString) {
+    for (const auto& relationStringRelationTypePair : kRelationClauseStringClauseTypePairs) {
+        if (relationStringRelationTypePair.first == relationClauseString) {
             return relationStringRelationTypePair.second;
         }
     }
-    throw std::invalid_argument("Error:relationTypeFromString: " + relationString + " does not map to any EntityType.");
+    throw std::invalid_argument("Error:relationClauseTypeFromString: " + relationClauseString +
+                                " does not map to any EntityType.");
 }
 
-std::string stringFromRelationType(RelationType relationType) {
-    for (const auto& relationTypePair : kRelationStringRelationTypePairs) {
+std::string stringFromRelationType(ClauseType relationType) {
+    for (const auto& relationTypePair : kRelationClauseStringClauseTypePairs) {
         if (relationTypePair.second == relationType) {
             return relationTypePair.first;
         }
@@ -102,7 +104,7 @@ std::string Query::toString() const {
     }
 
     stringstream << "\nSuch that clauses: ";
-    RelationType relationType;
+    ClauseType relationType;
     std::string arg1;
     std::string arg2;
     for (const RELATIONTUPLE& suchThatClause : suchThatClauses) {

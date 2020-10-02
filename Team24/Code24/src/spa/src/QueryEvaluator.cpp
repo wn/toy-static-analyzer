@@ -1,6 +1,7 @@
 #include "QueryEvaluator.h"
 
 #include "Logger.h"
+#include "QEHelper.h"
 #include "QPTypes.h"
 
 #include <set>
@@ -165,8 +166,8 @@ void SingleQueryEvaluator::initializeCandidate(const backend::PKB* pkb,
  * @return return false if (i) semantic errors encountered (ii) no result found
  */
 bool SingleQueryEvaluator::evaluateSuchThatClause(const backend::PKB* pkb,
-                                                  const std::tuple<RelationType, std::string, std::string>& suchThatClause) {
-    RelationType rt = std::get<0>(suchThatClause);
+                                                  const std::tuple<ClauseType, std::string, std::string>& suchThatClause) {
+    ClauseType rt = std::get<0>(suchThatClause);
     std::string arg1 = std::get<1>(suchThatClause);
     std::string arg2 = std::get<2>(suchThatClause);
 

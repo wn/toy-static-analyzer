@@ -4,6 +4,7 @@
 #include "Query.h"
 
 #include <string>
+#include <unordered_map>
 
 namespace qpbackend {
 namespace queryevaluator {
@@ -35,18 +36,6 @@ enum SubRelationType {
     MODIFIESP_WILDCARD, // check upon p (procedure), Modifies(p, v)
     ASSIGN_PATTERN, // evaluate pattern a(v, ...) or a("v", ...)
     INVALID // no suitable subrelation to evaluate
-};
-
-// type of argument used in relation, used for evaluation
-enum ArgType {
-    STMT_SYNONYM, // synonym name of a statement synonym
-    VAR_SYNONYM, // synonym name of a variable synonym
-    PROC_SYNONYM, // synonym name of a procedure synonym
-    CONST_SYNONYM, // synonym name of a procedure synonym
-    NAME_ENTITY, // name of variable or procedure, e.g. "\"centroidX\"" "\"main\""
-    NUM_ENTITY, // constant number or statement number of line number, e.g. "42"
-    WILDCARD, // placeholder sign, e.g. "_"
-    INVALID_ARG // invalid argument, not accepted for evaluation
 };
 
 // 2nd level SubRelation table: table mapping ArgType to SubRelationType>

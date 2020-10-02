@@ -23,16 +23,16 @@ TEST_CASE("Test query equality") {
           /* synonymsToReturn */ { "anyVariable", "s1", "s2" },
           /* suchThatClauses */
           {
-          RELATIONTUPLE{ RelationType::FOLLOWS, "1", "2" },
-          RELATIONTUPLE{ RelationType::MODIFIES, "procedure", "anyVariable" },
+          RELATIONTUPLE{ ClauseType::FOLLOWS, "1", "2" },
+          RELATIONTUPLE{ ClauseType::MODIFIES, "procedure", "anyVariable" },
           },
           /* patternClauses */ { PATTERNTUPLE{ "a", "a", "_" }, PATTERNTUPLE{ "a", "_", "_a+s*l/d+k-j_" }, PATTERNTUPLE{ "testingisgood", "greedisgood", "(expressionInBrackets)" } }) ==
     Query(/* declarationMap */ { { "anyVariable", EntityType::VARIABLE }, { "procedure", EntityType::PROCEDURE } },
           /* synonymsToReturn */ { "anyVariable", "s1", "s2" },
           /* suchThatClauses */
           {
-          RELATIONTUPLE{ RelationType::FOLLOWS, "1", "2" },
-          RELATIONTUPLE{ RelationType::MODIFIES, "procedure", "anyVariable" },
+          RELATIONTUPLE{ ClauseType::FOLLOWS, "1", "2" },
+          RELATIONTUPLE{ ClauseType::MODIFIES, "procedure", "anyVariable" },
           },
           /* patternClauses */ { PATTERNTUPLE{ "a", "a", "_" }, PATTERNTUPLE{ "a", "_", "_a+s*l/d+k-j_" }, PATTERNTUPLE{ "testingisgood", "greedisgood", "(expressionInBrackets)" } }));
 }
@@ -43,8 +43,8 @@ TEST_CASE("Test query equality failure") {
           /* synonymsToReturn */ { "anyVariable", "s1", "s2" },
           /* suchThatClauses */
           {
-          RELATIONTUPLE{ RelationType::FOLLOWS, "1", "2" },
-          RELATIONTUPLE{ RelationType::MODIFIES, "procedure", "anyVariable" },
+          RELATIONTUPLE{ ClauseType::FOLLOWS, "1", "2" },
+          RELATIONTUPLE{ ClauseType::MODIFIES, "procedure", "anyVariable" },
           },
           /* patternClauses */ { PATTERNTUPLE{ "a", "a", "_" }, PATTERNTUPLE{ "a", "_", "_a+s*l/d+k-j_" }, PATTERNTUPLE{ "testingisgood", "greedisgood", "(expressionInBrackets)" } }) ==
     Query({ /* declarationMap */ { "anyVariable", EntityType::VARIABLE } },
