@@ -35,10 +35,13 @@ enum ReturnType {
 
 // type of argument used in relation, used for evaluation
 enum ArgType {
-    STMT_SYNONYM, // synonym name of a statement synonym
+    // synonym name of a statement synonym
+    // READ, IF, CALL, WHILE, ASSIGN, PRINT are all regarded as subtypes
+    // of STMT synonym.
+    STMT_SYNONYM,
     VAR_SYNONYM, // synonym name of a variable synonym
     PROC_SYNONYM, // synonym name of a procedure synonym
-    CONST_SYNONYM, // synonym name of a procedure synonym
+    CONST_SYNONYM, // synonym name of a constant synonym
     NAME_ENTITY, // name of variable or procedure, e.g. "\"centroidX\"" "\"main\""
     NUM_ENTITY, // constant number or statement number of line number, e.g. "42"
     WILDCARD, // placeholder sign, e.g. "_"
@@ -52,6 +55,8 @@ typedef std::tuple<ClauseType, ARG, ARG, std::string /*expr*/> CLAUSE;
 typedef std::vector<CLAUSE> CLAUSE_LIST;
 typedef std::pair<ReturnType, std::string /*synonymName*/> RETURN_CANDIDATE;
 typedef std::vector<RETURN_CANDIDATE> RETURN_CANDIDATE_LIST;
+
+std::string prettyPrintArgType(ArgType argType);
 } // namespace qpbackend
 
 #endif // QPTYPES_H
