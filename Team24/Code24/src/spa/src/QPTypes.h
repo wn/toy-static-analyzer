@@ -10,7 +10,31 @@ namespace qpbackend {
 
 enum EntityType { STMT, READ, PRINT, CALL, WHILE, IF, ASSIGN, VARIABLE, CONSTANT, PROCEDURE };
 
-enum ClauseType { FOLLOWS, FOLLOWST, PARENT, PARENTT, USES, MODIFIES };
+enum ClauseType {
+    // Relation Types
+    FOLLOWS,
+    FOLLOWST,
+    PARENT,
+    PARENTT,
+    USES,
+    MODIFIES,
+    CALLS,
+    CALLST,
+    NEXT,
+    NEXTT,
+    AFFECTS,
+    AFFECTST,
+    // Pattern
+    ASSIGN_PATTERN,
+    ASSIGN_PATTERN_SUB_EXPR,
+    ASSIGN_PATTERN_WILDCARD,
+    IF_PATTERN,
+    WHILE_PATTERN,
+    // With
+    WITH,
+    // Invalid clause type, not accepted for evaluation
+    INVALID_CLAUSE_TYPE
+};
 
 enum ReturnType {
     PROC_PROC_NAME,
