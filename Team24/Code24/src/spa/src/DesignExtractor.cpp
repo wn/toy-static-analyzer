@@ -3,14 +3,17 @@
 #include "Logger.h"
 #include "TNode.h"
 
+#include <algorithm>
+#include <cassert>
 #include <set>
 #include <stack>
 #include <unordered_map>
 #include <unordered_set>
 
-
 namespace backend {
 namespace extractor {
+
+typedef int STATEMENT_NUMBER;
 
 std::unordered_map<const TNode*, int> getTNodeToStatementNumber(const TNode& ast) {
     logLine("start getTNodeToStatementNumber");
@@ -574,6 +577,90 @@ bool isValidSimpleProgram(const TNode& ast) {
     return true;
 }
 
+/**
+ * helper method for getNextRelationship
+ * @return first and last statement number of a statement list (statement block)
+ */
+std::pair<STATEMENT_NUMBER, STATEMENT_NUMBER>
+getStartAndEndStmtNumOfStmtList(const TNode* stmtList,
+                                const std::unordered_map<const TNode*, int>& tNodeToStatementNumber) {
+    return { tNodeToStatementNumber.at(&stmtList->children.at(0)),
+             tNodeToStatementNumber.at(&stmtList->children.back()) };
+}
 
+std::unordered_map<int, std::unordered_set<int>>
+getNextRelationship(const std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNode,
+                    const std::unordered_map<const TNode*, STATEMENT_NUMBER>& tNodeToStatementNumber) {
+    std::unordered_map<STATEMENT_NUMBER, std::unordered_set<STATEMENT_NUMBER>> result;
+
+    // Create next relationship for statement lists
+    for (const TNode* stmtListNode : tNodeTypeToTNode.at(StatementList)) {
+        STATEMENT_NUMBER prevNodeStmtNum = tNodeToStatementNumber.at(&stmtListNode->children[0]);
+        for (size_t i = 1; i < stmtListNode->children.size(); ++i) {
+            const TNode* currNode = &stmtListNode->children[i];
+            STATEMENT_NUMBER currNodeStmtNum = tNodeToStatementNumber.at(currNode);
+            result[prevNodeStmtNum].insert(currNodeStmtNum);
+            prevNodeStmtNum = currNodeStmtNum;
+        }
+    }
+
+    // Create next relationship for while statements
+    // Evaluation of next relationship for while statements must come before if-else to point the
+    // last statement (which could be if-else) of a while-block back to the while-loop.
+    if (tNodeTypeToTNode.find(While) != tNodeTypeToTNode.end()) {
+        for (const TNode* whileNode : tNodeTypeToTNode.at(While)) {
+            STATEMENT_NUMBER startStmtNo, endStmtNo;
+            std::tie(startStmtNo, endStmtNo) =
+            getStartAndEndStmtNumOfStmtList(&whileNode->children.at(1), tNodeToStatementNumber);
+            STATEMENT_NUMBER whileNodeStmtNo = tNodeToStatementNumber.at(whileNode);
+            result[whileNodeStmtNo].insert(startStmtNo);
+            // the last statement of a while-loop jumps back to the while-cond
+            assert((result.find(endStmtNo) == result.end()));
+            result[endStmtNo].insert(whileNodeStmtNo);
+        }
+    }
+
+    // Currently, the 'next' of the if-else block is the next statement that its children should go
+    // to. This block of code sort the if-else statement by statement number. And for it's if-else
+    // block, we set the last statement's 'next' to be the if-else's 'next'.
+    if (tNodeTypeToTNode.find(IfElse) != tNodeTypeToTNode.end()) {
+        std::vector<std::pair<STATEMENT_NUMBER, const TNode*>> ifElseStmts;
+        for (const TNode* ifElseNode : tNodeTypeToTNode.at(IfElse)) {
+            ifElseStmts.emplace_back(tNodeToStatementNumber.at(ifElseNode), ifElseNode);
+        }
+        std::sort(ifElseStmts.begin(), ifElseStmts.end());
+
+        for (const std::pair<STATEMENT_NUMBER, const TNode*>& stmtNodePair : ifElseStmts) {
+            const TNode* ifElseNode = stmtNodePair.second;
+            STATEMENT_NUMBER ifNodeStmtNo = stmtNodePair.first;
+            STATEMENT_NUMBER nextStatement = -1;
+            if (result.find(ifNodeStmtNo) != result.end()) {
+                // there's a next statement for the if-else block!
+                // Since ifNodeStmtNo must only have 1 next statement, we simply retrieve it.
+                assert((!result.at(ifNodeStmtNo).empty()));
+                nextStatement = *(result.at(ifNodeStmtNo).begin());
+            }
+
+            STATEMENT_NUMBER startIfStmtNo, endIfStmtNo;
+            std::tie(startIfStmtNo, endIfStmtNo) =
+            getStartAndEndStmtNumOfStmtList(&ifElseNode->children.at(1), tNodeToStatementNumber);
+
+            STATEMENT_NUMBER startElseStmtNo, endElseStmtNo;
+            std::tie(startElseStmtNo, endElseStmtNo) =
+            getStartAndEndStmtNumOfStmtList(&ifElseNode->children.at(2), tNodeToStatementNumber);
+
+            if (nextStatement != -1) {
+                // There is a next statement for the if-block and else-block to go to.
+                result[endIfStmtNo].insert(nextStatement);
+                result[endElseStmtNo].insert(nextStatement);
+            }
+
+            // reset result[ifNodeStmtNo] `next` to be the start of the if and else block.
+            result[ifNodeStmtNo] = { startIfStmtNo, startElseStmtNo };
+        }
+    }
+
+    return result;
+}
 } // namespace extractor
 } // namespace backend

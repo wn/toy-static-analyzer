@@ -741,5 +741,224 @@ TEST_CASE("isValidSimpleProgram: Acyclic calls are valid") {
     REQUIRE(extractor::isValidSimpleProgram(ast) == true);
 }
 
+TEST_CASE("Test getNextRelationship double jump") {
+    const char STRUCTURED_STATEMENT[] = "procedure MySpecialProc {"
+                                        "  while (y == 3) {" // 1
+                                        "    gucci = 1;" // 2
+                                        "  }"
+                                        "  if (!(armani == gucci)) then {" // 3
+                                        "    read x;" // 4
+                                        "    if (1+1 == 2) then {" // 5
+                                        "      if (1+1 == 2) then {" // 6
+                                        "        y = 1;" // 7
+                                        "      } else {"
+                                        "        print z;" // 8
+                                        "      }"
+                                        "    } else {"
+                                        "      print z;" // 9
+                                        "    }"
+                                        "  } else {"
+                                        "    if (1+1 == 2) then {" // 10
+                                        "      y = 1;" // 11
+                                        "    } else {"
+                                        "      print z;" // 12
+                                        "      y = 1;" // 13
+                                        "    }"
+                                        "  }"
+                                        "  y = y + 1;" // 14
+                                        "  y = 1;" // 15
+                                        "}";
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    std::unordered_map<const TNode*, int> tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    std::unordered_map<int, std::unordered_set<int>> actual =
+    extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    std::unordered_map<int, std::unordered_set<int>> expected = {
+        { 1, { 2, 3 } }, { 2, { 1 } },   { 3, { 4, 10 } }, { 4, { 5 } },  { 5, { 6, 9 } },
+        { 6, { 7, 8 } }, { 7, { 14 } },  { 8, { 14 } },    { 9, { 14 } }, { 10, { 11, 12 } },
+        { 11, { 14 } },  { 12, { 13 } }, { 13, { 14 } },   { 14, { 15 } }
+    };
+
+    REQUIRE(actual == expected);
+}
+
+TEST_CASE("Test getNextRelationship if-else jumps to while") {
+    const char STRUCTURED_STATEMENT[] = "procedure MySpecialProc {"
+                                        "  while (y == 3) {"
+                                        "    if (1==1) then {"
+                                        "       y = 1;"
+                                        "    } else {"
+                                        "       y = 2;"
+                                        "    }"
+                                        "  }"
+                                        "}";
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    std::unordered_map<const TNode*, int> tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    std::unordered_map<int, std::unordered_set<int>> actual =
+    extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    std::unordered_map<int, std::unordered_set<int>> expected = {
+
+        { 1, { 2 } }, { 2, { 3, 4 } }, { 3, { 1 } }, { 4, { 1 } }
+    };
+
+    REQUIRE(actual == expected);
+}
+
+TEST_CASE("Test getNextRelationship if-else dead end") {
+    const char STRUCTURED_STATEMENT[] = "procedure MySpecialProc {"
+                                        "  if (1==1) then {"
+                                        "     y = 1;"
+                                        "  } else {"
+                                        "     y = 2;"
+                                        "  }"
+                                        "}";
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    std::unordered_map<const TNode*, int> tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    std::unordered_map<int, std::unordered_set<int>> actual =
+    extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    std::unordered_map<int, std::unordered_set<int>> expected = { { 1, { 2, 3 } } };
+
+    REQUIRE(actual == expected);
+}
+
+TEST_CASE("Test getNextRelationship while-loop in if-else") {
+    const char STRUCTURED_STATEMENT[] = "procedure MySpecialProc {"
+                                        "  if (1==1) then {" // 1
+                                        "    while (1==1) {" // 2
+                                        "      a = 1;" // 3
+                                        "    }"
+                                        "  } else {"
+                                        "    while (1==1) {" // 4
+                                        "      a = 1;" // 5
+                                        "    }"
+                                        "  }"
+                                        "  a = 1;" // 6
+                                        "}";
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    std::unordered_map<const TNode*, int> tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    std::unordered_map<int, std::unordered_set<int>> actual =
+    extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    std::unordered_map<int, std::unordered_set<int>> expected = {
+        { 1, { 2, 4 } }, { 2, { 3, 6 } }, { 3, { 2 } }, { 4, { 5, 6 } }, { 5, { 4 } }
+    };
+
+    REQUIRE(actual == expected);
+}
+
+TEST_CASE("Test getNextRelationship nested while-loop") {
+    const char STRUCTURED_STATEMENT[] = "procedure a {         "
+                                        "  while (1 == 1) {    " // 1
+                                        "    while (1==1) {    " // 2
+                                        "      a = 1;          " // 3
+                                        "      while (1 == 1) {" // 4
+                                        "        a = 1;        " // 5
+                                        "        a = 2;        " // 6
+                                        "      }"
+                                        "    }"
+                                        "    a = 1;            " // 7
+                                        "  }"
+                                        "}";
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    std::unordered_map<const TNode*, int> tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    std::unordered_map<int, std::unordered_set<int>> actual =
+    extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    std::unordered_map<int, std::unordered_set<int>> expected = { { 1, { 2 } }, { 2, { 3, 7 } },
+                                                                  { 3, { 4 } }, { 4, { 2, 5 } },
+                                                                  { 5, { 6 } }, { 6, { 4 } },
+                                                                  { 7, { 1 } } };
+
+    REQUIRE(actual == expected);
+}
+
+TEST_CASE("Test getNextRelationship two procedure") {
+    const char STRUCTURED_STATEMENT[] = "procedure a {         "
+                                        "  while (1 == 1) {    " // 1
+                                        "    while (1==1) {    " // 2
+                                        "      a = 1;          " // 3
+                                        "      while (1 == 1) {" // 4
+                                        "        a = 1;        " // 5
+                                        "        a = 2;        " // 6
+                                        "      }"
+                                        "    }"
+                                        "    a = 1;            " // 7
+                                        "  }"
+                                        "}"
+
+                                        "procedure b {         "
+                                        "  while (1 == 1) {    " // 8
+                                        "    while (1==1) {    " // 9
+                                        "      a = 1;          " // 10
+                                        "      while (1 == 1) {" // 11
+                                        "        a = 1;        " // 12
+                                        "        a = 2;        " // 13
+                                        "      }"
+                                        "    }"
+                                        "    a = 1;            " // 14
+                                        "  }"
+                                        "}";
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    std::unordered_map<const TNode*, int> tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    std::unordered_map<int, std::unordered_set<int>> actual =
+    extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    std::unordered_map<int, std::unordered_set<int>> expected = {
+        { 1, { 2 } },      { 2, { 3, 7 } }, { 3, { 4 } },   { 4, { 2, 5 } },   { 5, { 6 } },
+        { 6, { 4 } },      { 7, { 1 } },    { 8, { 9 } },   { 9, { 10, 14 } }, { 10, { 11 } },
+        { 11, { 9, 12 } }, { 12, { 13 } },  { 13, { 11 } }, { 14, { 8 } }
+    };
+
+    REQUIRE(actual == expected);
+}
+
+TEST_CASE("Test getNextRelationship alternate ") {
+    const char STRUCTURED_STATEMENT[] = "procedure a {            "
+                                        "  if (1==1) then {       " // 1
+                                        "    while (1==1) {       " // 2
+                                        "      if (1==1) then {   " // 3
+                                        "        while (1 == 1) { " // 4
+                                        "          a = 1;         " // 5
+                                        "        }"
+                                        "      } else {"
+                                        "        while (1 == 1) { " // 6
+                                        "          a = 1;         " // 7
+                                        "        }"
+                                        "      }"
+                                        "    }"
+                                        "  } else {"
+                                        "    a = 1;               " // 8
+                                        "  }"
+                                        "  a = 2;                 " // 9
+                                        "}";
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    std::unordered_map<const TNode*, int> tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    std::unordered_map<int, std::unordered_set<int>> actual =
+    extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    std::unordered_map<int, std::unordered_set<int>> expected = { { 1, { 2, 8 } }, { 2, { 3, 9 } },
+                                                                  { 3, { 4, 6 } }, { 4, { 5, 2 } },
+                                                                  { 5, { 4 } },    { 6, { 7, 2 } },
+                                                                  { 7, { 6 } },    { 8, { 9 } } };
+
+    REQUIRE(actual == expected);
+}
+
 } // namespace testextractor
 } // namespace backend

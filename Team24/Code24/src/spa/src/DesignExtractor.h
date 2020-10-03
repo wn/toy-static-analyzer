@@ -71,5 +71,12 @@ getPatternsMap(const std::vector<const TNode*>& assignTNodes,
 
 std::unordered_map<int, TNodeType>
 getStatementNumberToTNodeTypeMap(const std::unordered_map<int, const TNode*>& statementNumberToTNode);
+
+/**
+ * Get mapping of the possible statements that a statement can go next.
+ */
+std::unordered_map<int, std::unordered_set<int>>
+getNextRelationship(const std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNode,
+                    const std::unordered_map<const TNode*, int>& tNodeToStatementNumber);
 } // namespace extractor
 } // namespace backend
