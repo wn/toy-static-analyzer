@@ -55,6 +55,9 @@ class PKBImplementation : virtual public backend::PKB {
     VARIABLE_NAME_LIST getVariablesModifiedBy(STATEMENT_NUMBER s) const override;
     VARIABLE_NAME_LIST getVariablesModifiedBySomeStatement() const override;
 
+    PROCEDURE_NAME_SET getProcedureThatCalls(const VARIABLE_NAME& procedureName, bool isTransitive) const override;
+    PROCEDURE_NAME_SET getProceduresCalledBy(const VARIABLE_NAME& procedureName, bool isTransitive) const override;
+
     // Pattern
     STATEMENT_NUMBER_LIST
     getAllAssignmentStatementsThatMatch(const std::string& assignee, const std::string& pattern, bool isSubExpr) const override;
@@ -101,6 +104,12 @@ class PKBImplementation : virtual public backend::PKB {
 
     // Pattern helper:
     std::unordered_map<std::string, std::vector<std::tuple<std::string, STATEMENT_NUMBER, bool>>> patternsMap;
+
+    // Call helper:
+    // {key, values} of all procedures, where values are the procedures that is called by key.
+    std::unordered_map<std::string, std::unordered_set<std::string>> allProcedureNamesCalledBy;
+    // {key, values} of all procedures, where values are the procedures that calls the key.
+    std::unordered_map<std::string, std::unordered_set<std::string>> allProcedureNamesThatCalls;
 
     // Performance booster fields:
     std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash> tNodeTypeToTNodesMap;

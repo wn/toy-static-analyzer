@@ -10,10 +10,10 @@ typedef std::string VARIABLE_NAME;
 typedef std::vector<std::string> VARIABLE_NAME_LIST;
 typedef int STATEMENT_NUMBER;
 typedef std::vector<STATEMENT_NUMBER> STATEMENT_NUMBER_LIST;
-typedef std::set<std::string> PROCEDURE_NAME_SET;
-typedef std::set<std::string> VARIABLE_NAME_SET;
+typedef std::unordered_set<std::string> PROCEDURE_NAME_SET;
+typedef std::unordered_set<std::string> VARIABLE_NAME_SET;
 typedef std::unordered_set<std::string> CONSTANT_NAME_SET;
-typedef std::set<STATEMENT_NUMBER> STATEMENT_NUMBER_SET;
+typedef std::unordered_set<STATEMENT_NUMBER> STATEMENT_NUMBER_SET;
 
 namespace backend {
 class PKB {
@@ -143,6 +143,20 @@ class PKB {
     // Statement
     virtual VARIABLE_NAME_LIST getVariablesModifiedBy(STATEMENT_NUMBER s) const = 0;
     virtual VARIABLE_NAME_LIST getVariablesModifiedBySomeStatement() const = 0;
+
+    // -- CALLS -- */
+    // For any procedures p and q:
+    //    Calls (p, q) holds if procedure p directly calls q
+    //    Calls* (p, q) holds if procedure p directly or indirectly calls q , that is:
+    //        Calls (p, q) or
+    //        Calls (p, p1) and Calls* (p1, q) for some procedure p1
+
+    // all procedures that calls procedureName.
+    virtual PROCEDURE_NAME_SET
+    getProcedureThatCalls(const VARIABLE_NAME& procedureName, bool isTransitive) const = 0;
+    // get all procedures that are called by procedureName.
+    virtual PROCEDURE_NAME_SET
+    getProceduresCalledBy(const VARIABLE_NAME& procedureName, bool isTransitive) const = 0;
 
     /* -- Patterns -- */
     // Get all statements that matches the input pattern.

@@ -23,6 +23,10 @@ const char STRUCTURED_STATEMENT[] = "procedure MySpecialProc {"
 
                                     "some_var = 23 + another_var;"
                                     "}";
+template <typename T> std::vector<T> GetSortedVector(std::vector<T> v) {
+    sort(v.begin(), v.end());
+    return v;
+}
 
 TEST_CASE("Test getDirectFollow") {
     Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
@@ -303,7 +307,7 @@ TEST_CASE("Test getStatementsThatUse") {
     for (auto& p : testCases) {
         VARIABLE_NAME input = p.first;
         STATEMENT_NUMBER_LIST expected = p.second;
-        STATEMENT_NUMBER_LIST actual = pkb.getStatementsThatUse(input);
+        STATEMENT_NUMBER_LIST actual = GetSortedVector(pkb.getStatementsThatUse(input));
         REQUIRE(actual == expected);
     }
 }
@@ -313,7 +317,7 @@ TEST_CASE("Test getStatementsThatUseSomeVariable") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
     STATEMENT_NUMBER_LIST expected = { 1, 2, 3, 5, 6, 7 };
-    STATEMENT_NUMBER_LIST actual = pkb.getStatementsThatUseSomeVariable();
+    STATEMENT_NUMBER_LIST actual = GetSortedVector(pkb.getStatementsThatUseSomeVariable());
     REQUIRE(actual == expected);
 }
 
@@ -334,7 +338,7 @@ TEST_CASE("Test getProceduresThatUse") {
     for (auto& p : testCases) {
         VARIABLE_NAME input = p.first;
         PROCEDURE_NAME_LIST expected = p.second;
-        PROCEDURE_NAME_LIST actual = pkb.getProceduresThatUse(input);
+        PROCEDURE_NAME_LIST actual = GetSortedVector(pkb.getProceduresThatUse(input));
         REQUIRE(actual == expected);
     }
 }
@@ -344,7 +348,7 @@ TEST_CASE("Test getProceduresThatUseSomeVariable") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
     PROCEDURE_NAME_LIST expected = { "callee1", "main" };
-    PROCEDURE_NAME_LIST actual = pkb.getProceduresThatUseSomeVariable();
+    PROCEDURE_NAME_LIST actual = GetSortedVector(pkb.getProceduresThatUseSomeVariable());
     REQUIRE(actual == expected);
 }
 
@@ -361,7 +365,7 @@ TEST_CASE("Test getVariablesUsedIn Statement") {
     for (auto& p : testCases) {
         STATEMENT_NUMBER input = p.first;
         VARIABLE_NAME_LIST expected = p.second;
-        VARIABLE_NAME_LIST actual = pkb.getVariablesUsedIn(input);
+        VARIABLE_NAME_LIST actual = GetSortedVector(pkb.getVariablesUsedIn(input));
         REQUIRE(actual == expected);
     }
 }
@@ -371,7 +375,7 @@ TEST_CASE("Test getVariablesUsedBySomeProcedure") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
     VARIABLE_NAME_LIST expected = { "adidas", "newBalance", "nike", "yeezy" };
-    VARIABLE_NAME_LIST actual = pkb.getVariablesUsedBySomeProcedure();
+    VARIABLE_NAME_LIST actual = GetSortedVector(pkb.getVariablesUsedBySomeProcedure());
     REQUIRE(actual == expected);
 }
 
@@ -387,7 +391,7 @@ TEST_CASE("Test getVariablesUsedIn Procedure") {
     for (auto& p : testCases) {
         PROCEDURE_NAME input = p.first;
         VARIABLE_NAME_LIST expected = p.second;
-        VARIABLE_NAME_LIST actual = pkb.getVariablesUsedIn(input);
+        VARIABLE_NAME_LIST actual = GetSortedVector(pkb.getVariablesUsedIn(input));
         REQUIRE(actual == expected);
     }
 }
@@ -397,7 +401,7 @@ TEST_CASE("Test getVariablesUsedBySomeStatement") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
     VARIABLE_NAME_LIST expected = { "adidas", "newBalance", "nike", "yeezy" };
-    VARIABLE_NAME_LIST actual = pkb.getVariablesUsedBySomeStatement();
+    VARIABLE_NAME_LIST actual = GetSortedVector(pkb.getVariablesUsedBySomeStatement());
     REQUIRE(actual == expected);
 }
 
@@ -414,7 +418,7 @@ TEST_CASE("Test getStatementsThatModify") {
     for (auto& p : testCases) {
         VARIABLE_NAME input = p.first;
         STATEMENT_NUMBER_LIST expected = p.second;
-        STATEMENT_NUMBER_LIST actual = pkb.getStatementsThatModify(input);
+        STATEMENT_NUMBER_LIST actual = GetSortedVector(pkb.getStatementsThatModify(input));
         REQUIRE(actual == expected);
     }
 }
@@ -424,7 +428,7 @@ TEST_CASE("Test getStatementsThatModifySomeVariable") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
     STATEMENT_NUMBER_LIST expected = { 1, 2, 3, 4, 5, 6, 8 };
-    STATEMENT_NUMBER_LIST actual = pkb.getStatementsThatModifySomeVariable();
+    STATEMENT_NUMBER_LIST actual = GetSortedVector(pkb.getStatementsThatModifySomeVariable());
     REQUIRE(actual == expected);
 }
 
@@ -445,7 +449,7 @@ TEST_CASE("Test getProceduresThatModify") {
     for (auto& p : testCases) {
         VARIABLE_NAME input = p.first;
         PROCEDURE_NAME_LIST expected = p.second;
-        PROCEDURE_NAME_LIST actual = pkb.getProceduresThatModify(input);
+        PROCEDURE_NAME_LIST actual = GetSortedVector(pkb.getProceduresThatModify(input));
         REQUIRE(actual == expected);
     }
 }
@@ -455,7 +459,7 @@ TEST_CASE("Test getProceduresThatModifySomeVariable") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
     PROCEDURE_NAME_LIST expected = { "callee1", "callee2", "main" };
-    PROCEDURE_NAME_LIST actual = pkb.getProceduresThatModifySomeVariable();
+    PROCEDURE_NAME_LIST actual = GetSortedVector(pkb.getProceduresThatModifySomeVariable());
     REQUIRE(actual == expected);
 }
 
@@ -470,7 +474,7 @@ TEST_CASE("Test getVariablesModifiedBy Statement") {
     for (auto& p : testCases) {
         STATEMENT_NUMBER input = p.first;
         VARIABLE_NAME_LIST expected = p.second;
-        VARIABLE_NAME_LIST actual = pkb.getVariablesModifiedBy(input);
+        VARIABLE_NAME_LIST actual = GetSortedVector(pkb.getVariablesModifiedBy(input));
         REQUIRE(actual == expected);
     }
 }
@@ -480,7 +484,7 @@ TEST_CASE("Test getVariablesModifiedBySomeProcedure") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
     VARIABLE_NAME_LIST expected = { "armani", "gucci", "pasha" };
-    VARIABLE_NAME_LIST actual = pkb.getVariablesModifiedBySomeProcedure();
+    VARIABLE_NAME_LIST actual = GetSortedVector(pkb.getVariablesModifiedBySomeProcedure());
     REQUIRE(actual == expected);
 }
 
@@ -494,7 +498,7 @@ TEST_CASE("Test getVariablesModifiedBy Procedure") {
     for (auto& p : testCases) {
         PROCEDURE_NAME input = p.first;
         VARIABLE_NAME_LIST expected = p.second;
-        VARIABLE_NAME_LIST actual = pkb.getVariablesModifiedBy(input);
+        VARIABLE_NAME_LIST actual = GetSortedVector(pkb.getVariablesModifiedBy(input));
         REQUIRE(actual == expected);
     }
 }
@@ -504,7 +508,7 @@ TEST_CASE("Test getVariablesModifiedBySomeStatement") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
     VARIABLE_NAME_LIST expected = { "armani", "gucci", "pasha" };
-    VARIABLE_NAME_LIST actual = pkb.getVariablesModifiedBySomeStatement();
+    VARIABLE_NAME_LIST actual = GetSortedVector(pkb.getVariablesModifiedBySomeStatement());
     REQUIRE(actual == expected);
 }
 
@@ -558,13 +562,11 @@ TEST_CASE("Test getAllAssignmentStatementsThatMatch multiple assign") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
 
-    std::vector<int> actual1 = pkb.getAllAssignmentStatementsThatMatch("_", "q*r", true);
-    std::sort(actual1.begin(), actual1.end());
+    std::vector<int> actual1 = GetSortedVector(pkb.getAllAssignmentStatementsThatMatch("_", "q*r", true));
     std::vector<int> expected1 = { 1, 2, 3 };
     REQUIRE(actual1 == expected1);
 
-    std::vector<int> actual2 = pkb.getAllAssignmentStatementsThatMatch("x", "q*r", true);
-    std::sort(actual2.begin(), actual2.end());
+    std::vector<int> actual2 = GetSortedVector(pkb.getAllAssignmentStatementsThatMatch("x", "q*r", true));
     std::vector<int> expected2 = { 1, 2 };
     REQUIRE(actual2 == expected2);
 
@@ -588,8 +590,7 @@ TEST_CASE("Test getAllAssignmentStatementsThatMatch multiple assign") {
     std::vector<int> expected7 = { 3 };
     REQUIRE(actual7 == expected7);
 
-    std::vector<int> actual8 = pkb.getAllAssignmentStatementsThatMatch("_", "y", true);
-    std::sort(actual8.begin(), actual8.end());
+    std::vector<int> actual8 = GetSortedVector(pkb.getAllAssignmentStatementsThatMatch("_", "y", true));
     std::vector<int> expected8 = { 2, 3 };
     REQUIRE(actual8 == expected8);
 
@@ -611,8 +612,7 @@ TEST_CASE("Test getAllAssignmentStatementsThatMatch multiple assign") {
     std::vector<int> expected12 = { 3 };
     REQUIRE(actual12 == expected12);
 
-    std::vector<int> actual13 = pkb.getAllAssignmentStatementsThatMatch("x", "", true);
-    std::sort(actual13.begin(), actual13.end());
+    std::vector<int> actual13 = GetSortedVector(pkb.getAllAssignmentStatementsThatMatch("x", "", true));
     std::vector<int> expected13 = { 1, 2 };
     REQUIRE(actual13 == expected13);
 
@@ -633,7 +633,7 @@ TEST_CASE("Test getAllAssignmentStatementsThatMatch multiple assign") {
     std::vector<int> expected17 = {};
     REQUIRE(actual17 == expected17);
 
-    std::vector<int> actual18 = pkb.getAllAssignmentStatementsThatMatch("_", "", true);
+    std::vector<int> actual18 = GetSortedVector(pkb.getAllAssignmentStatementsThatMatch("_", "", true));
     std::vector<int> expected18 = { 1, 2, 3, 4 };
     REQUIRE(actual18 == expected18);
 }
@@ -809,6 +809,118 @@ TEST_CASE("Test getAllEntity") {
     std::unordered_set<std::string> expectedConstants = { "3", "1" };
     std::unordered_set<std::string> actualConstants = pkb.getAllConstants();
     REQUIRE(actualConstants == expectedConstants);
+}
+
+TEST_CASE("Test getProcedureThatCalls") {
+    const char STRUCTURED_STATEMENT[] = "procedure a {"
+                                        "call b;"
+                                        "call d;"
+                                        "}"
+
+                                        "procedure b {"
+                                        "call c;"
+                                        "call d;"
+                                        "}"
+
+                                        "procedure c {y = 1+1;}"
+                                        "procedure d {y = 1+1;}";
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    std::unordered_set<std::string> actualA = pkb.getProcedureThatCalls("a", false);
+    std::unordered_set<std::string> expectedA = {};
+    REQUIRE(actualA == expectedA);
+
+    std::unordered_set<std::string> actualB = pkb.getProcedureThatCalls("b", false);
+    std::unordered_set<std::string> expectedB = { "a" };
+    REQUIRE(actualB == expectedB);
+
+    std::unordered_set<std::string> actualC = pkb.getProcedureThatCalls("c", false);
+    std::unordered_set<std::string> expectedC = { "b" };
+    REQUIRE(actualC == expectedC);
+
+    std::unordered_set<std::string> actualD = pkb.getProcedureThatCalls("d", false);
+    std::unordered_set<std::string> expectedD = { "a", "b" };
+    REQUIRE(actualD == expectedD);
+
+    std::unordered_set<std::string> actualA_transitive = pkb.getProcedureThatCalls("a", true);
+    std::unordered_set<std::string> expectedA_transitive = {};
+    REQUIRE(actualA_transitive == expectedA_transitive);
+
+    std::unordered_set<std::string> actualB_transitive = pkb.getProcedureThatCalls("b", true);
+    std::unordered_set<std::string> expectedB_transitive = { "a" };
+    REQUIRE(actualB_transitive == expectedB_transitive);
+
+    std::unordered_set<std::string> actualC_transitive = pkb.getProcedureThatCalls("c", true);
+    std::unordered_set<std::string> expectedC_transitive = { "a", "b" };
+    REQUIRE(actualC_transitive == expectedC_transitive);
+
+    std::unordered_set<std::string> actualD_transitive = pkb.getProcedureThatCalls("d", true);
+    std::unordered_set<std::string> expectedD_transitive = { "a", "b" };
+    REQUIRE(actualD_transitive == expectedD_transitive);
+
+    std::unordered_set<std::string> actualE_transitive = pkb.getProcedureThatCalls("e", true);
+    std::unordered_set<std::string> expectedE_transitive = {};
+    REQUIRE(actualE_transitive == expectedE_transitive);
+}
+
+TEST_CASE("Test getProceduresCalledBy") {
+    const char STRUCTURED_STATEMENT[] = "procedure a {"
+                                        "call b;"
+                                        "call d;"
+                                        "}"
+
+                                        "procedure b {"
+                                        "call c;"
+                                        "call d;"
+                                        "}"
+
+                                        "procedure c {y = 1+1;}"
+                                        "procedure d {y = 1+1;}";
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    std::unordered_set<std::string> actualA = pkb.getProceduresCalledBy("a", false);
+    std::unordered_set<std::string> expectedA = { "b", "d" };
+    REQUIRE(actualA == expectedA);
+
+    std::unordered_set<std::string> actualB = pkb.getProceduresCalledBy("b", false);
+    std::unordered_set<std::string> expectedB = { "c", "d" };
+    REQUIRE(actualB == expectedB);
+
+    std::unordered_set<std::string> actualC = pkb.getProceduresCalledBy("c", false);
+    std::unordered_set<std::string> expectedC = {};
+    REQUIRE(actualC == expectedC);
+
+    std::unordered_set<std::string> actualD = pkb.getProceduresCalledBy("d", false);
+    std::unordered_set<std::string> expectedD = {};
+    REQUIRE(actualD == expectedD);
+
+    std::unordered_set<std::string> actualE = pkb.getProceduresCalledBy("e", false);
+    std::unordered_set<std::string> expectedE = {};
+    REQUIRE(actualE == expectedE);
+
+    std::unordered_set<std::string> actualA_transitive = pkb.getProceduresCalledBy("a", true);
+    std::unordered_set<std::string> expectedA_transitive = { "b", "c", "d" };
+    REQUIRE(actualA_transitive == expectedA_transitive);
+
+    std::unordered_set<std::string> actualB_transitive = pkb.getProceduresCalledBy("b", true);
+    std::unordered_set<std::string> expectedB_transitive = { "c", "d" };
+    REQUIRE(actualB_transitive == expectedB_transitive);
+
+    std::unordered_set<std::string> actualC_transitive = pkb.getProceduresCalledBy("c", true);
+    std::unordered_set<std::string> expectedC_transitive = {};
+    REQUIRE(actualC_transitive == expectedC_transitive);
+
+    std::unordered_set<std::string> actualD_transitive = pkb.getProceduresCalledBy("d", true);
+    std::unordered_set<std::string> expectedD_transitive = {};
+    REQUIRE(actualD_transitive == expectedD_transitive);
+
+    std::unordered_set<std::string> actualE_transitive = pkb.getProceduresCalledBy("e", true);
+    std::unordered_set<std::string> expectedE_transitive = {};
+    REQUIRE(actualE_transitive == expectedE_transitive);
 }
 } // namespace testpkb
 } // namespace backend

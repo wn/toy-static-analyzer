@@ -996,6 +996,13 @@ bool PKBMock::isAssign(STATEMENT_NUMBER s) const {
     }
     return false;
 }
+PROCEDURE_NAME_SET PKBMock::getProcedureThatCalls(const VARIABLE_NAME& procedureName, bool isTransitive) const {
+    return PROCEDURE_NAME_SET();
+}
+
+PROCEDURE_NAME_SET PKBMock::getProceduresCalledBy(const VARIABLE_NAME& procedureName, bool isTransitive) const {
+    return PROCEDURE_NAME_SET();
+}
 
 
 } // namespace qetest

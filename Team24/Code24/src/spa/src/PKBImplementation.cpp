@@ -29,6 +29,15 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
         allStatementsNumber.push_back(i.first);
     }
 
+    // Get mapping of all procedures that calls (allProcedureNamesThatCalls) and
+    // are called by (allProcedureNamesCalledBy) procedure:
+    for (const auto& procedure : extractor::getProcedureToCallees(tNodeTypeToTNodesMap)) {
+        for (auto node : procedure.second) {
+            allProcedureNamesThatCalls[procedure.first->name].insert(node->name);
+            allProcedureNamesCalledBy[node->name].insert(procedure.first->name);
+        }
+    }
+
     // Get all constants name:
     for (auto i : tNodeTypeToTNodesMap[Constant]) {
         allConstantsName.insert(i->constant);
@@ -454,4 +463,43 @@ bool PKBImplementation::isAssign(STATEMENT_NUMBER s) const {
     return it->second == Assign;
 }
 
+PROCEDURE_NAME_SET PKBImplementation::getProcedureThatCalls(const VARIABLE_NAME& procedureName,
+                                                            bool isTransitive) const {
+    std::unordered_set<std::string> visited;
+    std::vector<std::string> toVisit = { procedureName };
+    std::unordered_set<std::string> result;
+
+    while (!toVisit.empty()) {
+        auto it = allProcedureNamesCalledBy.find(toVisit.back());
+        toVisit.pop_back();
+        if (it == allProcedureNamesCalledBy.end()) {
+            continue;
+        }
+        result.insert(it->second.begin(), it->second.end());
+        if (isTransitive) {
+            toVisit.insert(toVisit.end(), it->second.begin(), it->second.end());
+        }
+    }
+    return result;
+}
+
+PROCEDURE_NAME_SET PKBImplementation::getProceduresCalledBy(const VARIABLE_NAME& procedureName,
+                                                            bool isTransitive) const {
+    std::unordered_set<std::string> visited;
+    std::vector<std::string> toVisit = { procedureName };
+    std::unordered_set<std::string> result;
+
+    while (!toVisit.empty()) {
+        auto it = allProcedureNamesThatCalls.find(toVisit.back());
+        toVisit.pop_back();
+        if (it == allProcedureNamesThatCalls.end()) {
+            continue;
+        }
+        result.insert(it->second.begin(), it->second.end());
+        if (isTransitive) {
+            toVisit.insert(toVisit.end(), it->second.begin(), it->second.end());
+        }
+    }
+    return result;
+}
 } // namespace backend
