@@ -142,7 +142,7 @@ TEST_CASE("Test getProcedureFromProcedureName maps properly") {
     REQUIRE(*extractor::getProcedureFromProcedureName("q", tNodeTypeToTNodes) == ast.children[1]);
 }
 
-TEST_CASE("Test getProcedureToCallers") {
+TEST_CASE("Test getProcedureToCallees") {
     const char program[] = "procedure p{call q;}"
                            "procedure q{call r; call s;}"
                            "procedure r{call s;}"
@@ -159,59 +159,28 @@ TEST_CASE("Test getProcedureToCallers") {
 
     auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
     REQUIRE(tNodeTypeToTNodes[TNodeType::Procedure].size() == 5);
-    auto procedureToCallers = extractor::getProcedureToCallers(tNodeTypeToTNodes);
+    auto procedureToCallees = extractor::getProcedureToCallees(tNodeTypeToTNodes);
 
-    // Only q, r and s are ever called.
-    REQUIRE(procedureToCallers.size() == 3);
+    // Every Procedure has an entry in the call graph
+    REQUIRE(procedureToCallees.size() == 5);
+    REQUIRE(procedureToCallees.find(p) != procedureToCallees.end());
+    REQUIRE(procedureToCallees.find(q) != procedureToCallees.end());
+    REQUIRE(procedureToCallees.find(r) != procedureToCallees.end());
+    REQUIRE(procedureToCallees.find(s) != procedureToCallees.end());
+    REQUIRE(procedureToCallees.find(t) != procedureToCallees.end());
 
-    // s is called by r and q
-    REQUIRE(procedureToCallers.find(s) != procedureToCallers.end());
-    auto callers = procedureToCallers.find(s)->second;
-    REQUIRE(callers.size() == 2);
-    REQUIRE(std::find(callers.begin(), callers.end(), r) != callers.end());
-    REQUIRE(std::find(callers.begin(), callers.end(), q) != callers.end());
+    std::unordered_set<const TNode*> expectedCallees = { q };
+    REQUIRE(procedureToCallees[p] == expectedCallees);
 
-    // r is called by q
-    REQUIRE(procedureToCallers.find(r) != procedureToCallers.end());
-    callers = procedureToCallers.find(r)->second;
-    REQUIRE(callers.size() == 1);
-    REQUIRE(std::find(callers.begin(), callers.end(), q) != callers.end());
+    expectedCallees = { r, s };
+    REQUIRE(procedureToCallees[q] == expectedCallees);
 
-    // q is called by p
-    REQUIRE(procedureToCallers.find(q) != procedureToCallers.end());
-    callers = procedureToCallers.find(q)->second;
-    REQUIRE(callers.size() == 1);
-    REQUIRE(std::find(callers.begin(), callers.end(), p) != callers.end());
-}
+    expectedCallees = { s };
+    REQUIRE(procedureToCallees[r] == expectedCallees);
 
-
-TEST_CASE("Test getTopologicalOrderingOfCalledByGraph") {
-    // We shuffle the procedures to ensure that their order of appearance in the program
-    // does not affect the topological order of their calls.
-    const char program[] = "procedure p{call q;}"
-                           "procedure s{x = 2;}"
-                           "procedure r{call s;}"
-                           "procedure q{call r; call s;}"
-                           "procedure t{y = 1;}";
-
-    Parser parser = testhelpers::GenerateParserFromTokens(program);
-    TNode ast(parser.parse());
-    const TNode* p = &ast.children[0];
-    const TNode* q = &ast.children[3];
-    const TNode* r = &ast.children[2];
-    const TNode* s = &ast.children[1];
-    const TNode* t = &ast.children[4];
-
-    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
-    auto procedureReverseTopologicalOrder = extractor::getTopologicalOrderingOfCalledByGraph(tNodeTypeToTNodes);
-    std::vector<const TNode*> expectedOrdering = {
-        s, // s is called by r, does not make any calls.
-        r, // r calls s
-        q, // q calls r and s
-        p, // p calls q, and indirectly calls q,r,s
-        t // We can place t anywhere in the topological call order as it never calls/gets called.
-    };
-    REQUIRE(procedureReverseTopologicalOrder == expectedOrdering);
+    expectedCallees = {};
+    REQUIRE(procedureToCallees[s] == expectedCallees);
+    REQUIRE(procedureToCallees[t] == expectedCallees);
 }
 
 TEST_CASE("Test getUsesMapping with a single procedure") {

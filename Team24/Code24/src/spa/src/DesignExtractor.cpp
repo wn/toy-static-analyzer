@@ -97,10 +97,10 @@ getStatementNumberToTNode(const std::unordered_map<const TNode*, int>& tNodeToSt
     return statementNumberToTNode;
 }
 
-const TNode*
-getProcedureFromProcedureName(const std::string& procedureName,
-                              std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes) {
-    for (auto tNode : tNodeTypeToTNodes[TNodeType::Procedure]) {
+const TNode* getProcedureFromProcedureName(
+const std::string& procedureName,
+const std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes) {
+    for (auto tNode : tNodeTypeToTNodes.at(TNodeType::Procedure)) {
         if (tNode->name == procedureName) {
             return tNode;
         }
@@ -108,18 +108,22 @@ getProcedureFromProcedureName(const std::string& procedureName,
     throw std::runtime_error("Error: Could not find procedure " + procedureName);
 }
 
-std::unordered_map<const TNode*, std::vector<const TNode*>>
-getProcedureToCallers(std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes) {
-    std::unordered_map<const TNode*, std::vector<const TNode*>> procedureToCallers;
-    logLine("getProcedureToCallers started");
-    for (const auto& callingProcedure : tNodeTypeToTNodes[TNodeType::Procedure]) {
-        logLine("getProcedureToCallers: Looking at procedure " + callingProcedure->toShortString());
+;
+std::unordered_map<const TNode*, std::unordered_set<const TNode*>>
+getProcedureToCallees(const std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes) {
+    std::unordered_map<const TNode*, std::unordered_set<const TNode*>> procedureToCallees;
+    logLine("getProcedureToCallees started");
+    for (const auto& callingProcedure : tNodeTypeToTNodes.at(TNodeType::Procedure)) {
+        logLine("getProcedureToCallees: Looking at procedure " + callingProcedure->toShortString());
+        // Initialize an entry
+        procedureToCallees[callingProcedure] = std::unordered_set<const TNode*>();
+
         // Get procedures called by this procedure
         std::vector<const TNode*> stack = { callingProcedure };
         while (!stack.empty()) {
             const TNode* tNode = stack.back();
             stack.pop_back();
-            logLine("getProcedureToCallers: Looking at tNode " + tNode->toShortString());
+            logLine("getProcedureToCallees: Looking at tNode " + tNode->toShortString());
 
             for (auto& child : tNode->children) {
                 stack.push_back(&child);
@@ -129,51 +133,19 @@ getProcedureToCallers(std::unordered_map<TNodeType, std::vector<const TNode*>, E
                 continue;
             }
 
-            logLine("getProcedureToCallers: Found call statement " + tNode->toShortString());
+            logLine("getProcedureToCallees: Found call statement " + tNode->toShortString());
             auto procedureName = tNode->children[0].name;
             auto calledProcedure = getProcedureFromProcedureName(procedureName, tNodeTypeToTNodes);
-            if (procedureToCallers.find(calledProcedure) == procedureToCallers.end()) {
-                logLine("getProcedureToCallers: Initializing empty list for called procedures" +
-                        calledProcedure->toShortString());
-                procedureToCallers[calledProcedure] = std::vector<const TNode*>();
-            }
-            logLine("getProcedureToCallers: Adding caller" + callingProcedure->toShortString() +
-                    " for " + calledProcedure->toShortString());
-            procedureToCallers[calledProcedure].push_back(callingProcedure);
+            logLine("getProcedureToCallees: Adding callee" + calledProcedure->toShortString() +
+                    " for " + callingProcedure->toShortString());
+            procedureToCallees[callingProcedure].insert(calledProcedure);
         }
     }
-    return procedureToCallers;
-}
-
-
-/**
- * A modified DFS is used to get a topological ordering of the "called-by" graph.
- * @param currentNode
- * @param procedureToCallers a mapping of procedure to procedures that call it.
- * @param topologicalOrderOfCalledByGraph the result vector to store the topological order in.
- * Note that we push_back into the vector, which means that it must be reversed to be a valid
- * topological ordering of the reverse cal graph.
- */
-void getTopologicalOrderingOfCalledByGraphHelper(
-const TNode* currentNode,
-const std::unordered_map<const TNode*, std::vector<const TNode*>>& procedureToCallers,
-std::vector<const TNode*>& topologicalOrderOfCalledByGraph) {
-    if (std::find(topologicalOrderOfCalledByGraph.begin(), topologicalOrderOfCalledByGraph.end(),
-                  currentNode) != topologicalOrderOfCalledByGraph.end()) {
-        return;
-    }
-    logLine("getTopologicalOrderingOfCalledByGraphHelper: visiting " + currentNode->toShortString());
-    if (procedureToCallers.find(currentNode) != procedureToCallers.end()) {
-        for (const auto& caller : procedureToCallers.find(currentNode)->second) {
-            getTopologicalOrderingOfCalledByGraphHelper(caller, procedureToCallers, topologicalOrderOfCalledByGraph);
-        }
-    }
-    logLine("getTopologicalOrderingOfCalledByGraphHelper: adding " + currentNode->toShortString() + " to topo order");
-    topologicalOrderOfCalledByGraph.push_back(currentNode);
+    return procedureToCallees;
 }
 
 bool cyclicCallExistsHelper(const TNode* currentNode,
-                            const std::unordered_map<const TNode*, std::vector<const TNode*>>& procedureToCallers,
+                            const std::unordered_map<const TNode*, std::unordered_set<const TNode*>>& procedureToCallees,
                             std::unordered_set<const TNode*>& currentlyVisiting) {
     if (currentlyVisiting.find(currentNode) != currentlyVisiting.end()) {
         logLine("cyclicCallExistsHelper: Cycle detected at " + currentNode->toShortString());
@@ -183,10 +155,10 @@ bool cyclicCallExistsHelper(const TNode* currentNode,
     logLine("cyclicCallExistsHelper: visiting " + currentNode->toShortString());
     currentlyVisiting.insert(currentNode);
     bool cyclicCallExists = false;
-    if (procedureToCallers.find(currentNode) != procedureToCallers.end()) {
-        for (const TNode* caller : procedureToCallers.find(currentNode)->second) {
+    if (procedureToCallees.find(currentNode) != procedureToCallees.end()) {
+        for (const TNode* callee : procedureToCallees.find(currentNode)->second) {
             cyclicCallExists =
-            cyclicCallExists || cyclicCallExistsHelper(caller, procedureToCallers, currentlyVisiting);
+            cyclicCallExists || cyclicCallExistsHelper(callee, procedureToCallees, currentlyVisiting);
         }
     }
     currentlyVisiting.erase(currentNode);
@@ -197,48 +169,41 @@ bool cyclicCallExistsHelper(const TNode* currentNode,
     return cyclicCallExists;
 }
 
-bool cyclicCallExists(const std::unordered_map<const TNode*, std::vector<const TNode*>>& procedureToCallers) {
-    for (auto& p : procedureToCallers) {
+bool cyclicCallExists(const std::unordered_map<const TNode*, std::unordered_set<const TNode*>>& procedureToCallees) {
+    for (auto& p : procedureToCallees) {
         const TNode* currentProcedure = p.first;
         std::unordered_set<const TNode*> visitedNodes;
-        if (cyclicCallExistsHelper(currentProcedure, procedureToCallers, visitedNodes)) {
+        if (cyclicCallExistsHelper(currentProcedure, procedureToCallees, visitedNodes)) {
             return true;
         }
     }
     return false;
 }
 
-std::vector<const TNode*> getTopologicalOrderingOfCalledByGraph(
-std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes) {
-    const std::unordered_map<const TNode*, std::vector<const TNode*>>& procedureToCallers =
-    getProcedureToCallers(tNodeTypeToTNodes);
-    std::vector<const TNode*> topologicalOrderResult;
-    for (const auto& procedure : tNodeTypeToTNodes[TNodeType::Procedure]) {
-        getTopologicalOrderingOfCalledByGraphHelper(procedure, procedureToCallers, topologicalOrderResult);
-    }
-    std::reverse(topologicalOrderResult.begin(), topologicalOrderResult.end());
-    return topologicalOrderResult;
-}
 
 /**
  * A DFS Helper that is used to compute the Uses mapping.
- * Prerequisite: any procedure(s) that currentNode calls must have been indexed, i.e. it must exist
- * in the usesMapping.
  * @param currentNode
  * @param tNodeTypeToTNodes
  * @param usesMapping a reference to the mapping, that will be updated with the Uses information for
  * the currentNode.
  */
 void getUsesMappingHelper(const TNode* currentNode,
-                          std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes,
+                          const std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes,
                           std::unordered_map<const TNode*, std::unordered_set<std::string>>& usesMapping) {
-    std::unordered_set<std::string> variablesUsedByCurrentTNode;
-
-    if (currentNode->type == TNodeType::Read) {
-        // Only in the case of a read statement, we don't want to accumulate the variable name
-        // since we modify it instead of using it.
+    logLine("Starting usesHelper for node " + currentNode->toString());
+    // The Uses information for this node was already computed.
+    if (usesMapping.find(currentNode) != usesMapping.end()) {
         return;
     }
+
+    // In the case of a read statement, we don't want to accumulate the variable name
+    // since we modify it instead of using it.
+    if (currentNode->type == TNodeType::Read) {
+        return;
+    }
+
+    std::unordered_set<std::string> variablesUsedByCurrentTNode;
 
     if (currentNode->type == TNodeType::Variable) {
         // Base case. We want to propagate the usage of a variable upwards.
@@ -261,10 +226,13 @@ void getUsesMappingHelper(const TNode* currentNode,
         // Retrieve the procedure name
         const TNode* procNameNode = &(currentNode->children[0]);
         auto calledProc = getProcedureFromProcedureName(procNameNode->name, tNodeTypeToTNodes);
-        // Index the variables used in this procedure, if any.
-        // We are guaranteed that getUsesMapping was run on this procedure, by the pre-requisite.
+
+        // Compute the Uses mapping of the called procedure.
+        getUsesMappingHelper(calledProc, tNodeTypeToTNodes, usesMapping);
+
+        // Index the variables used in the called procedure, if any, becuase
+        // this call statement uses all the variables used by the called procedure
         if (usesMapping.find(calledProc) != usesMapping.end()) {
-            // This call statement modifies all the variables modified by the called procedure
             variablesUsedByCurrentTNode.insert(usesMapping[calledProc].begin(),
                                                usesMapping[calledProc].end());
         } else {
@@ -285,16 +253,14 @@ void getUsesMappingHelper(const TNode* currentNode,
         "Current node " + currentNode->toShortString() +
         " has already been indexed, but every TNode should only be indexed once.");
     }
-    if (!variablesUsedByCurrentTNode.empty()) {
-        usesMapping[currentNode] = std::unordered_set<std::string>(variablesUsedByCurrentTNode.begin(),
-                                                                   variablesUsedByCurrentTNode.end());
-    }
+    usesMapping[currentNode] = std::unordered_set<std::string>(variablesUsedByCurrentTNode.begin(),
+                                                               variablesUsedByCurrentTNode.end());
 }
 
 std::unordered_map<const TNode*, std::unordered_set<std::string>>
 getUsesMapping(std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes) {
     std::unordered_map<const TNode*, std::unordered_set<std::string>> usesMapping;
-    for (const auto procedure : getTopologicalOrderingOfCalledByGraph(tNodeTypeToTNodes)) {
+    for (const TNode* procedure : tNodeTypeToTNodes[Procedure]) {
         logLine("Starting uses for proc " + procedure->toShortString());
         getUsesMappingHelper(procedure, tNodeTypeToTNodes, usesMapping);
     }
@@ -304,9 +270,15 @@ getUsesMapping(std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClas
     // information from their descendants, so that their ancestors can copy that information
     // too.
     std::vector<const TNode*> keysToDelete;
+
     std::set<TNodeType> validTypesForUses = { Assign, Print, IfElse, While, Call, Procedure };
     for (auto& p : usesMapping) {
+        // Some TNodes are added simply to propagate the Uses mappings upwwards, e.g.
+        // most expression nodes.
         if (validTypesForUses.find(p.first->type) == validTypesForUses.end()) {
+            keysToDelete.push_back(p.first);
+            // Visited TNodes with empty uses information should not be returned
+        } else if (p.second.empty()) {
             keysToDelete.push_back(p.first);
         }
     }
@@ -328,8 +300,12 @@ getUsesMapping(std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClas
  * information for the currentNode.
  */
 void getModifiesMappingHelper(const TNode* currentNode,
-                              std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes,
+                              const std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes,
                               std::unordered_map<const TNode*, std::unordered_set<std::string>>& modifiesMapping) {
+    if (modifiesMapping.find(currentNode) != modifiesMapping.end()) {
+        return;
+    }
+
     std::unordered_set<std::string> variablesModifiedByCurrentTNode;
 
     if (currentNode->type == TNodeType::Assign) {
@@ -344,10 +320,13 @@ void getModifiesMappingHelper(const TNode* currentNode,
         // Retrieve the procedure name
         const TNode* procNameNode = &(currentNode->children[0]);
         auto calledProc = getProcedureFromProcedureName(procNameNode->name, tNodeTypeToTNodes);
-        // Index the variables modified in this procedure, if any.
-        // We are guaranteed that getModifiesMapping was run on this procedure, by the pre-requisite.
+
+        // Compute the Modifies mapping of the called procedure.
+        getModifiesMappingHelper(calledProc, tNodeTypeToTNodes, modifiesMapping);
+
+        // Index the variables modified in this procedure, if any, because
+        // this call statement modifies all the variables modified by the called procedure.
         if (modifiesMapping.find(calledProc) != modifiesMapping.end()) {
-            // This call statement modifies all the variables modified by the called procedure
             variablesModifiedByCurrentTNode.insert(modifiesMapping[calledProc].begin(),
                                                    modifiesMapping[calledProc].end());
         } else {
@@ -370,17 +349,13 @@ void getModifiesMappingHelper(const TNode* currentNode,
         " has already been indexed, but every TNode should only be indexed once.");
     }
 
-    if (!variablesModifiedByCurrentTNode.empty()) {
-        modifiesMapping[currentNode] =
-        std::unordered_set<std::string>(variablesModifiedByCurrentTNode.begin(),
-                                        variablesModifiedByCurrentTNode.end());
-    }
+    modifiesMapping[currentNode] = variablesModifiedByCurrentTNode;
 }
 
 std::unordered_map<const TNode*, std::unordered_set<std::string>>
 getModifiesMapping(std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes) {
     std::unordered_map<const TNode*, std::unordered_set<std::string>> modifiesMapping;
-    for (const auto procedure : getTopologicalOrderingOfCalledByGraph(tNodeTypeToTNodes)) {
+    for (const auto procedure : tNodeTypeToTNodes[Procedure]) {
         logLine("Starting modifies for proc " + procedure->toShortString());
         getModifiesMappingHelper(procedure, tNodeTypeToTNodes, modifiesMapping);
     }
@@ -392,7 +367,7 @@ getModifiesMapping(std::unordered_map<TNodeType, std::vector<const TNode*>, Enum
     std::vector<const TNode*> keysToDelete;
     std::set<TNodeType> validTypesForModifies = { Assign, Read, IfElse, While, Call, Procedure };
     for (auto& p : modifiesMapping) {
-        if (validTypesForModifies.find(p.first->type) == validTypesForModifies.end()) {
+        if (validTypesForModifies.find(p.first->type) == validTypesForModifies.end() || p.second.empty()) {
             keysToDelete.push_back(p.first);
         }
     }
@@ -590,8 +565,8 @@ bool isValidSimpleProgram(const TNode& ast) {
     // Cyclic calls are not allowed.
     // For example, procedure A calls procedure B, procedure B calls C, and C calls A
     // should not be accepted in a correct SIMPLE code.
-    auto procedureToCallers = getProcedureToCallers(tNodeTypeToTNodes);
-    if (cyclicCallExists(procedureToCallers)) {
+    auto procedureToCallees = getProcedureToCallees(tNodeTypeToTNodes);
+    if (cyclicCallExists(procedureToCallees)) {
         return false;
     }
 
