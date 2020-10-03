@@ -77,6 +77,8 @@ std::vector<std::pair<TokenType, std::string>> rules = { { LBRACE, "^(\\{)" },
                                                          { WHITESPACE, "^(\\s+)" } };
 
 
+// Splits input into lines. getline has the added benefit of dealing with
+// platform-specific newline interpretations.
 std::vector<std::string> splitLines(std::istream& stream) {
     std::vector<std::string> result;
     std::string line;
@@ -116,12 +118,7 @@ std::vector<Token> tokenize(std::istream& stream, bool willLexWithWhitespace) {
                         }
                     }
 
-                    // If we have a whitespace before the current whitespace,
-                    if (t.type == WHITESPACE && !result.empty() && result.back().type == WHITESPACE) {
-                        // don't push
-                    } else {
-                        result.push_back(t);
-                    }
+                    result.push_back(t);
 
                     if (DEBUG) {
                         std::cout << prettyPrintType(p.first) << "<" << t.line << ", " << t.linePosition << ">";
@@ -145,15 +142,27 @@ std::vector<Token> tokenize(std::istream& stream, bool willLexWithWhitespace) {
             }
         }
 
+        // Feed a newline token at the end of every (non-last) line.
         if (lineNumber != lines.size()) {
             Token newLine(WHITESPACE);
             newLine.line = lineNumber;
-            if (!result.empty() && result.back().type != WHITESPACE) {
-                result.push_back(newLine);
-            }
+            result.push_back(newLine);
         }
     }
 
+    // Compress whitespaces together. For e.g. " \n " will be stored as 3 consecutive whitespaces.
+    std::vector<Token> resultWithoutConsecutiveWhitespace;
+    for (Token& token : result) {
+        if (token.type != TokenType::WHITESPACE) {
+            resultWithoutConsecutiveWhitespace.push_back(token);
+        } else if (!resultWithoutConsecutiveWhitespace.empty() &&
+                   resultWithoutConsecutiveWhitespace.back().type != TokenType::WHITESPACE) {
+            resultWithoutConsecutiveWhitespace.push_back(token);
+        }
+    }
+    result = resultWithoutConsecutiveWhitespace;
+
+    // Early return if we want to return whitespace
     if (willLexWithWhitespace) {
         return result;
     }
