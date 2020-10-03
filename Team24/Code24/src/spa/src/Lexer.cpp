@@ -95,7 +95,7 @@ std::vector<Token> tokenize(std::istream& stream, bool willLexWithWhitespace) {
     int lineNumber = 1;
     std::vector<std::string> lines = splitLines(stream);
 
-    for (; lineNumber <= lines.size(); lineNumber++) {
+    for (; lineNumber <= static_cast<int>(lines.size()); lineNumber++) {
         std::string line = lines[lineNumber - 1];
         std::string originalLine = line.substr();
         while (!line.empty()) {
