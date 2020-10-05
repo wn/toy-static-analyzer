@@ -158,6 +158,19 @@ class PKB {
     virtual PROCEDURE_NAME_SET
     getProceduresCalledBy(const VARIABLE_NAME& procedureName, bool isTransitive) const = 0;
 
+    // -- NEXTS -- */
+    // For two program lines n1 and n2 in the same procedure:
+    //
+    //    Next (n1, n2) holds if n2 can be executed immediately after n1 in some execution sequence
+    //    Next* (n1, n2) holds if n2 can be executed after n1 in some execution sequence
+
+    // all possible next statements that `statementNumber` can go to.
+    virtual STATEMENT_NUMBER_SET
+    getNextStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const = 0;
+    // list of all statement numbers that goes to `statementNumber`
+    virtual STATEMENT_NUMBER_SET
+    getPreviousStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const = 0;
+
     /* -- Patterns -- */
     // Get all statements that matches the input pattern.
     // Example:

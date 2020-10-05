@@ -78,5 +78,11 @@ getStatementNumberToTNodeTypeMap(const std::unordered_map<int, const TNode*>& st
 std::unordered_map<int, std::unordered_set<int>>
 getNextRelationship(const std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNode,
                     const std::unordered_map<const TNode*, int>& tNodeToStatementNumber);
+
+/**
+ * Get mapping of the possible statements that goes to a statement.
+ */
+std::unordered_map<int, std::unordered_set<int>>
+getPreviousRelationship(const std::unordered_map<int, std::unordered_set<int>>& nextRelationship);
 } // namespace extractor
 } // namespace backend

@@ -922,5 +922,219 @@ TEST_CASE("Test getProceduresCalledBy") {
     std::unordered_set<std::string> expectedE_transitive = {};
     REQUIRE(actualE_transitive == expectedE_transitive);
 }
+
+TEST_CASE("Test getNextStatementOf") {
+    const char STRUCTURED_STATEMENT[] = "procedure a {         "
+                                        "  while (1 == 1) {    " // 1
+                                        "    while (1==1) {    " // 2
+                                        "      a = 1;          " // 3
+                                        "      while (1 == 1) {" // 4
+                                        "        a = 1;        " // 5
+                                        "        a = 2;        " // 6
+                                        "      }"
+                                        "    }"
+                                        "    a = 1;            " // 7
+                                        "  }"
+                                        "  call b;             " // 8
+                                        "}"
+                                        ""
+                                        "procedure b {         "
+                                        "  a = 1;              " // 9
+                                        "  b = 2;              " // 10
+                                        "}";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    // TEST TRANSITIVE
+    STATEMENT_NUMBER_SET actual_transitive_1 = pkb.getNextStatementOf(1, true);
+    STATEMENT_NUMBER_SET expected_transitive_1 = { 1, 2, 3, 4, 5, 6, 7, 8 };
+    REQUIRE(actual_transitive_1 == expected_transitive_1);
+
+    STATEMENT_NUMBER_SET actual_transitive_2 = pkb.getNextStatementOf(2, true);
+    STATEMENT_NUMBER_SET expected_transitive_2 = { 1, 2, 3, 4, 5, 6, 7, 8 };
+    REQUIRE(actual_transitive_2 == expected_transitive_2);
+
+    STATEMENT_NUMBER_SET actual_transitive_3 = pkb.getNextStatementOf(3, true);
+    STATEMENT_NUMBER_SET expected_transitive_3 = { 1, 2, 3, 4, 5, 6, 7, 8 };
+    REQUIRE(actual_transitive_3 == expected_transitive_3);
+
+    STATEMENT_NUMBER_SET actual_transitive_4 = pkb.getNextStatementOf(4, true);
+    STATEMENT_NUMBER_SET expected_transitive_4 = { 1, 2, 3, 4, 5, 6, 7, 8 };
+    REQUIRE(actual_transitive_4 == expected_transitive_4);
+
+    STATEMENT_NUMBER_SET actual_transitive_5 = pkb.getNextStatementOf(5, true);
+    STATEMENT_NUMBER_SET expected_transitive_5 = { 1, 2, 3, 4, 5, 6, 7, 8 };
+    REQUIRE(actual_transitive_5 == expected_transitive_5);
+
+    STATEMENT_NUMBER_SET actual_transitive_6 = pkb.getNextStatementOf(6, true);
+    STATEMENT_NUMBER_SET expected_transitive_6 = { 1, 2, 3, 4, 5, 6, 7, 8 };
+    REQUIRE(actual_transitive_6 == expected_transitive_6);
+
+    STATEMENT_NUMBER_SET actual_transitive_7 = pkb.getNextStatementOf(7, true);
+    STATEMENT_NUMBER_SET expected_transitive_7 = { 1, 2, 3, 4, 5, 6, 7, 8 };
+    REQUIRE(actual_transitive_7 == expected_transitive_7);
+
+    STATEMENT_NUMBER_SET actual_transitive_8 = pkb.getNextStatementOf(8, true);
+    STATEMENT_NUMBER_SET expected_transitive_8 = {};
+    REQUIRE(actual_transitive_8 == expected_transitive_8);
+
+    STATEMENT_NUMBER_SET actual_transitive_9 = pkb.getNextStatementOf(9, true);
+    STATEMENT_NUMBER_SET expected_transitive_9 = { 10 };
+    REQUIRE(actual_transitive_9 == expected_transitive_9);
+
+    STATEMENT_NUMBER_SET actual_transitive_10 = pkb.getNextStatementOf(10, true);
+    STATEMENT_NUMBER_SET expected_transitive_10 = {};
+    REQUIRE(actual_transitive_10 == expected_transitive_10);
+
+    // TEST NON-TRANSITIVE
+    STATEMENT_NUMBER_SET actual_non_transitive_1 = pkb.getNextStatementOf(1, false);
+    STATEMENT_NUMBER_SET expected_non_transitive_1 = { 2, 8 };
+    REQUIRE(actual_non_transitive_1 == expected_non_transitive_1);
+
+    STATEMENT_NUMBER_SET actual_non_transitive_2 = pkb.getNextStatementOf(2, false);
+    STATEMENT_NUMBER_SET expected_non_transitive_2 = { 3, 7 };
+    REQUIRE(actual_non_transitive_2 == expected_non_transitive_2);
+
+    STATEMENT_NUMBER_SET actual_non_transitive_3 = pkb.getNextStatementOf(3, false);
+    STATEMENT_NUMBER_SET expected_non_transitive_3 = { 4 };
+    REQUIRE(actual_non_transitive_3 == expected_non_transitive_3);
+
+    STATEMENT_NUMBER_SET actual_non_transitive_4 = pkb.getNextStatementOf(4, false);
+    STATEMENT_NUMBER_SET expected_non_transitive_4 = { 2, 5 };
+    REQUIRE(actual_non_transitive_4 == expected_non_transitive_4);
+
+    STATEMENT_NUMBER_SET actual_non_transitive_5 = pkb.getNextStatementOf(5, false);
+    STATEMENT_NUMBER_SET expected_non_transitive_5 = { 6 };
+    REQUIRE(actual_non_transitive_5 == expected_non_transitive_5);
+
+    STATEMENT_NUMBER_SET actual_non_transitive_6 = pkb.getNextStatementOf(6, false);
+    STATEMENT_NUMBER_SET expected_non_transitive_6 = { 4 };
+    REQUIRE(actual_non_transitive_6 == expected_non_transitive_6);
+
+    STATEMENT_NUMBER_SET actual_non_transitive_7 = pkb.getNextStatementOf(7, false);
+    STATEMENT_NUMBER_SET expected_non_transitive_7 = { 1 };
+    REQUIRE(actual_non_transitive_7 == expected_non_transitive_7);
+
+    STATEMENT_NUMBER_SET actual_non_transitive_8 = pkb.getNextStatementOf(8, false);
+    STATEMENT_NUMBER_SET expected_non_transitive_8 = {};
+    REQUIRE(actual_non_transitive_8 == expected_non_transitive_8);
+
+    STATEMENT_NUMBER_SET actual_non_transitive_9 = pkb.getNextStatementOf(9, false);
+    STATEMENT_NUMBER_SET expected_non_transitive_9 = { 10 };
+    REQUIRE(actual_non_transitive_9 == expected_non_transitive_9);
+
+    STATEMENT_NUMBER_SET actual_non_transitive_10 = pkb.getNextStatementOf(10, false);
+    STATEMENT_NUMBER_SET expected_non_transitive_10 = {};
+    REQUIRE(actual_non_transitive_10 == expected_non_transitive_10);
+}
+
+TEST_CASE("Test getPreviousStatementOf") {
+    const char STRUCTURED_STATEMENT[] = "procedure a {         "
+                                        "  while (1 == 1) {    " // 1
+                                        "    while (1==1) {    " // 2
+                                        "      a = 1;          " // 3
+                                        "      while (1 == 1) {" // 4
+                                        "        a = 1;        " // 5
+                                        "        a = 2;        " // 6
+                                        "      }"
+                                        "    }"
+                                        "    a = 1;            " // 7
+                                        "  }"
+                                        "  call b;             " // 8
+                                        "}"
+                                        ""
+                                        "procedure b {         "
+                                        "  a = 1;              " // 9
+                                        "  b = 2;              " // 10
+                                        "}";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    // TEST TRANSITIVE
+    STATEMENT_NUMBER_SET actual_transitive_1 = pkb.getPreviousStatementOf(1, true);
+    STATEMENT_NUMBER_SET expected_transitive_1 = { 1, 2, 3, 4, 5, 6, 7 };
+    REQUIRE(actual_transitive_1 == expected_transitive_1);
+
+    STATEMENT_NUMBER_SET actual_transitive_2 = pkb.getPreviousStatementOf(2, true);
+    STATEMENT_NUMBER_SET expected_transitive_2 = { 1, 2, 3, 4, 5, 6, 7 };
+    REQUIRE(actual_transitive_2 == expected_transitive_2);
+
+    STATEMENT_NUMBER_SET actual_transitive_3 = pkb.getPreviousStatementOf(3, true);
+    STATEMENT_NUMBER_SET expected_transitive_3 = { 1, 2, 3, 4, 5, 6, 7 };
+    REQUIRE(actual_transitive_3 == expected_transitive_3);
+
+    STATEMENT_NUMBER_SET actual_transitive_4 = pkb.getPreviousStatementOf(4, true);
+    STATEMENT_NUMBER_SET expected_transitive_4 = { 1, 2, 3, 4, 5, 6, 7 };
+    REQUIRE(actual_transitive_4 == expected_transitive_4);
+
+    STATEMENT_NUMBER_SET actual_transitive_5 = pkb.getPreviousStatementOf(5, true);
+    STATEMENT_NUMBER_SET expected_transitive_5 = { 1, 2, 3, 4, 5, 6, 7 };
+    REQUIRE(actual_transitive_5 == expected_transitive_5);
+
+    STATEMENT_NUMBER_SET actual_transitive_6 = pkb.getPreviousStatementOf(6, true);
+    STATEMENT_NUMBER_SET expected_transitive_6 = { 1, 2, 3, 4, 5, 6, 7 };
+    REQUIRE(actual_transitive_6 == expected_transitive_6);
+
+    STATEMENT_NUMBER_SET actual_transitive_7 = pkb.getPreviousStatementOf(7, true);
+    STATEMENT_NUMBER_SET expected_transitive_7 = { 1, 2, 3, 4, 5, 6, 7 };
+    REQUIRE(actual_transitive_7 == expected_transitive_7);
+
+    STATEMENT_NUMBER_SET actual_transitive_8 = pkb.getPreviousStatementOf(8, true);
+    STATEMENT_NUMBER_SET expected_transitive_8 = { 1, 2, 3, 4, 5, 6, 7 };
+    REQUIRE(actual_transitive_8 == expected_transitive_8);
+
+    STATEMENT_NUMBER_SET actual_transitive_9 = pkb.getPreviousStatementOf(9, true);
+    STATEMENT_NUMBER_SET expected_transitive_9 = {};
+    REQUIRE(actual_transitive_9 == expected_transitive_9);
+
+    STATEMENT_NUMBER_SET actual_transitive_10 = pkb.getPreviousStatementOf(10, true);
+    STATEMENT_NUMBER_SET expected_transitive_10 = { 9 };
+    REQUIRE(actual_transitive_10 == expected_transitive_10);
+
+    // TEST NON-TRANSITIVE
+    STATEMENT_NUMBER_SET actual_non_transitive_1 = pkb.getPreviousStatementOf(1, false);
+    STATEMENT_NUMBER_SET expected_non_transitive_1 = { 7 };
+    REQUIRE(actual_non_transitive_1 == expected_non_transitive_1);
+
+    STATEMENT_NUMBER_SET actual_non_transitive_2 = pkb.getPreviousStatementOf(2, false);
+    STATEMENT_NUMBER_SET expected_non_transitive_2 = { 1, 4 };
+    REQUIRE(actual_non_transitive_2 == expected_non_transitive_2);
+
+    STATEMENT_NUMBER_SET actual_non_transitive_3 = pkb.getPreviousStatementOf(3, false);
+    STATEMENT_NUMBER_SET expected_non_transitive_3 = { 2 };
+    REQUIRE(actual_non_transitive_3 == expected_non_transitive_3);
+
+    STATEMENT_NUMBER_SET actual_non_transitive_4 = pkb.getPreviousStatementOf(4, false);
+    STATEMENT_NUMBER_SET expected_non_transitive_4 = { 3, 6 };
+    REQUIRE(actual_non_transitive_4 == expected_non_transitive_4);
+
+    STATEMENT_NUMBER_SET actual_non_transitive_5 = pkb.getPreviousStatementOf(5, false);
+    STATEMENT_NUMBER_SET expected_non_transitive_5 = { 4 };
+    REQUIRE(actual_non_transitive_5 == expected_non_transitive_5);
+
+    STATEMENT_NUMBER_SET actual_non_transitive_6 = pkb.getPreviousStatementOf(6, false);
+    STATEMENT_NUMBER_SET expected_non_transitive_6 = { 5 };
+    REQUIRE(actual_non_transitive_6 == expected_non_transitive_6);
+
+    STATEMENT_NUMBER_SET actual_non_transitive_7 = pkb.getPreviousStatementOf(7, false);
+    STATEMENT_NUMBER_SET expected_non_transitive_7 = { 2 };
+    REQUIRE(actual_non_transitive_7 == expected_non_transitive_7);
+
+    STATEMENT_NUMBER_SET actual_non_transitive_8 = pkb.getPreviousStatementOf(8, false);
+    STATEMENT_NUMBER_SET expected_non_transitive_8 = { 1 };
+    REQUIRE(actual_non_transitive_8 == expected_non_transitive_8);
+
+    STATEMENT_NUMBER_SET actual_non_transitive_9 = pkb.getPreviousStatementOf(9, false);
+    STATEMENT_NUMBER_SET expected_non_transitive_9 = {};
+    REQUIRE(actual_non_transitive_9 == expected_non_transitive_9);
+
+    STATEMENT_NUMBER_SET actual_non_transitive_10 = pkb.getPreviousStatementOf(10, false);
+    STATEMENT_NUMBER_SET expected_non_transitive_10 = { 9 };
+    REQUIRE(actual_non_transitive_10 == expected_non_transitive_10);
+}
 } // namespace testpkb
 } // namespace backend

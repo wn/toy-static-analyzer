@@ -58,6 +58,9 @@ class PKBImplementation : virtual public backend::PKB {
     PROCEDURE_NAME_SET getProcedureThatCalls(const VARIABLE_NAME& procedureName, bool isTransitive) const override;
     PROCEDURE_NAME_SET getProceduresCalledBy(const VARIABLE_NAME& procedureName, bool isTransitive) const override;
 
+    STATEMENT_NUMBER_SET getNextStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const override;
+    STATEMENT_NUMBER_SET getPreviousStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const override;
+
     // Pattern
     STATEMENT_NUMBER_LIST
     getAllAssignmentStatementsThatMatch(const std::string& assignee, const std::string& pattern, bool isSubExpr) const override;
@@ -110,6 +113,10 @@ class PKBImplementation : virtual public backend::PKB {
     std::unordered_map<std::string, std::unordered_set<std::string>> allProcedureNamesCalledBy;
     // {key, values} of all procedures, where values are the procedures that calls the key.
     std::unordered_map<std::string, std::unordered_set<std::string>> allProcedureNamesThatCalls;
+
+    // Next helper:
+    std::unordered_map<STATEMENT_NUMBER, std::unordered_set<STATEMENT_NUMBER>> nextRelationship;
+    std::unordered_map<STATEMENT_NUMBER, std::unordered_set<STATEMENT_NUMBER>> previousRelationship;
 
     // Performance booster fields:
     std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash> tNodeTypeToTNodesMap;

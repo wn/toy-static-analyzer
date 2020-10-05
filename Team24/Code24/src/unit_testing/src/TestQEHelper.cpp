@@ -1004,6 +1004,14 @@ PROCEDURE_NAME_SET PKBMock::getProceduresCalledBy(const VARIABLE_NAME& procedure
     return PROCEDURE_NAME_SET();
 }
 
+STATEMENT_NUMBER_SET PKBMock::getNextStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const {
+    return STATEMENT_NUMBER_SET();
+}
+
+STATEMENT_NUMBER_SET PKBMock::getPreviousStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const {
+    return STATEMENT_NUMBER_SET();
+}
+
 
 } // namespace qetest
 } // namespace qpbackend

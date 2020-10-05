@@ -10,6 +10,41 @@
 
 namespace backend {
 
+template <typename T>
+std::unordered_set<T>
+getVisitedInDFS(const T& start, const std::unordered_map<T, std::unordered_set<T>>& graph, bool isTransitive) {
+    auto it = graph.find(start);
+    if (it == graph.end()) {
+        return {};
+    }
+    const std::unordered_set<T>& nextHops = it->second;
+
+    if (!isTransitive) {
+        return nextHops;
+    }
+
+    std::unordered_set<T> visited;
+    std::vector<T> toVisit;
+    for (const T& elem : nextHops) {
+        toVisit.push_back(elem);
+    }
+
+    while (!toVisit.empty()) {
+        T visiting = toVisit.back();
+        toVisit.pop_back();
+        if (visited.find(visiting) != visited.end()) {
+            continue;
+        }
+        visited.insert(visiting);
+        auto it = graph.find(visiting);
+        if (it == graph.end()) {
+            continue;
+        }
+        toVisit.insert(toVisit.end(), it->second.begin(), it->second.end());
+    }
+    return visited;
+}
+
 PKBImplementation::PKBImplementation(const TNode& ast) {
     logWord("PKB starting with ast");
     logLine(ast.toString());
@@ -33,8 +68,8 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
     // are called by (allProcedureNamesCalledBy) procedure:
     for (const auto& procedure : extractor::getProcedureToCallees(tNodeTypeToTNodesMap)) {
         for (auto node : procedure.second) {
-            allProcedureNamesThatCalls[procedure.first->name].insert(node->name);
-            allProcedureNamesCalledBy[node->name].insert(procedure.first->name);
+            allProcedureNamesCalledBy[procedure.first->name].insert(node->name);
+            allProcedureNamesThatCalls[node->name].insert(procedure.first->name);
         }
     }
 
@@ -75,6 +110,10 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
     std::tie(childrenParentRelation, parentChildrenRelation) = extractor::getParentRelationship(ast);
     allStatementsThatHaveAncestors = extractor::getKeysInMap(childrenParentRelation);
     allStatementsThatHaveDescendants = extractor::getKeysInMap(parentChildrenRelation);
+
+    // next
+    nextRelationship = extractor::getNextRelationship(tNodeTypeToTNodesMap, tNodeToStatementNumber);
+    previousRelationship = extractor::getPreviousRelationship(nextRelationship);
 
     // Pattern
     patternsMap = extractor::getPatternsMap(tNodeTypeToTNodesMap[Assign], tNodeToStatementNumber);
@@ -465,41 +504,21 @@ bool PKBImplementation::isAssign(STATEMENT_NUMBER s) const {
 
 PROCEDURE_NAME_SET PKBImplementation::getProcedureThatCalls(const VARIABLE_NAME& procedureName,
                                                             bool isTransitive) const {
-    std::unordered_set<std::string> visited;
-    std::vector<std::string> toVisit = { procedureName };
-    std::unordered_set<std::string> result;
-
-    while (!toVisit.empty()) {
-        auto it = allProcedureNamesCalledBy.find(toVisit.back());
-        toVisit.pop_back();
-        if (it == allProcedureNamesCalledBy.end()) {
-            continue;
-        }
-        result.insert(it->second.begin(), it->second.end());
-        if (isTransitive) {
-            toVisit.insert(toVisit.end(), it->second.begin(), it->second.end());
-        }
-    }
-    return result;
+    return getVisitedInDFS(procedureName, allProcedureNamesThatCalls, isTransitive);
 }
 
 PROCEDURE_NAME_SET PKBImplementation::getProceduresCalledBy(const VARIABLE_NAME& procedureName,
                                                             bool isTransitive) const {
-    std::unordered_set<std::string> visited;
-    std::vector<std::string> toVisit = { procedureName };
-    std::unordered_set<std::string> result;
+    return getVisitedInDFS(procedureName, allProcedureNamesCalledBy, isTransitive);
+}
 
-    while (!toVisit.empty()) {
-        auto it = allProcedureNamesThatCalls.find(toVisit.back());
-        toVisit.pop_back();
-        if (it == allProcedureNamesThatCalls.end()) {
-            continue;
-        }
-        result.insert(it->second.begin(), it->second.end());
-        if (isTransitive) {
-            toVisit.insert(toVisit.end(), it->second.begin(), it->second.end());
-        }
-    }
-    return result;
+STATEMENT_NUMBER_SET
+PKBImplementation::getNextStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const {
+    return getVisitedInDFS(statementNumber, nextRelationship, isTransitive);
+}
+
+STATEMENT_NUMBER_SET PKBImplementation::getPreviousStatementOf(STATEMENT_NUMBER statementNumber,
+                                                               bool isTransitive) const {
+    return getVisitedInDFS(statementNumber, previousRelationship, isTransitive);
 }
 } // namespace backend

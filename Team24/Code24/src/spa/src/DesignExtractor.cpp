@@ -662,5 +662,16 @@ getNextRelationship(const std::unordered_map<TNodeType, std::vector<const TNode*
 
     return result;
 }
+
+std::unordered_map<int, std::unordered_set<int>>
+getPreviousRelationship(const std::unordered_map<int, std::unordered_set<int>>& nextRelationship) {
+    std::unordered_map<int, std::unordered_set<int>> result;
+    for (const auto& nextPair : nextRelationship) {
+        for (int goTo : nextPair.second) {
+            result[goTo].insert(nextPair.first);
+        }
+    }
+    return result;
+}
 } // namespace extractor
 } // namespace backend
