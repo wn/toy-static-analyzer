@@ -24,8 +24,8 @@ bool checkIfVectorOfStringMatch(const std::vector<std::string>& lst1, const std:
     return true;
 }
 
-const STATEMENT_NUMBER_LIST& PKBMock::getAllStatements() const {
-    static std::vector<int> statements;
+const STATEMENT_NUMBER_SET& PKBMock::getAllStatements() const {
+    static STATEMENT_NUMBER_SET statements;
     switch (test_idx) {
     case 0:
         statements = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14 };
@@ -44,7 +44,7 @@ const STATEMENT_NUMBER_LIST& PKBMock::getAllStatements() const {
 }
 
 const VARIABLE_NAME_LIST& PKBMock::getAllVariables() const {
-    static std::vector<std::string> variables;
+    static VARIABLE_NAME_LIST variables;
     switch (test_idx) {
     case 0:
         variables = { "count", "cenX", "cenY", "x", "y", "flag", "normSq" };
@@ -59,7 +59,7 @@ const VARIABLE_NAME_LIST& PKBMock::getAllVariables() const {
 }
 
 const PROCEDURE_NAME_LIST& PKBMock::getAllProcedures() const {
-    static std::vector<std::string> procedures;
+    static PROCEDURE_NAME_LIST procedures;
     switch (test_idx) {
     case 0:
         procedures = { "computeCentroid" };
@@ -82,8 +82,8 @@ const CONSTANT_NAME_SET& PKBMock::getAllConstants() const {
     return constants;
 }
 
-STATEMENT_NUMBER_LIST PKBMock::getDirectFollowedBy(STATEMENT_NUMBER s) const {
-    std::vector<int> stmts;
+STATEMENT_NUMBER_SET PKBMock::getDirectFollowedBy(STATEMENT_NUMBER s) const {
+    STATEMENT_NUMBER_SET stmts;
     if (test_idx == 0) {
         switch (s) {
         case 2:
@@ -123,8 +123,8 @@ STATEMENT_NUMBER_LIST PKBMock::getDirectFollowedBy(STATEMENT_NUMBER s) const {
     return stmts;
 }
 
-STATEMENT_NUMBER_LIST PKBMock::getDirectFollow(STATEMENT_NUMBER s) const {
-    std::vector<int> stmts;
+STATEMENT_NUMBER_SET PKBMock::getDirectFollow(STATEMENT_NUMBER s) const {
+    STATEMENT_NUMBER_SET stmts;
     if (test_idx == 0) {
         switch (s) {
         case 1:
@@ -164,8 +164,8 @@ STATEMENT_NUMBER_LIST PKBMock::getDirectFollow(STATEMENT_NUMBER s) const {
     return stmts;
 }
 
-STATEMENT_NUMBER_LIST PKBMock::getStatementsThatFollows(STATEMENT_NUMBER s) const {
-    std::vector<int> stmts;
+STATEMENT_NUMBER_SET PKBMock::getStatementsThatFollows(STATEMENT_NUMBER s) const {
+    STATEMENT_NUMBER_SET stmts;
     if (test_idx == 0) {
         switch (s) {
         case 1:
@@ -205,16 +205,16 @@ STATEMENT_NUMBER_LIST PKBMock::getStatementsThatFollows(STATEMENT_NUMBER s) cons
     return stmts;
 }
 
-STATEMENT_NUMBER_LIST PKBMock::getAllStatementsThatAreFollowed() const {
-    std::vector<int> stmts;
+STATEMENT_NUMBER_SET PKBMock::getAllStatementsThatAreFollowed() const {
+    STATEMENT_NUMBER_SET stmts;
     if (test_idx == 0) {
         stmts = { 1, 2, 3, 4, 5, 6, 7, 8, 10, 12 };
     }
     return stmts;
 }
 
-STATEMENT_NUMBER_LIST PKBMock::getStatementsFollowedBy(STATEMENT_NUMBER s) const {
-    std::vector<int> stmts;
+STATEMENT_NUMBER_SET PKBMock::getStatementsFollowedBy(STATEMENT_NUMBER s) const {
+    STATEMENT_NUMBER_SET stmts;
     if (test_idx == 0) {
         switch (s) {
         case 2:
@@ -254,16 +254,16 @@ STATEMENT_NUMBER_LIST PKBMock::getStatementsFollowedBy(STATEMENT_NUMBER s) const
     return stmts;
 }
 
-STATEMENT_NUMBER_LIST PKBMock::getAllStatementsThatFollows() const {
-    std::vector<int> stmts;
+STATEMENT_NUMBER_SET PKBMock::getAllStatementsThatFollows() const {
+    STATEMENT_NUMBER_SET stmts;
     if (test_idx == 0) {
         stmts = { 2, 3, 4, 5, 7, 8, 9, 10, 13, 14 };
     }
     return stmts;
 }
 
-STATEMENT_NUMBER_LIST PKBMock::getParent(STATEMENT_NUMBER statementNumber) const {
-    std::vector<int> stmts;
+STATEMENT_NUMBER_SET PKBMock::getParent(STATEMENT_NUMBER statementNumber) const {
+    STATEMENT_NUMBER_SET stmts;
     if (test_idx == 0) {
         switch (statementNumber) {
         case 6:
@@ -303,8 +303,8 @@ STATEMENT_NUMBER_LIST PKBMock::getParent(STATEMENT_NUMBER statementNumber) const
     return stmts;
 }
 
-STATEMENT_NUMBER_LIST PKBMock::getChildren(STATEMENT_NUMBER statementNumber) const {
-    std::vector<int> stmts;
+STATEMENT_NUMBER_SET PKBMock::getChildren(STATEMENT_NUMBER statementNumber) const {
+    STATEMENT_NUMBER_SET stmts;
     if (test_idx == 0) {
         switch (statementNumber) {
         case 5:
@@ -335,8 +335,8 @@ STATEMENT_NUMBER_LIST PKBMock::getChildren(STATEMENT_NUMBER statementNumber) con
     return stmts;
 }
 
-STATEMENT_NUMBER_LIST PKBMock::getAncestors(STATEMENT_NUMBER statementNumber) const {
-    std::vector<int> stmts;
+STATEMENT_NUMBER_SET PKBMock::getAncestors(STATEMENT_NUMBER statementNumber) const {
+    STATEMENT_NUMBER_SET stmts;
     if (test_idx == 0) {
         switch (statementNumber) {
         case 6:
@@ -376,8 +376,8 @@ STATEMENT_NUMBER_LIST PKBMock::getAncestors(STATEMENT_NUMBER statementNumber) co
     return stmts;
 }
 
-STATEMENT_NUMBER_LIST PKBMock::getStatementsThatHaveAncestors() const {
-    std::vector<int> stmts;
+STATEMENT_NUMBER_SET PKBMock::getStatementsThatHaveAncestors() const {
+    STATEMENT_NUMBER_SET stmts;
     if (test_idx == 1) {
         stmts = { 6, 7, 8, 9, 11, 12, 13 };
     }
@@ -387,8 +387,8 @@ STATEMENT_NUMBER_LIST PKBMock::getStatementsThatHaveAncestors() const {
     return stmts;
 }
 
-STATEMENT_NUMBER_LIST PKBMock::getDescendants(STATEMENT_NUMBER statementNumber) const {
-    std::vector<int> stmts;
+STATEMENT_NUMBER_SET PKBMock::getDescendants(STATEMENT_NUMBER statementNumber) const {
+    STATEMENT_NUMBER_SET stmts;
     if (test_idx == 0) {
         switch (statementNumber) {
         case 5:
@@ -419,8 +419,8 @@ STATEMENT_NUMBER_LIST PKBMock::getDescendants(STATEMENT_NUMBER statementNumber) 
     return stmts;
 }
 
-STATEMENT_NUMBER_LIST PKBMock::getStatementsThatHaveDescendants() const {
-    std::vector<int> stmts;
+STATEMENT_NUMBER_SET PKBMock::getStatementsThatHaveDescendants() const {
+    STATEMENT_NUMBER_SET stmts;
     if (test_idx == 0) {
         stmts = { 5, 10 };
     }
@@ -430,8 +430,8 @@ STATEMENT_NUMBER_LIST PKBMock::getStatementsThatHaveDescendants() const {
     return stmts;
 }
 
-STATEMENT_NUMBER_LIST PKBMock::getStatementsThatUse(VARIABLE_NAME v) const {
-    std::vector<int> stmts;
+STATEMENT_NUMBER_SET PKBMock::getStatementsThatUse(VARIABLE_NAME v) const {
+    STATEMENT_NUMBER_SET stmts;
     if (test_idx == 2) {
         if (v == "x") {
             stmts = { 1 };
@@ -448,8 +448,8 @@ STATEMENT_NUMBER_LIST PKBMock::getStatementsThatUse(VARIABLE_NAME v) const {
     return stmts;
 }
 
-STATEMENT_NUMBER_LIST PKBMock::getStatementsThatUseSomeVariable() const {
-    std::vector<int> stmts;
+STATEMENT_NUMBER_SET PKBMock::getStatementsThatUseSomeVariable() const {
+    STATEMENT_NUMBER_SET stmts;
     if (test_idx == 2) {
         stmts = { 1, 2, 4, 5, 6 };
     }
@@ -457,7 +457,7 @@ STATEMENT_NUMBER_LIST PKBMock::getStatementsThatUseSomeVariable() const {
 }
 
 PROCEDURE_NAME_LIST PKBMock::getProceduresThatUse(VARIABLE_NAME v) const {
-    std::vector<std::string> procs;
+    PROCEDURE_NAME_LIST procs;
     if (test_idx == 2) {
         if (v == "x") {
             procs = { "foo" };
@@ -469,7 +469,7 @@ PROCEDURE_NAME_LIST PKBMock::getProceduresThatUse(VARIABLE_NAME v) const {
 }
 
 PROCEDURE_NAME_LIST PKBMock::getProceduresThatUseSomeVariable() const {
-    std::vector<std::string> procs;
+    PROCEDURE_NAME_LIST procs;
     if (test_idx == 2) {
         procs = { "foo", "bar" };
     }
@@ -477,7 +477,7 @@ PROCEDURE_NAME_LIST PKBMock::getProceduresThatUseSomeVariable() const {
 }
 
 VARIABLE_NAME_LIST PKBMock::getVariablesUsedIn(PROCEDURE_NAME p) const {
-    std::vector<std::string> vars;
+    VARIABLE_NAME_LIST vars;
     if (test_idx == 2) {
         if (p == "foo") {
             vars = { "x", "z", "m", "n", "count" };
@@ -489,7 +489,7 @@ VARIABLE_NAME_LIST PKBMock::getVariablesUsedIn(PROCEDURE_NAME p) const {
 }
 
 VARIABLE_NAME_LIST PKBMock::getVariablesUsedBySomeProcedure() const {
-    std::vector<std::string> vars;
+    VARIABLE_NAME_LIST vars;
     if (test_idx == 2) {
         vars = { "x", "z", "m", "n", "count" };
     }
@@ -497,7 +497,7 @@ VARIABLE_NAME_LIST PKBMock::getVariablesUsedBySomeProcedure() const {
 }
 
 VARIABLE_NAME_LIST PKBMock::getVariablesUsedIn(STATEMENT_NUMBER s) const {
-    std::vector<std::string> vars;
+    VARIABLE_NAME_LIST vars;
     if (test_idx == 2) {
         switch (s) {
         case 1:
@@ -518,15 +518,15 @@ VARIABLE_NAME_LIST PKBMock::getVariablesUsedIn(STATEMENT_NUMBER s) const {
 }
 
 VARIABLE_NAME_LIST PKBMock::getVariablesUsedBySomeStatement() const {
-    std::vector<std::string> vars;
+    VARIABLE_NAME_LIST vars;
     if (test_idx == 2) {
         vars = { "x", "z", "m", "n", "count" };
     }
     return vars;
 }
 
-STATEMENT_NUMBER_LIST PKBMock::getStatementsThatModify(VARIABLE_NAME v) const {
-    std::vector<int> stmts;
+STATEMENT_NUMBER_SET PKBMock::getStatementsThatModify(VARIABLE_NAME v) const {
+    STATEMENT_NUMBER_SET stmts;
     if (test_idx == 2) {
         if (v == "random") {
             stmts = { 2, 3 };
@@ -540,15 +540,15 @@ STATEMENT_NUMBER_LIST PKBMock::getStatementsThatModify(VARIABLE_NAME v) const {
     }
     return stmts;
 }
-STATEMENT_NUMBER_LIST PKBMock::getStatementsThatModifySomeVariable() const {
-    std::vector<int> stmts;
+STATEMENT_NUMBER_SET PKBMock::getStatementsThatModifySomeVariable() const {
+    STATEMENT_NUMBER_SET stmts;
     if (test_idx == 2) {
         stmts = { 2, 3, 4, 5, 6, 7, 8, 9 };
     }
     return stmts;
 }
 PROCEDURE_NAME_LIST PKBMock::getProceduresThatModify(VARIABLE_NAME v) const {
-    std::vector<std::string> procs;
+    PROCEDURE_NAME_LIST procs;
     if (test_idx == 2) {
         if (v == "random" || v == "n" || v == "y") {
             procs = { "foo", "bar" };
@@ -557,14 +557,14 @@ PROCEDURE_NAME_LIST PKBMock::getProceduresThatModify(VARIABLE_NAME v) const {
     return procs;
 }
 PROCEDURE_NAME_LIST PKBMock::getProceduresThatModifySomeVariable() const {
-    std::vector<std::string> procs;
+    PROCEDURE_NAME_LIST procs;
     if (test_idx == 2) {
         procs = { "foo", "bar" };
     }
     return procs;
 }
 VARIABLE_NAME_LIST PKBMock::getVariablesModifiedBy(PROCEDURE_NAME p) const {
-    std::vector<std::string> vars;
+    VARIABLE_NAME_LIST vars;
     if (test_idx == 2) {
         if (p == "foo") {
             vars = { "n", "random", "y", "a" };
@@ -575,14 +575,14 @@ VARIABLE_NAME_LIST PKBMock::getVariablesModifiedBy(PROCEDURE_NAME p) const {
     return vars;
 }
 VARIABLE_NAME_LIST PKBMock::getVariablesModifiedBySomeProcedure() const {
-    std::vector<std::string> vars;
+    VARIABLE_NAME_LIST vars;
     if (test_idx == 2) {
         vars = { "n", "y", "random", "a" };
     }
     return vars;
 }
 VARIABLE_NAME_LIST PKBMock::getVariablesModifiedBy(STATEMENT_NUMBER s) const {
-    std::vector<std::string> vars;
+    VARIABLE_NAME_LIST vars;
     if (test_idx == 2) {
         switch (s) {
         case 2:
@@ -614,14 +614,14 @@ VARIABLE_NAME_LIST PKBMock::getVariablesModifiedBy(STATEMENT_NUMBER s) const {
     return vars;
 }
 VARIABLE_NAME_LIST PKBMock::getVariablesModifiedBySomeStatement() const {
-    std::vector<std::string> vars;
+    VARIABLE_NAME_LIST vars;
     if (test_idx == 2) {
         vars = { "n", "y", "random", "a" };
     }
     return vars;
 }
 
-STATEMENT_NUMBER_LIST
+STATEMENT_NUMBER_SET
 PKBMock::getAllAssignmentStatementsThatMatch(const std::string& assignee, const std::string& pattern, bool isSubExpr) const {
     if (test_idx == 0) {
         if (!isSubExpr) {
@@ -849,7 +849,7 @@ PKBMock::getAllAssignmentStatementsThatMatch(const std::string& assignee, const 
         }
     }
 
-    return STATEMENT_NUMBER_LIST();
+    return STATEMENT_NUMBER_SET();
 }
 
 bool PKBMock::isRead(STATEMENT_NUMBER s) const {

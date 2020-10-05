@@ -1,4 +1,5 @@
 #include "Logger.h"
+#include "PKB.h"
 #include "PKBImplementation.h"
 #include "TestParserHelpers.h"
 #include "catch.hpp"
@@ -33,22 +34,23 @@ TEST_CASE("Test getDirectFollow") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
 
-    std::vector<int> expected = { 3 };
+
+    STATEMENT_NUMBER_SET expected = { 3 };
     REQUIRE(pkb.getDirectFollow(1) == expected);
 
-    std::vector<int> expected2 = {};
+    STATEMENT_NUMBER_SET expected2 = {};
     REQUIRE(pkb.getDirectFollow(2) == expected2);
 
-    std::vector<int> expected3 = { 6 };
+    STATEMENT_NUMBER_SET expected3 = { 6 };
     REQUIRE(pkb.getDirectFollow(3) == expected3);
 
-    std::vector<int> expected4 = {};
+    STATEMENT_NUMBER_SET expected4 = {};
     REQUIRE(pkb.getDirectFollow(4) == expected4);
 
-    std::vector<int> expected5 = {};
+    STATEMENT_NUMBER_SET expected5 = {};
     REQUIRE(pkb.getDirectFollow(5) == expected5);
 
-    std::vector<int> expected6 = {};
+    STATEMENT_NUMBER_SET expected6 = {};
     REQUIRE(pkb.getDirectFollow(6) == expected6);
 }
 
@@ -57,22 +59,22 @@ TEST_CASE("Test getDirectFollowedBy") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
 
-    std::vector<int> expected = {};
+    STATEMENT_NUMBER_SET expected = {};
     REQUIRE(pkb.getDirectFollowedBy(1) == expected);
 
-    std::vector<int> expected2 = {};
+    STATEMENT_NUMBER_SET expected2 = {};
     REQUIRE(pkb.getDirectFollowedBy(2) == expected2);
 
-    std::vector<int> expected3 = { 1 };
+    STATEMENT_NUMBER_SET expected3 = { 1 };
     REQUIRE(pkb.getDirectFollowedBy(3) == expected3);
 
-    std::vector<int> expected4 = {};
+    STATEMENT_NUMBER_SET expected4 = {};
     REQUIRE(pkb.getDirectFollowedBy(4) == expected4);
 
-    std::vector<int> expected5 = {};
+    STATEMENT_NUMBER_SET expected5 = {};
     REQUIRE(pkb.getDirectFollowedBy(5) == expected5);
 
-    std::vector<int> expected6 = { 3 };
+    STATEMENT_NUMBER_SET expected6 = { 3 };
     REQUIRE(pkb.getDirectFollowedBy(6) == expected6);
 }
 
@@ -81,22 +83,22 @@ TEST_CASE("Test getStatementsFollowedBy") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
 
-    std::vector<int> expected = {};
+    STATEMENT_NUMBER_SET expected = {};
     REQUIRE(pkb.getStatementsFollowedBy(1) == expected);
 
-    std::vector<int> expected2 = {};
+    STATEMENT_NUMBER_SET expected2 = {};
     REQUIRE(pkb.getStatementsFollowedBy(2) == expected2);
 
-    std::vector<int> expected3 = { 1 };
+    STATEMENT_NUMBER_SET expected3 = { 1 };
     REQUIRE(pkb.getStatementsFollowedBy(3) == expected3);
 
-    std::vector<int> expected4 = {};
+    STATEMENT_NUMBER_SET expected4 = {};
     REQUIRE(pkb.getStatementsFollowedBy(4) == expected4);
 
-    std::vector<int> expected5 = {};
+    STATEMENT_NUMBER_SET expected5 = {};
     REQUIRE(pkb.getStatementsFollowedBy(5) == expected5);
 
-    std::vector<int> expected6 = { 3, 1 };
+    STATEMENT_NUMBER_SET expected6 = { 3, 1 };
     REQUIRE(pkb.getStatementsFollowedBy(6) == expected6);
 }
 
@@ -105,22 +107,22 @@ TEST_CASE("Test getStatementsThatFollows") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
 
-    std::vector<int> expected = { 3, 6 };
+    STATEMENT_NUMBER_SET expected = { 3, 6 };
     REQUIRE(pkb.getStatementsThatFollows(1) == expected);
 
-    std::vector<int> expected2 = {};
+    STATEMENT_NUMBER_SET expected2 = {};
     REQUIRE(pkb.getStatementsThatFollows(2) == expected2);
 
-    std::vector<int> expected3 = { 6 };
+    STATEMENT_NUMBER_SET expected3 = { 6 };
     REQUIRE(pkb.getStatementsThatFollows(3) == expected3);
 
-    std::vector<int> expected4 = {};
+    STATEMENT_NUMBER_SET expected4 = {};
     REQUIRE(pkb.getStatementsThatFollows(4) == expected4);
 
-    std::vector<int> expected5 = {};
+    STATEMENT_NUMBER_SET expected5 = {};
     REQUIRE(pkb.getStatementsThatFollows(5) == expected5);
 
-    std::vector<int> expected6 = {};
+    STATEMENT_NUMBER_SET expected6 = {};
     REQUIRE(pkb.getStatementsThatFollows(6) == expected6);
 }
 
@@ -129,9 +131,8 @@ TEST_CASE("Test getAllStatementsThatFollows") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
 
-    std::vector<int> expected = { 3, 6 };
-    std::vector<int> actual = pkb.getAllStatementsThatFollows();
-    std::sort(actual.begin(), actual.end());
+    STATEMENT_NUMBER_SET expected = { 3, 6 };
+    STATEMENT_NUMBER_SET actual = pkb.getAllStatementsThatFollows();
     REQUIRE(actual == expected);
 }
 
@@ -140,9 +141,8 @@ TEST_CASE("Test getAllStatementsThatAreFollowed") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
 
-    std::vector<int> expected = { 1, 3 };
-    std::vector<int> actual = pkb.getAllStatementsThatAreFollowed();
-    std::sort(actual.begin(), actual.end());
+    STATEMENT_NUMBER_SET expected = { 1, 3 };
+    STATEMENT_NUMBER_SET actual = pkb.getAllStatementsThatAreFollowed();
     REQUIRE(actual == expected);
 }
 
@@ -151,22 +151,22 @@ TEST_CASE("Test getAncestors") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
 
-    std::vector<int> expected = {};
+    STATEMENT_NUMBER_SET expected = {};
     REQUIRE(pkb.getAncestors(1) == expected);
 
-    std::vector<int> expected2 = { 1 };
+    STATEMENT_NUMBER_SET expected2 = { 1 };
     REQUIRE(pkb.getAncestors(2) == expected2);
 
-    std::vector<int> expected3 = {};
+    STATEMENT_NUMBER_SET expected3 = {};
     REQUIRE(pkb.getAncestors(3) == expected3);
 
-    std::vector<int> expected4 = { 3 };
+    STATEMENT_NUMBER_SET expected4 = { 3 };
     REQUIRE(pkb.getAncestors(4) == expected4);
 
-    std::vector<int> expected5 = { 3 };
+    STATEMENT_NUMBER_SET expected5 = { 3 };
     REQUIRE(pkb.getAncestors(5) == expected5);
 
-    std::vector<int> expected6 = {};
+    STATEMENT_NUMBER_SET expected6 = {};
     REQUIRE(pkb.getAncestors(6) == expected6);
 }
 
@@ -175,24 +175,23 @@ TEST_CASE("Test getDescendants") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
 
-    std::vector<int> expected = { 2 };
+    STATEMENT_NUMBER_SET expected = { 2 };
     REQUIRE(pkb.getDescendants(1) == expected);
 
-    std::vector<int> expected2 = {};
+    STATEMENT_NUMBER_SET expected2 = {};
     REQUIRE(pkb.getDescendants(2) == expected2);
 
-    std::vector<int> expected3 = { 4, 5 };
-    std::vector<int> actual3 = pkb.getDescendants(3);
-    sort(actual3.begin(), actual3.end());
+    STATEMENT_NUMBER_SET expected3 = { 4, 5 };
+    STATEMENT_NUMBER_SET actual3 = pkb.getDescendants(3);
     REQUIRE(actual3 == expected3);
 
-    std::vector<int> expected4 = {};
+    STATEMENT_NUMBER_SET expected4 = {};
     REQUIRE(pkb.getDescendants(4) == expected4);
 
-    std::vector<int> expected5 = {};
+    STATEMENT_NUMBER_SET expected5 = {};
     REQUIRE(pkb.getDescendants(5) == expected5);
 
-    std::vector<int> expected6 = {};
+    STATEMENT_NUMBER_SET expected6 = {};
     REQUIRE(pkb.getDescendants(6) == expected6);
 }
 
@@ -210,19 +209,19 @@ TEST_CASE("Test getParent") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
 
-    std::vector<int> expected = {};
+    STATEMENT_NUMBER_SET expected = {};
     REQUIRE(pkb.getParent(1) == expected);
 
-    std::vector<int> expected2 = { 1 };
+    STATEMENT_NUMBER_SET expected2 = { 1 };
     REQUIRE(pkb.getParent(2) == expected2);
 
-    std::vector<int> expected3 = { 1 };
+    STATEMENT_NUMBER_SET expected3 = { 1 };
     REQUIRE(pkb.getParent(3) == expected3);
 
-    std::vector<int> expected4 = { 3 };
+    STATEMENT_NUMBER_SET expected4 = { 3 };
     REQUIRE(pkb.getParent(4) == expected4);
 
-    std::vector<int> expected5 = { 1 };
+    STATEMENT_NUMBER_SET expected5 = { 1 };
     REQUIRE(pkb.getParent(5) == expected5);
 }
 
@@ -240,19 +239,19 @@ TEST_CASE("Test getChildren") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
 
-    std::vector<int> expected = { 2, 3, 5 };
+    STATEMENT_NUMBER_SET expected = { 2, 3, 5 };
     REQUIRE(pkb.getChildren(1) == expected);
 
-    std::vector<int> expected2 = {};
+    STATEMENT_NUMBER_SET expected2 = {};
     REQUIRE(pkb.getChildren(2) == expected2);
 
-    std::vector<int> expected3 = { 4 };
+    STATEMENT_NUMBER_SET expected3 = { 4 };
     REQUIRE(pkb.getChildren(3) == expected3);
 
-    std::vector<int> expected4 = {};
+    STATEMENT_NUMBER_SET expected4 = {};
     REQUIRE(pkb.getChildren(4) == expected4);
 
-    std::vector<int> expected5 = {};
+    STATEMENT_NUMBER_SET expected5 = {};
     REQUIRE(pkb.getChildren(5) == expected5);
 }
 
@@ -260,9 +259,8 @@ TEST_CASE("Test getStatementsThatHaveAncestors") {
     Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
-    std::vector<int> expected = { 2, 4, 5 };
-    std::vector<int> actual = pkb.getStatementsThatHaveAncestors();
-    std::sort(actual.begin(), actual.end());
+    STATEMENT_NUMBER_SET expected = { 2, 4, 5 };
+    STATEMENT_NUMBER_SET actual = pkb.getStatementsThatHaveAncestors();
 
     REQUIRE(expected == actual);
 }
@@ -271,9 +269,8 @@ TEST_CASE("Test getStatementsThatHaveDescendants") {
     Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
-    std::vector<int> expected = { 1, 3 };
-    std::vector<int> actual = pkb.getStatementsThatHaveDescendants();
-    std::sort(actual.begin(), actual.end());
+    STATEMENT_NUMBER_SET expected = { 1, 3 };
+    STATEMENT_NUMBER_SET actual = pkb.getStatementsThatHaveDescendants();
 
     REQUIRE(expected == actual);
 }
@@ -301,13 +298,13 @@ TEST_CASE("Test getStatementsThatUse") {
     Parser parser = testhelpers::GenerateParserFromTokens(USES_AND_MODIFIES_PROGRAM);
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
-    std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_LIST> testCases = {
+    std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_SET> testCases = {
         { "nike", { 1 } }, { "adidas", { 1, 2 } }, { "yeezy", { 3, 5, 6 } }, { "newBalance", { 3, 5, 7 } }
     };
     for (auto& p : testCases) {
         VARIABLE_NAME input = p.first;
-        STATEMENT_NUMBER_LIST expected = p.second;
-        STATEMENT_NUMBER_LIST actual = GetSortedVector(pkb.getStatementsThatUse(input));
+        STATEMENT_NUMBER_SET expected = p.second;
+        STATEMENT_NUMBER_SET actual = pkb.getStatementsThatUse(input);
         REQUIRE(actual == expected);
     }
 }
@@ -316,8 +313,8 @@ TEST_CASE("Test getStatementsThatUseSomeVariable") {
     Parser parser = testhelpers::GenerateParserFromTokens(USES_AND_MODIFIES_PROGRAM);
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
-    STATEMENT_NUMBER_LIST expected = { 1, 2, 3, 5, 6, 7 };
-    STATEMENT_NUMBER_LIST actual = GetSortedVector(pkb.getStatementsThatUseSomeVariable());
+    STATEMENT_NUMBER_SET expected = { 1, 2, 3, 5, 6, 7 };
+    STATEMENT_NUMBER_SET actual = pkb.getStatementsThatUseSomeVariable();
     REQUIRE(actual == expected);
 }
 
@@ -337,7 +334,7 @@ TEST_CASE("Test getProceduresThatUse") {
     };
     for (auto& p : testCases) {
         VARIABLE_NAME input = p.first;
-        PROCEDURE_NAME_LIST expected = p.second;
+        PROCEDURE_NAME_LIST expected = GetSortedVector(p.second);
         PROCEDURE_NAME_LIST actual = GetSortedVector(pkb.getProceduresThatUse(input));
         REQUIRE(actual == expected);
     }
@@ -409,7 +406,7 @@ TEST_CASE("Test getStatementsThatModify") {
     Parser parser = testhelpers::GenerateParserFromTokens(USES_AND_MODIFIES_PROGRAM);
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
-    std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_LIST> testCases = {
+    std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_SET> testCases = {
         { "nike", {} },         { "adidas", {} },
         { "yeezy", {} },        { "newBalance", {} },
         { "gucci", { 1, 2 } },  { "pasha", { 3, 5, 6 } },
@@ -417,8 +414,8 @@ TEST_CASE("Test getStatementsThatModify") {
     };
     for (auto& p : testCases) {
         VARIABLE_NAME input = p.first;
-        STATEMENT_NUMBER_LIST expected = p.second;
-        STATEMENT_NUMBER_LIST actual = GetSortedVector(pkb.getStatementsThatModify(input));
+        STATEMENT_NUMBER_SET expected = p.second;
+        STATEMENT_NUMBER_SET actual = pkb.getStatementsThatModify(input);
         REQUIRE(actual == expected);
     }
 }
@@ -427,8 +424,8 @@ TEST_CASE("Test getStatementsThatModifySomeVariable") {
     Parser parser = testhelpers::GenerateParserFromTokens(USES_AND_MODIFIES_PROGRAM);
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
-    STATEMENT_NUMBER_LIST expected = { 1, 2, 3, 4, 5, 6, 8 };
-    STATEMENT_NUMBER_LIST actual = GetSortedVector(pkb.getStatementsThatModifySomeVariable());
+    STATEMENT_NUMBER_SET expected = { 1, 2, 3, 4, 5, 6, 8 };
+    STATEMENT_NUMBER_SET actual = pkb.getStatementsThatModifySomeVariable();
     REQUIRE(actual == expected);
 }
 
@@ -517,36 +514,37 @@ TEST_CASE("Test getAllAssignmentStatementsThatMatch") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
 
-    std::vector<int> actual1 = pkb.getAllAssignmentStatementsThatMatch("_", "23+another_var", true);
-    std::vector<int> expected1 = { 6 };
+    STATEMENT_NUMBER_SET actual1 = pkb.getAllAssignmentStatementsThatMatch("_", "23+another_var", true);
+    STATEMENT_NUMBER_SET expected1 = { 6 };
     REQUIRE(actual1 == expected1);
 
-    std::vector<int> actual2 = pkb.getAllAssignmentStatementsThatMatch("_", "23+another_var", false);
-    std::vector<int> expected2 = { 6 };
+    STATEMENT_NUMBER_SET actual2 = pkb.getAllAssignmentStatementsThatMatch("_", "23+another_var", false);
+    STATEMENT_NUMBER_SET expected2 = { 6 };
     REQUIRE(actual2 == expected2);
 
-    std::vector<int> actual3 = pkb.getAllAssignmentStatementsThatMatch("_", "another_var", true);
-    std::vector<int> expected3 = { 6 };
+    STATEMENT_NUMBER_SET actual3 = pkb.getAllAssignmentStatementsThatMatch("_", "another_var", true);
+    STATEMENT_NUMBER_SET expected3 = { 6 };
     REQUIRE(actual3 == expected3);
 
-    std::vector<int> actual4 = pkb.getAllAssignmentStatementsThatMatch("_", "another_var", false);
-    std::vector<int> expected4 = {};
+    STATEMENT_NUMBER_SET actual4 = pkb.getAllAssignmentStatementsThatMatch("_", "another_var", false);
+    STATEMENT_NUMBER_SET expected4 = {};
     REQUIRE(actual4 == expected4);
 
-    std::vector<int> actual5 = pkb.getAllAssignmentStatementsThatMatch("some_var", "another_var", false);
-    std::vector<int> expected5 = {};
+    STATEMENT_NUMBER_SET actual5 = pkb.getAllAssignmentStatementsThatMatch("some_var", "another_var", false);
+    STATEMENT_NUMBER_SET expected5 = {};
     REQUIRE(actual5 == expected5);
 
-    std::vector<int> actual6 = pkb.getAllAssignmentStatementsThatMatch("some_var", "another_var", false);
-    std::vector<int> expected6 = {};
+    STATEMENT_NUMBER_SET actual6 = pkb.getAllAssignmentStatementsThatMatch("some_var", "another_var", false);
+    STATEMENT_NUMBER_SET expected6 = {};
     REQUIRE(actual6 == expected6);
 
-    std::vector<int> actual7 = pkb.getAllAssignmentStatementsThatMatch("some_var", "23+another_var", false);
-    std::vector<int> expected7 = { 6 };
+    STATEMENT_NUMBER_SET actual7 =
+    pkb.getAllAssignmentStatementsThatMatch("some_var", "23+another_var", false);
+    STATEMENT_NUMBER_SET expected7 = { 6 };
     REQUIRE(actual7 == expected7);
 
-    std::vector<int> actual8 = pkb.getAllAssignmentStatementsThatMatch("some_var", "23", true);
-    std::vector<int> expected8 = { 6 };
+    STATEMENT_NUMBER_SET actual8 = pkb.getAllAssignmentStatementsThatMatch("some_var", "23", true);
+    STATEMENT_NUMBER_SET expected8 = { 6 };
     REQUIRE(actual8 == expected8);
 }
 
@@ -562,79 +560,79 @@ TEST_CASE("Test getAllAssignmentStatementsThatMatch multiple assign") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
 
-    std::vector<int> actual1 = GetSortedVector(pkb.getAllAssignmentStatementsThatMatch("_", "q*r", true));
-    std::vector<int> expected1 = { 1, 2, 3 };
+    STATEMENT_NUMBER_SET actual1 = pkb.getAllAssignmentStatementsThatMatch("_", "q*r", true);
+    STATEMENT_NUMBER_SET expected1 = { 1, 2, 3 };
     REQUIRE(actual1 == expected1);
 
-    std::vector<int> actual2 = GetSortedVector(pkb.getAllAssignmentStatementsThatMatch("x", "q*r", true));
-    std::vector<int> expected2 = { 1, 2 };
+    STATEMENT_NUMBER_SET actual2 = pkb.getAllAssignmentStatementsThatMatch("x", "q*r", true);
+    STATEMENT_NUMBER_SET expected2 = { 1, 2 };
     REQUIRE(actual2 == expected2);
 
-    std::vector<int> actual3 = pkb.getAllAssignmentStatementsThatMatch("_", "y+q", true);
-    std::vector<int> expected3 = {};
+    STATEMENT_NUMBER_SET actual3 = pkb.getAllAssignmentStatementsThatMatch("_", "y+q", true);
+    STATEMENT_NUMBER_SET expected3 = {};
     REQUIRE(actual3 == expected3);
 
-    std::vector<int> actual4 = pkb.getAllAssignmentStatementsThatMatch("x", "y+q*r", false);
-    std::vector<int> expected4 = { 2 };
+    STATEMENT_NUMBER_SET actual4 = pkb.getAllAssignmentStatementsThatMatch("x", "y+q*r", false);
+    STATEMENT_NUMBER_SET expected4 = { 2 };
     REQUIRE(actual4 == expected4);
 
-    std::vector<int> actual5 = pkb.getAllAssignmentStatementsThatMatch("z", "y+q*r", false);
-    std::vector<int> expected5 = { 3 };
+    STATEMENT_NUMBER_SET actual5 = pkb.getAllAssignmentStatementsThatMatch("z", "y+q*r", false);
+    STATEMENT_NUMBER_SET expected5 = { 3 };
     REQUIRE(actual5 == expected5);
 
-    std::vector<int> actual6 = pkb.getAllAssignmentStatementsThatMatch("z", "y+q*r", true);
-    std::vector<int> expected6 = { 3 };
+    STATEMENT_NUMBER_SET actual6 = pkb.getAllAssignmentStatementsThatMatch("z", "y+q*r", true);
+    STATEMENT_NUMBER_SET expected6 = { 3 };
     REQUIRE(actual6 == expected6);
 
-    std::vector<int> actual7 = pkb.getAllAssignmentStatementsThatMatch("z", "y", true);
-    std::vector<int> expected7 = { 3 };
+    STATEMENT_NUMBER_SET actual7 = pkb.getAllAssignmentStatementsThatMatch("z", "y", true);
+    STATEMENT_NUMBER_SET expected7 = { 3 };
     REQUIRE(actual7 == expected7);
 
-    std::vector<int> actual8 = GetSortedVector(pkb.getAllAssignmentStatementsThatMatch("_", "y", true));
-    std::vector<int> expected8 = { 2, 3 };
+    STATEMENT_NUMBER_SET actual8 = pkb.getAllAssignmentStatementsThatMatch("_", "y", true);
+    STATEMENT_NUMBER_SET expected8 = { 2, 3 };
     REQUIRE(actual8 == expected8);
 
-    std::vector<int> actual9 = pkb.getAllAssignmentStatementsThatMatch("x", "q*r", false);
-    std::vector<int> expected9 = {};
+    STATEMENT_NUMBER_SET actual9 = pkb.getAllAssignmentStatementsThatMatch("x", "q*r", false);
+    STATEMENT_NUMBER_SET expected9 = {};
     REQUIRE(actual9 == expected9);
 
-    std::vector<int> actual10 =
+    STATEMENT_NUMBER_SET actual10 =
     pkb.getAllAssignmentStatementsThatMatch("x", "impossible_string!@#$%^&*(){}|\"[0987654321", false);
-    std::vector<int> expected10 = {};
+    STATEMENT_NUMBER_SET expected10 = {};
     REQUIRE(actual10 == expected10);
 
-    std::vector<int> actual11 = pkb.getAllAssignmentStatementsThatMatch("x", "1+1", false);
-    std::vector<int> expected11 = {};
+    STATEMENT_NUMBER_SET actual11 = pkb.getAllAssignmentStatementsThatMatch("x", "1+1", false);
+    STATEMENT_NUMBER_SET expected11 = {};
     REQUIRE(actual11 == expected11);
 
     // These are implicit "Modifies" queries since patterns aren't specified.
-    std::vector<int> actual12 = pkb.getAllAssignmentStatementsThatMatch("z", "", true);
-    std::vector<int> expected12 = { 3 };
+    STATEMENT_NUMBER_SET actual12 = pkb.getAllAssignmentStatementsThatMatch("z", "", true);
+    STATEMENT_NUMBER_SET expected12 = { 3 };
     REQUIRE(actual12 == expected12);
 
-    std::vector<int> actual13 = GetSortedVector(pkb.getAllAssignmentStatementsThatMatch("x", "", true));
-    std::vector<int> expected13 = { 1, 2 };
+    STATEMENT_NUMBER_SET actual13 = pkb.getAllAssignmentStatementsThatMatch("x", "", true);
+    STATEMENT_NUMBER_SET expected13 = { 1, 2 };
     REQUIRE(actual13 == expected13);
 
     // Left-assoc
-    std::vector<int> actual14 = pkb.getAllAssignmentStatementsThatMatch("_", "((p+q)+r)", false);
-    std::vector<int> expected14 = { 4 };
+    STATEMENT_NUMBER_SET actual14 = pkb.getAllAssignmentStatementsThatMatch("_", "((p+q)+r)", false);
+    STATEMENT_NUMBER_SET expected14 = { 4 };
     REQUIRE(actual14 == expected14);
 
-    std::vector<int> actual15 = pkb.getAllAssignmentStatementsThatMatch("x", "                 ", false);
-    std::vector<int> expected15 = {};
+    STATEMENT_NUMBER_SET actual15 = pkb.getAllAssignmentStatementsThatMatch("x", "                 ", false);
+    STATEMENT_NUMBER_SET expected15 = {};
     REQUIRE(actual15 == expected15);
 
-    std::vector<int> actual16 = pkb.getAllAssignmentStatementsThatMatch("z", "y+(q*r)", true);
-    std::vector<int> expected16 = { 3 };
+    STATEMENT_NUMBER_SET actual16 = pkb.getAllAssignmentStatementsThatMatch("z", "y+(q*r)", true);
+    STATEMENT_NUMBER_SET expected16 = { 3 };
     REQUIRE(actual16 == expected16);
 
-    std::vector<int> actual17 = pkb.getAllAssignmentStatementsThatMatch("z", "(y+q)*r", true);
-    std::vector<int> expected17 = {};
+    STATEMENT_NUMBER_SET actual17 = pkb.getAllAssignmentStatementsThatMatch("z", "(y+q)*r", true);
+    STATEMENT_NUMBER_SET expected17 = {};
     REQUIRE(actual17 == expected17);
 
-    std::vector<int> actual18 = GetSortedVector(pkb.getAllAssignmentStatementsThatMatch("_", "", true));
-    std::vector<int> expected18 = { 1, 2, 3, 4 };
+    STATEMENT_NUMBER_SET actual18 = pkb.getAllAssignmentStatementsThatMatch("_", "", true);
+    STATEMENT_NUMBER_SET expected18 = { 1, 2, 3, 4 };
     REQUIRE(actual18 == expected18);
 }
 
@@ -647,69 +645,69 @@ TEST_CASE("Test invalid getAllAssignmentStatementsThatMatch patterns") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
 
-    std::vector<int> actual1 = pkb.getAllAssignmentStatementsThatMatch("_", "()", true);
-    std::vector<int> expected1 = {};
+    STATEMENT_NUMBER_SET actual1 = pkb.getAllAssignmentStatementsThatMatch("_", "()", true);
+    STATEMENT_NUMBER_SET expected1 = {};
     REQUIRE(actual1 == expected1);
 
-    std::vector<int> actual1_f = pkb.getAllAssignmentStatementsThatMatch("_", "()", false);
-    std::vector<int> expected1_f = {};
+    STATEMENT_NUMBER_SET actual1_f = pkb.getAllAssignmentStatementsThatMatch("_", "()", false);
+    STATEMENT_NUMBER_SET expected1_f = {};
     REQUIRE(actual1_f == expected1_f);
 
 
-    std::vector<int> actual2 = pkb.getAllAssignmentStatementsThatMatch("_", "()q*r()", true);
-    std::vector<int> expected2 = {};
+    STATEMENT_NUMBER_SET actual2 = pkb.getAllAssignmentStatementsThatMatch("_", "()q*r()", true);
+    STATEMENT_NUMBER_SET expected2 = {};
     REQUIRE(actual2 == expected2);
 
-    std::vector<int> actual2_f = pkb.getAllAssignmentStatementsThatMatch("_", "()q*r()", false);
-    std::vector<int> expected2_f = {};
+    STATEMENT_NUMBER_SET actual2_f = pkb.getAllAssignmentStatementsThatMatch("_", "()q*r()", false);
+    STATEMENT_NUMBER_SET expected2_f = {};
     REQUIRE(actual2_f == expected2_f);
 
-    std::vector<int> actual3 = pkb.getAllAssignmentStatementsThatMatch("_", "12 3", true);
-    std::vector<int> expected3 = {};
+    STATEMENT_NUMBER_SET actual3 = pkb.getAllAssignmentStatementsThatMatch("_", "12 3", true);
+    STATEMENT_NUMBER_SET expected3 = {};
     REQUIRE(actual3 == expected3);
 
-    std::vector<int> actual3_f = pkb.getAllAssignmentStatementsThatMatch("_", "12 3", false);
-    std::vector<int> expected3_f = {};
+    STATEMENT_NUMBER_SET actual3_f = pkb.getAllAssignmentStatementsThatMatch("_", "12 3", false);
+    STATEMENT_NUMBER_SET expected3_f = {};
     REQUIRE(actual3_f == expected3_f);
 
-    std::vector<int> actual4 = pkb.getAllAssignmentStatementsThatMatch("_", "q*r+12\n3", true);
-    std::vector<int> expected4 = {};
+    STATEMENT_NUMBER_SET actual4 = pkb.getAllAssignmentStatementsThatMatch("_", "q*r+12\n3", true);
+    STATEMENT_NUMBER_SET expected4 = {};
     REQUIRE(actual4 == expected4);
 
-    std::vector<int> actual4_f = pkb.getAllAssignmentStatementsThatMatch("_", "q*r+12\n3", false);
-    std::vector<int> expected4_f = {};
+    STATEMENT_NUMBER_SET actual4_f = pkb.getAllAssignmentStatementsThatMatch("_", "q*r+12\n3", false);
+    STATEMENT_NUMBER_SET expected4_f = {};
     REQUIRE(actual4_f == expected4_f);
 
-    std::vector<int> actual5 = pkb.getAllAssignmentStatementsThatMatch("_", "q\n*r+123", true);
-    std::vector<int> expected5 = { 1 };
+    STATEMENT_NUMBER_SET actual5 = pkb.getAllAssignmentStatementsThatMatch("_", "q\n*r+123", true);
+    STATEMENT_NUMBER_SET expected5 = { 1 };
     REQUIRE(actual5 == expected5);
 
-    std::vector<int> actual5_f = pkb.getAllAssignmentStatementsThatMatch("_", "q\n*r+123", false);
-    std::vector<int> expected5_f = {};
+    STATEMENT_NUMBER_SET actual5_f = pkb.getAllAssignmentStatementsThatMatch("_", "q\n*r+123", false);
+    STATEMENT_NUMBER_SET expected5_f = {};
     REQUIRE(actual5_f == expected5_f);
 
-    std::vector<int> actual6 = pkb.getAllAssignmentStatementsThatMatch("_", "q*r+\n123", true);
-    std::vector<int> expected6 = { 1 };
+    STATEMENT_NUMBER_SET actual6 = pkb.getAllAssignmentStatementsThatMatch("_", "q*r+\n123", true);
+    STATEMENT_NUMBER_SET expected6 = { 1 };
     REQUIRE(actual6 == expected6);
 
-    std::vector<int> actual6_f = pkb.getAllAssignmentStatementsThatMatch("_", "q*r+\n123", false);
-    std::vector<int> expected6_f = {};
+    STATEMENT_NUMBER_SET actual6_f = pkb.getAllAssignmentStatementsThatMatch("_", "q*r+\n123", false);
+    STATEMENT_NUMBER_SET expected6_f = {};
     REQUIRE(actual6_f == expected6_f);
 
-    std::vector<int> actual7 = pkb.getAllAssignmentStatementsThatMatch("_", "    ", true);
-    std::vector<int> expected7 = { 1 };
+    STATEMENT_NUMBER_SET actual7 = pkb.getAllAssignmentStatementsThatMatch("_", "    ", true);
+    STATEMENT_NUMBER_SET expected7 = { 1 };
     REQUIRE(actual7 == expected7);
 
-    std::vector<int> actual7_f = pkb.getAllAssignmentStatementsThatMatch("_", "    ", false);
-    std::vector<int> expected7_f = {};
+    STATEMENT_NUMBER_SET actual7_f = pkb.getAllAssignmentStatementsThatMatch("_", "    ", false);
+    STATEMENT_NUMBER_SET expected7_f = {};
     REQUIRE(actual7_f == expected7_f);
 
-    std::vector<int> actual8 = pkb.getAllAssignmentStatementsThatMatch("_", "1+12 3", true);
-    std::vector<int> expected8 = {};
+    STATEMENT_NUMBER_SET actual8 = pkb.getAllAssignmentStatementsThatMatch("_", "1+12 3", true);
+    STATEMENT_NUMBER_SET expected8 = {};
     REQUIRE(actual8 == expected8);
 
-    std::vector<int> actual8_f = pkb.getAllAssignmentStatementsThatMatch("_", "1+12 3", false);
-    std::vector<int> expected8_f = {};
+    STATEMENT_NUMBER_SET actual8_f = pkb.getAllAssignmentStatementsThatMatch("_", "1+12 3", false);
+    STATEMENT_NUMBER_SET expected8_f = {};
     REQUIRE(actual8_f == expected8_f);
 }
 
@@ -796,14 +794,12 @@ TEST_CASE("Test getAllEntity") {
     TNode ast(parser.parse());
     PKBImplementation pkb(ast);
 
-    std::vector<std::string> expectedVariables = { "armani", "gucci", "x", "y", "z" };
-    std::vector<std::string> actualVariables = pkb.getAllVariables();
-    sort(actualVariables.begin(), actualVariables.end());
+    VARIABLE_NAME_LIST expectedVariables = GetSortedVector<std::string>({ "armani", "gucci", "x", "y", "z" });
+    VARIABLE_NAME_LIST actualVariables = GetSortedVector(pkb.getAllVariables());
     REQUIRE(actualVariables == expectedVariables);
 
-    std::vector<std::string> expectedProcedures = { "aoeu", "y" };
-    std::vector<std::string> actualProcedures = pkb.getAllProcedures();
-    sort(actualProcedures.begin(), actualProcedures.end());
+    VARIABLE_NAME_LIST expectedProcedures = { "aoeu", "y" };
+    VARIABLE_NAME_LIST actualProcedures = GetSortedVector(pkb.getAllProcedures());
     REQUIRE(actualProcedures == expectedProcedures);
 
     std::unordered_set<std::string> expectedConstants = { "3", "1" };

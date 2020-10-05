@@ -1,5 +1,6 @@
 #include "DesignExtractor.h"
 #include "Logger.h"
+#include "PKB.h"
 #include "TestParserHelpers.h"
 #include "catch.hpp"
 
@@ -533,19 +534,17 @@ TEST_CASE("Test getFollowRelationship") {
 
 TEST_CASE("Test getKeysInMap") {
     std::unordered_map<int, int> input = { { 1, 1 }, { 2, 2 }, { 3, 3 } };
-    std::vector<int> actual = extractor::getKeysInMap(input);
+    STATEMENT_NUMBER_SET actual = extractor::getKeysInMap(input);
 
-    std::vector<int> expected = { 1, 2, 3 };
-    std::sort(actual.begin(), actual.end());
+    STATEMENT_NUMBER_SET expected = { 1, 2, 3 };
     REQUIRE(actual == expected);
 }
 
 TEST_CASE("Test getVisitedPathFromStart") {
     std::unordered_map<int, int> input = { { 1, 2 }, { 2, 3 }, { 3, 4 } };
-    std::vector<int> actual = extractor::getVisitedPathFromStart(1, input);
+    STATEMENT_NUMBER_SET actual = extractor::getVisitedPathFromStart(1, input);
 
-    std::vector<int> expected = { 2, 3, 4 };
-    std::sort(actual.begin(), actual.end());
+    STATEMENT_NUMBER_SET expected = { 2, 3, 4 };
     REQUIRE(actual == expected);
 }
 
@@ -553,15 +552,16 @@ TEST_CASE("Test getParentRelationship") {
     Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
     TNode ast(parser.parse());
 
-    std::unordered_map<int, std::vector<int>> actualParentChildren;
+    std::unordered_map<int, STATEMENT_NUMBER_SET> actualParentChildren;
     std::unordered_map<int, int> actualChildParent;
     std::tie(actualChildParent, actualParentChildren) = extractor::getParentRelationship(ast);
     std::vector<std::pair<int, int>> actualChildParentVector(actualChildParent.begin(),
                                                              actualChildParent.end());
-    std::vector<std::pair<int, std::vector<int>>> actualParentChildrenVector(actualParentChildren.begin(),
-                                                                             actualParentChildren.end());
+    std::vector<std::pair<int, STATEMENT_NUMBER_SET>> actualParentChildrenVector(
+    actualParentChildren.begin(), actualParentChildren.end());
 
-    std::vector<std::pair<int, std::vector<int>>> expectedParentChildren = { { 1, { 2 } }, { 3, { 4, 5 } } };
+    std::vector<std::pair<int, STATEMENT_NUMBER_SET>> expectedParentChildren = { { 1, { 2 } },
+                                                                                 { 3, { 4, 5 } } };
     std::vector<std::pair<int, int>> expectedChildParent = { { 2, 1 }, { 4, 3 }, { 5, 3 } };
 
     REQUIRE(actualParentChildrenVector == expectedParentChildren);

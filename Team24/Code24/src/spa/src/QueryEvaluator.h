@@ -104,7 +104,9 @@ class SingleQueryEvaluator {
 };
 
 // helper functions for vector operations
-template <typename T> std::vector<std::string> castToStrVector(const std::vector<T>& v);
+template <typename T> std::vector<std::string> castToStrVector(const std::vector<T>& vect);
+template <typename T> std::vector<std::string> castToStrVector(const std::unordered_set<T>& s);
+
 template <typename T> bool isFoundInVector(const std::vector<T>& v, T arg);
 template <typename T>
 std::vector<T> vectorIntersection(const std::vector<T>& lst1, const std::vector<T>& lst2);

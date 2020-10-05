@@ -61,7 +61,7 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
     statementNumberToTNodeType = extractor::getStatementNumberToTNodeTypeMap(statementNumberToTNode);
 
     for (auto i : statementNumberToTNode) {
-        allStatementsNumber.push_back(i.first);
+        allStatementsNumber.insert(i.first);
     }
 
     // Get mapping of all procedures that calls (allProcedureNamesThatCalls) and
@@ -194,7 +194,7 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
     }
 }
 
-const STATEMENT_NUMBER_LIST& PKBImplementation::getAllStatements() const {
+const STATEMENT_NUMBER_SET& PKBImplementation::getAllStatements() const {
     return allStatementsNumber;
 }
 
@@ -212,7 +212,7 @@ const CONSTANT_NAME_SET& PKBImplementation::getAllConstants() const {
 
 /** -------------------------- FOLLOWS ---------------------------- **/
 
-STATEMENT_NUMBER_LIST PKBImplementation::getDirectFollow(STATEMENT_NUMBER s) const {
+STATEMENT_NUMBER_SET PKBImplementation::getDirectFollow(STATEMENT_NUMBER s) const {
     auto it = followedFollowRelation.find(s);
     if (it == followedFollowRelation.end()) {
         return {};
@@ -220,7 +220,7 @@ STATEMENT_NUMBER_LIST PKBImplementation::getDirectFollow(STATEMENT_NUMBER s) con
     return { it->second };
 }
 
-STATEMENT_NUMBER_LIST PKBImplementation::getDirectFollowedBy(STATEMENT_NUMBER s) const {
+STATEMENT_NUMBER_SET PKBImplementation::getDirectFollowedBy(STATEMENT_NUMBER s) const {
     auto it = followFollowedRelation.find(s);
     if (it == followFollowedRelation.end()) {
         return {};
@@ -229,26 +229,26 @@ STATEMENT_NUMBER_LIST PKBImplementation::getDirectFollowedBy(STATEMENT_NUMBER s)
 }
 
 // TODO(weineng) optimize in the future.
-STATEMENT_NUMBER_LIST PKBImplementation::getStatementsThatFollows(STATEMENT_NUMBER s) const {
+STATEMENT_NUMBER_SET PKBImplementation::getStatementsThatFollows(STATEMENT_NUMBER s) const {
     return extractor::getVisitedPathFromStart(s, followedFollowRelation);
 }
 
 // TODO(weineng) optimize in the future.
-STATEMENT_NUMBER_LIST PKBImplementation::getStatementsFollowedBy(STATEMENT_NUMBER s) const {
+STATEMENT_NUMBER_SET PKBImplementation::getStatementsFollowedBy(STATEMENT_NUMBER s) const {
     return extractor::getVisitedPathFromStart(s, followFollowedRelation);
 }
 
-STATEMENT_NUMBER_LIST PKBImplementation::getAllStatementsThatFollows() const {
+STATEMENT_NUMBER_SET PKBImplementation::getAllStatementsThatFollows() const {
     return allStatementsThatFollows;
 }
 
-STATEMENT_NUMBER_LIST PKBImplementation::getAllStatementsThatAreFollowed() const {
+STATEMENT_NUMBER_SET PKBImplementation::getAllStatementsThatAreFollowed() const {
     return allStatementsThatAreFollowed;
 }
 
 /** -------------------------- PARENTS ---------------------------- **/
 
-STATEMENT_NUMBER_LIST PKBImplementation::getParent(STATEMENT_NUMBER statementNumber) const {
+STATEMENT_NUMBER_SET PKBImplementation::getParent(STATEMENT_NUMBER statementNumber) const {
     auto it = childrenParentRelation.find(statementNumber);
     if (it == childrenParentRelation.end()) {
         return {};
@@ -256,7 +256,7 @@ STATEMENT_NUMBER_LIST PKBImplementation::getParent(STATEMENT_NUMBER statementNum
     return { it->second };
 }
 
-STATEMENT_NUMBER_LIST PKBImplementation::getChildren(STATEMENT_NUMBER statementNumber) const {
+STATEMENT_NUMBER_SET PKBImplementation::getChildren(STATEMENT_NUMBER statementNumber) const {
     auto it = parentChildrenRelation.find(statementNumber);
     if (it == parentChildrenRelation.end()) {
         return {};
@@ -264,15 +264,15 @@ STATEMENT_NUMBER_LIST PKBImplementation::getChildren(STATEMENT_NUMBER statementN
     return it->second;
 }
 
-STATEMENT_NUMBER_LIST PKBImplementation::getAncestors(STATEMENT_NUMBER s) const {
+STATEMENT_NUMBER_SET PKBImplementation::getAncestors(STATEMENT_NUMBER s) const {
     return extractor::getVisitedPathFromStart(s, childrenParentRelation);
 }
 
-STATEMENT_NUMBER_LIST PKBImplementation::getStatementsThatHaveAncestors() const {
+STATEMENT_NUMBER_SET PKBImplementation::getStatementsThatHaveAncestors() const {
     return allStatementsThatHaveAncestors;
 }
 
-STATEMENT_NUMBER_LIST PKBImplementation::getDescendants(STATEMENT_NUMBER statementNumber) const {
+STATEMENT_NUMBER_SET PKBImplementation::getDescendants(STATEMENT_NUMBER statementNumber) const {
     std::unordered_set<int> visited;
     std::vector<int> toVisit = { statementNumber };
     while (!toVisit.empty()) {
@@ -289,25 +289,25 @@ STATEMENT_NUMBER_LIST PKBImplementation::getDescendants(STATEMENT_NUMBER stateme
         toVisit.insert(toVisit.end(), it->second.begin(), it->second.end());
     }
     visited.erase(statementNumber);
-    return std::vector<int>(visited.begin(), visited.end());
+    return STATEMENT_NUMBER_SET(visited.begin(), visited.end());
 }
 
-STATEMENT_NUMBER_LIST PKBImplementation::getStatementsThatHaveDescendants() const {
+STATEMENT_NUMBER_SET PKBImplementation::getStatementsThatHaveDescendants() const {
     return allStatementsThatHaveDescendants;
 }
 
 /** -------------------------- USES ---------------------------- **/
-STATEMENT_NUMBER_LIST PKBImplementation::getStatementsThatUse(VARIABLE_NAME v) const {
+STATEMENT_NUMBER_SET PKBImplementation::getStatementsThatUse(VARIABLE_NAME v) const {
     auto it = variableToStatementsThatUseIt.find(v);
     if (it == variableToStatementsThatUseIt.end()) {
-        return STATEMENT_NUMBER_LIST();
+        return STATEMENT_NUMBER_SET();
     } else {
-        return STATEMENT_NUMBER_LIST(it->second.begin(), it->second.end());
+        return STATEMENT_NUMBER_SET(it->second.begin(), it->second.end());
     }
 }
-STATEMENT_NUMBER_LIST PKBImplementation::getStatementsThatUseSomeVariable() const {
-    return STATEMENT_NUMBER_LIST(allStatementsThatUseSomeVariable.begin(),
-                                 allStatementsThatUseSomeVariable.end());
+STATEMENT_NUMBER_SET PKBImplementation::getStatementsThatUseSomeVariable() const {
+    return STATEMENT_NUMBER_SET(allStatementsThatUseSomeVariable.begin(),
+                                allStatementsThatUseSomeVariable.end());
 }
 PROCEDURE_NAME_LIST PKBImplementation::getProceduresThatUse(VARIABLE_NAME v) const {
     auto it = variableToProceduresThatUseIt.find(v);
@@ -347,17 +347,17 @@ VARIABLE_NAME_LIST PKBImplementation::getVariablesUsedBySomeStatement() const {
 }
 
 /** -------------------------- MODIFIES ---------------------------- **/
-STATEMENT_NUMBER_LIST PKBImplementation::getStatementsThatModify(VARIABLE_NAME v) const {
+STATEMENT_NUMBER_SET PKBImplementation::getStatementsThatModify(VARIABLE_NAME v) const {
     auto it = variableToStatementsThatModifyIt.find(v);
     if (it == variableToStatementsThatModifyIt.end()) {
-        return STATEMENT_NUMBER_LIST();
+        return STATEMENT_NUMBER_SET();
     } else {
-        return STATEMENT_NUMBER_LIST(it->second.begin(), it->second.end());
+        return STATEMENT_NUMBER_SET(it->second.begin(), it->second.end());
     }
 }
-STATEMENT_NUMBER_LIST PKBImplementation::getStatementsThatModifySomeVariable() const {
-    return STATEMENT_NUMBER_LIST(allStatementsThatModifySomeVariable.begin(),
-                                 allStatementsThatModifySomeVariable.end());
+STATEMENT_NUMBER_SET PKBImplementation::getStatementsThatModifySomeVariable() const {
+    return STATEMENT_NUMBER_SET(allStatementsThatModifySomeVariable.begin(),
+                                allStatementsThatModifySomeVariable.end());
 }
 PROCEDURE_NAME_LIST PKBImplementation::getProceduresThatModify(VARIABLE_NAME v) const {
     auto it = variableToProceduresThatModifyIt.find(v);
@@ -397,7 +397,7 @@ VARIABLE_NAME_LIST PKBImplementation::getVariablesModifiedBySomeStatement() cons
 }
 
 /** -------------------------- Pattern ---------------------------- **/
-STATEMENT_NUMBER_LIST
+STATEMENT_NUMBER_SET
 PKBImplementation::getAllAssignmentStatementsThatMatch(const std::string& assignee,
                                                        const std::string& pattern,
                                                        bool isSubExpr) const {
@@ -416,12 +416,12 @@ PKBImplementation::getAllAssignmentStatementsThatMatch(const std::string& assign
         }
         // Return all s such that Modifies(assignee, s);
         if (variableToStatementsThatModifyIt.find(assignee) == variableToStatementsThatModifyIt.end()) {
-            return STATEMENT_NUMBER_LIST();
+            return STATEMENT_NUMBER_SET();
         }
         STATEMENT_NUMBER_SET statementsThatModifyAssignee =
         variableToStatementsThatModifyIt.find(assignee)->second;
-        return STATEMENT_NUMBER_LIST(statementsThatModifyAssignee.begin(),
-                                     statementsThatModifyAssignee.end());
+        return STATEMENT_NUMBER_SET(statementsThatModifyAssignee.begin(),
+                                    statementsThatModifyAssignee.end());
     }
 
     // Preprocess pattern using the parser, to set precedence.
@@ -447,9 +447,9 @@ PKBImplementation::getAllAssignmentStatementsThatMatch(const std::string& assign
         candidateResult.erase(res, candidateResult.end());
     }
 
-    STATEMENT_NUMBER_LIST result;
+    STATEMENT_NUMBER_SET result;
     for (auto tup : candidateResult) {
-        result.push_back(std::get<1>(tup));
+        result.insert(std::get<1>(tup));
     }
     return result;
 }

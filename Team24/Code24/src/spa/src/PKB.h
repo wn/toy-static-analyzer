@@ -5,15 +5,19 @@
 #include <vector>
 
 typedef std::string PROCEDURE_NAME;
-typedef std::vector<std::string> PROCEDURE_NAME_LIST;
-typedef std::string VARIABLE_NAME;
-typedef std::vector<std::string> VARIABLE_NAME_LIST;
-typedef int STATEMENT_NUMBER;
-typedef std::vector<STATEMENT_NUMBER> STATEMENT_NUMBER_LIST;
+typedef std::vector<PROCEDURE_NAME> PROCEDURE_NAME_LIST;
 typedef std::unordered_set<std::string> PROCEDURE_NAME_SET;
+
+typedef std::string VARIABLE_NAME;
+typedef std::vector<VARIABLE_NAME> VARIABLE_NAME_LIST;
 typedef std::unordered_set<std::string> VARIABLE_NAME_SET;
-typedef std::unordered_set<std::string> CONSTANT_NAME_SET;
+
+typedef int STATEMENT_NUMBER;
 typedef std::unordered_set<STATEMENT_NUMBER> STATEMENT_NUMBER_SET;
+
+typedef std::string CONSTANT_NAME;
+typedef std::unordered_set<CONSTANT_NAME> CONSTANT_NAME_SET;
+
 
 namespace backend {
 class PKB {
@@ -22,7 +26,7 @@ class PKB {
     /* -- MASS RETRIEVAL OF DESIGN ENTITIES -- */
 
     // Retrieves all statements in the SIMPLE program.
-    virtual const STATEMENT_NUMBER_LIST& getAllStatements() const = 0;
+    virtual const STATEMENT_NUMBER_SET& getAllStatements() const = 0;
 
     // Retrieves all variables name used in the SIMPLE program.
     virtual const VARIABLE_NAME_LIST& getAllVariables() const = 0;
@@ -48,22 +52,24 @@ class PKB {
     // i.e. a list of statements is returned such that for statement s,
     // Follows*(<statement at statementNumber>, s) holds true.
     //
-    // Usage: To get s1 such that Follows(9, s1)
-    // first_statement_after_statement_9 = getDirectFollowedBy(9)
     // Usage: To get s1 such that Follows(s1, 9)
     // first_statement_before_statement_9 = getDirectFollow(9)
-
-    virtual STATEMENT_NUMBER_LIST getDirectFollow(STATEMENT_NUMBER s) const = 0;
-    virtual STATEMENT_NUMBER_LIST getDirectFollowedBy(STATEMENT_NUMBER s) const = 0;
-    virtual STATEMENT_NUMBER_LIST getStatementsFollowedBy(STATEMENT_NUMBER s) const = 0;
+    // If the result is empty, there is no statement that directly follows s
+    virtual STATEMENT_NUMBER_SET getDirectFollow(STATEMENT_NUMBER s) const = 0;
+    // Usage: To get s1 such that Follows(9, s1)
+    // first_statement_after_statement_9 = getDirectFollowedBy(9)
+    // If the result is empty, there is no statement that is directly followed by s
+    virtual STATEMENT_NUMBER_SET getDirectFollowedBy(STATEMENT_NUMBER s) const = 0;
+    // Get all statements that are followed by statement s.
+    virtual STATEMENT_NUMBER_SET getStatementsFollowedBy(STATEMENT_NUMBER s) const = 0;
     // Get all statements that are followed by some statement.
-    virtual STATEMENT_NUMBER_LIST getAllStatementsThatAreFollowed() const = 0;
+    virtual STATEMENT_NUMBER_SET getAllStatementsThatAreFollowed() const = 0;
 
     // Similarly, get all the statements that appear before.
     // More formally, for a given Statement s, return all s' such that Follow*(s, s').
-    virtual STATEMENT_NUMBER_LIST getStatementsThatFollows(STATEMENT_NUMBER s) const = 0;
+    virtual STATEMENT_NUMBER_SET getStatementsThatFollows(STATEMENT_NUMBER s) const = 0;
     // Get all statements that follow some statement.
-    virtual STATEMENT_NUMBER_LIST getAllStatementsThatFollows() const = 0;
+    virtual STATEMENT_NUMBER_SET getAllStatementsThatFollows() const = 0;
 
 
     /* -- PARENT / PARENT* -- */
@@ -80,15 +86,15 @@ class PKB {
     // parent_of_9 = getParent(9)
     // Usage: To get the s1 such that Parent(9, s1):
     // children_of_9 = getChildren(9)
-    virtual STATEMENT_NUMBER_LIST getParent(STATEMENT_NUMBER statementNumber) const = 0;
-    virtual STATEMENT_NUMBER_LIST getChildren(STATEMENT_NUMBER statementNumber) const = 0;
-    virtual STATEMENT_NUMBER_LIST getAncestors(STATEMENT_NUMBER statementNumber) const = 0;
-    virtual STATEMENT_NUMBER_LIST getStatementsThatHaveAncestors() const = 0;
+    virtual STATEMENT_NUMBER_SET getParent(STATEMENT_NUMBER statementNumber) const = 0;
+    virtual STATEMENT_NUMBER_SET getChildren(STATEMENT_NUMBER statementNumber) const = 0;
+    virtual STATEMENT_NUMBER_SET getAncestors(STATEMENT_NUMBER statementNumber) const = 0;
+    virtual STATEMENT_NUMBER_SET getStatementsThatHaveAncestors() const = 0;
 
     // Similarly, get all the statements that are descendants
     // of the statement at this statement number.
-    virtual STATEMENT_NUMBER_LIST getDescendants(STATEMENT_NUMBER statementNumber) const = 0;
-    virtual STATEMENT_NUMBER_LIST getStatementsThatHaveDescendants() const = 0;
+    virtual STATEMENT_NUMBER_SET getDescendants(STATEMENT_NUMBER statementNumber) const = 0;
+    virtual STATEMENT_NUMBER_SET getStatementsThatHaveDescendants() const = 0;
 
     /* -- USES -- */
     // Get all statements that Uses v
@@ -102,8 +108,8 @@ class PKB {
     //     stmt s; select s such that uses(s,"v");
     // Possible query plan:
     //     return getStatementsThatUse("v")
-    virtual STATEMENT_NUMBER_LIST getStatementsThatUse(VARIABLE_NAME v) const = 0;
-    virtual STATEMENT_NUMBER_LIST getStatementsThatUseSomeVariable() const = 0;
+    virtual STATEMENT_NUMBER_SET getStatementsThatUse(VARIABLE_NAME v) const = 0;
+    virtual STATEMENT_NUMBER_SET getStatementsThatUseSomeVariable() const = 0;
 
     // Get all procedure that Uses v
     virtual PROCEDURE_NAME_LIST getProceduresThatUse(VARIABLE_NAME v) const = 0;
@@ -129,8 +135,8 @@ class PKB {
     //     stmt s; select s such that uses(s,"v");
     // Possible query plan:
     //     return getStatementsThatUse("v")
-    virtual STATEMENT_NUMBER_LIST getStatementsThatModify(VARIABLE_NAME v) const = 0;
-    virtual STATEMENT_NUMBER_LIST getStatementsThatModifySomeVariable() const = 0;
+    virtual STATEMENT_NUMBER_SET getStatementsThatModify(VARIABLE_NAME v) const = 0;
+    virtual STATEMENT_NUMBER_SET getStatementsThatModifySomeVariable() const = 0;
 
 
     virtual PROCEDURE_NAME_LIST getProceduresThatModify(VARIABLE_NAME v) const = 0;
@@ -177,8 +183,8 @@ class PKB {
     //     pattern a(_, "_1+1_") -> getAllAssignmentStatementsThatMatch("", "1+1", true);
     //     pattern a("x", "_") -> getAllAssignmentStatementsThatMatch("x", "", true);
     //     pattern a("x", "1+1") -> getAllAssignmentStatementsThatMatch("x", "1+1", false)
-    virtual STATEMENT_NUMBER_LIST getAllAssignmentStatementsThatMatch(const std::string& assignee,
-                                                                      const std::string& pattern,
-                                                                      bool isSubExpr) const = 0;
+    virtual STATEMENT_NUMBER_SET getAllAssignmentStatementsThatMatch(const std::string& assignee,
+                                                                     const std::string& pattern,
+                                                                     bool isSubExpr) const = 0;
 };
 } // namespace backend

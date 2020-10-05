@@ -403,13 +403,13 @@ std::pair<std::unordered_map<int, int>, std::unordered_map<int, int>> getFollowR
 }
 
 
-std::pair<std::unordered_map<int, int>, std::unordered_map<int, std::vector<int>>>
+std::pair<std::unordered_map<int, int>, std::unordered_map<int, STATEMENT_NUMBER_SET>>
 getParentRelationship(const TNode& ast) {
     auto tNodetypeToTNode = getTNodeTypeToTNodes(ast);
     auto tNodeToStmtNo = getTNodeToStatementNumber(ast);
 
     std::unordered_map<int, int> childParentMap;
-    std::unordered_map<int, std::vector<int>> parentChildrenMap;
+    std::unordered_map<int, STATEMENT_NUMBER_SET> parentChildrenMap;
 
 
     for (const TNode* parent : tNodetypeToTNode[While]) {
@@ -423,7 +423,7 @@ getParentRelationship(const TNode& ast) {
         for (const TNode& stmt : stmtLists.children) {
             int childStmtNo = tNodeToStmtNo[&stmt]; // we do not expect this to throw as child has stmt_no.
             childParentMap[childStmtNo] = parentStmtNo;
-            parentChildrenMap[parentStmtNo].push_back(childStmtNo);
+            parentChildrenMap[parentStmtNo].insert(childStmtNo);
         }
     }
 
@@ -439,7 +439,7 @@ getParentRelationship(const TNode& ast) {
         for (const TNode& stmt : ifStmtLists.children) {
             int childStmtNo = tNodeToStmtNo[&stmt]; // we do not expect this to throw as child has stmt_no.
             childParentMap[childStmtNo] = parentStmtNo;
-            parentChildrenMap[parentStmtNo].push_back(childStmtNo);
+            parentChildrenMap[parentStmtNo].insert(childStmtNo);
         }
 
         // else-stmts
@@ -447,18 +447,18 @@ getParentRelationship(const TNode& ast) {
         for (const TNode& stmt : elseStmtLists.children) {
             int childStmtNo = tNodeToStmtNo[&stmt]; // we do not expect this to throw as child has stmt_no.
             childParentMap[childStmtNo] = parentStmtNo;
-            parentChildrenMap[parentStmtNo].push_back(childStmtNo);
+            parentChildrenMap[parentStmtNo].insert(childStmtNo);
         }
     }
     return { childParentMap, parentChildrenMap };
 }
 
-std::vector<int> getVisitedPathFromStart(int start, const std::unordered_map<int, int>& relation) {
-    std::vector<int> result;
+STATEMENT_NUMBER_SET getVisitedPathFromStart(int start, const std::unordered_map<int, int>& relation) {
+    STATEMENT_NUMBER_SET result;
     auto it = relation.find(start);
     while (it != relation.end()) {
         int next = it->second;
-        result.push_back(next);
+        result.insert(next);
         it = relation.find(next);
     }
     return result;

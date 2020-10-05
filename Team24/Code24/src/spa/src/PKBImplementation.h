@@ -11,7 +11,7 @@ class PKBImplementation : virtual public backend::PKB {
   public:
     PKBImplementation() = default;
     explicit PKBImplementation(const TNode& ast);
-    const STATEMENT_NUMBER_LIST& getAllStatements() const override;
+    const STATEMENT_NUMBER_SET& getAllStatements() const override;
     const VARIABLE_NAME_LIST& getAllVariables() const override;
     const PROCEDURE_NAME_LIST& getAllProcedures() const override;
     const CONSTANT_NAME_SET& getAllConstants() const override;
@@ -23,22 +23,22 @@ class PKBImplementation : virtual public backend::PKB {
     bool isIfElse(STATEMENT_NUMBER s) const override;
     bool isAssign(STATEMENT_NUMBER s) const override;
 
-    STATEMENT_NUMBER_LIST getDirectFollow(STATEMENT_NUMBER s) const override;
-    STATEMENT_NUMBER_LIST getDirectFollowedBy(STATEMENT_NUMBER s) const override;
-    STATEMENT_NUMBER_LIST getStatementsFollowedBy(STATEMENT_NUMBER s) const override;
-    STATEMENT_NUMBER_LIST getAllStatementsThatFollows() const override;
-    STATEMENT_NUMBER_LIST getStatementsThatFollows(STATEMENT_NUMBER s) const override;
-    STATEMENT_NUMBER_LIST getAllStatementsThatAreFollowed() const override;
+    STATEMENT_NUMBER_SET getDirectFollow(STATEMENT_NUMBER s) const override;
+    STATEMENT_NUMBER_SET getDirectFollowedBy(STATEMENT_NUMBER s) const override;
+    STATEMENT_NUMBER_SET getStatementsFollowedBy(STATEMENT_NUMBER s) const override;
+    STATEMENT_NUMBER_SET getAllStatementsThatFollows() const override;
+    STATEMENT_NUMBER_SET getStatementsThatFollows(STATEMENT_NUMBER s) const override;
+    STATEMENT_NUMBER_SET getAllStatementsThatAreFollowed() const override;
 
-    STATEMENT_NUMBER_LIST getParent(STATEMENT_NUMBER statementNumber) const override;
-    STATEMENT_NUMBER_LIST getChildren(STATEMENT_NUMBER statementNumber) const override;
-    STATEMENT_NUMBER_LIST getAncestors(STATEMENT_NUMBER statementNumber) const override;
-    STATEMENT_NUMBER_LIST getStatementsThatHaveAncestors() const override;
-    STATEMENT_NUMBER_LIST getDescendants(STATEMENT_NUMBER statementNumber) const override;
-    STATEMENT_NUMBER_LIST getStatementsThatHaveDescendants() const override;
+    STATEMENT_NUMBER_SET getParent(STATEMENT_NUMBER statementNumber) const override;
+    STATEMENT_NUMBER_SET getChildren(STATEMENT_NUMBER statementNumber) const override;
+    STATEMENT_NUMBER_SET getAncestors(STATEMENT_NUMBER statementNumber) const override;
+    STATEMENT_NUMBER_SET getStatementsThatHaveAncestors() const override;
+    STATEMENT_NUMBER_SET getDescendants(STATEMENT_NUMBER statementNumber) const override;
+    STATEMENT_NUMBER_SET getStatementsThatHaveDescendants() const override;
 
-    STATEMENT_NUMBER_LIST getStatementsThatUse(VARIABLE_NAME v) const override;
-    STATEMENT_NUMBER_LIST getStatementsThatUseSomeVariable() const override;
+    STATEMENT_NUMBER_SET getStatementsThatUse(VARIABLE_NAME v) const override;
+    STATEMENT_NUMBER_SET getStatementsThatUseSomeVariable() const override;
     PROCEDURE_NAME_LIST getProceduresThatUse(VARIABLE_NAME v) const override;
     PROCEDURE_NAME_LIST getProceduresThatUseSomeVariable() const override;
     VARIABLE_NAME_LIST getVariablesUsedIn(PROCEDURE_NAME p) const override;
@@ -46,8 +46,8 @@ class PKBImplementation : virtual public backend::PKB {
     VARIABLE_NAME_LIST getVariablesUsedIn(STATEMENT_NUMBER s) const override;
     VARIABLE_NAME_LIST getVariablesUsedBySomeStatement() const override;
 
-    STATEMENT_NUMBER_LIST getStatementsThatModify(VARIABLE_NAME v) const override;
-    STATEMENT_NUMBER_LIST getStatementsThatModifySomeVariable() const override;
+    STATEMENT_NUMBER_SET getStatementsThatModify(VARIABLE_NAME v) const override;
+    STATEMENT_NUMBER_SET getStatementsThatModifySomeVariable() const override;
     PROCEDURE_NAME_LIST getProceduresThatModify(VARIABLE_NAME v) const override;
     PROCEDURE_NAME_LIST getProceduresThatModifySomeVariable() const override;
     VARIABLE_NAME_LIST getVariablesModifiedBy(PROCEDURE_NAME p) const override;
@@ -62,7 +62,7 @@ class PKBImplementation : virtual public backend::PKB {
     STATEMENT_NUMBER_SET getPreviousStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const override;
 
     // Pattern
-    STATEMENT_NUMBER_LIST
+    STATEMENT_NUMBER_SET
     getAllAssignmentStatementsThatMatch(const std::string& assignee, const std::string& pattern, bool isSubExpr) const override;
 
   private:
@@ -72,17 +72,17 @@ class PKBImplementation : virtual public backend::PKB {
     // for k, v in map, follow(k, v).
     std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER> followFollowedRelation;
     // Stmt list is private to prevent modification.
-    STATEMENT_NUMBER_LIST allStatementsThatFollows;
-    STATEMENT_NUMBER_LIST allStatementsThatAreFollowed;
+    STATEMENT_NUMBER_SET allStatementsThatFollows;
+    STATEMENT_NUMBER_SET allStatementsThatAreFollowed;
 
     // Parent helper:
     // for k, v in map, parent(k, j) for j in v
-    std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_LIST> parentChildrenRelation;
+    std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> parentChildrenRelation;
     // for k, v in map, parent(v, k).
     std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER> childrenParentRelation;
     // Stmt list is private to prevent modification.
-    STATEMENT_NUMBER_LIST allStatementsThatHaveAncestors;
-    STATEMENT_NUMBER_LIST allStatementsThatHaveDescendants;
+    STATEMENT_NUMBER_SET allStatementsThatHaveAncestors;
+    STATEMENT_NUMBER_SET allStatementsThatHaveDescendants;
 
 
     // Uses helper:
@@ -126,7 +126,7 @@ class PKBImplementation : virtual public backend::PKB {
     VARIABLE_NAME_LIST allVariablesName;
     CONSTANT_NAME_SET allConstantsName;
     PROCEDURE_NAME_LIST allProceduresName;
-    STATEMENT_NUMBER_LIST allStatementsNumber;
+    STATEMENT_NUMBER_SET allStatementsNumber;
     STATEMENT_NUMBER_SET allAssignmentStatements;
 };
 } // namespace backend

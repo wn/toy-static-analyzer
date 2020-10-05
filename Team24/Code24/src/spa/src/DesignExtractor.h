@@ -1,5 +1,6 @@
 #pragma once
 
+#include "PKB.h"
 #include "TNode.h"
 
 #include <unordered_map>
@@ -43,18 +44,18 @@ bool isValidSimpleProgram(const TNode& ast);
 // Return a pair of mapping {{follower : followed}, {followed, follower}}.
 std::pair<std::unordered_map<int, int>, std::unordered_map<int, int>> getFollowRelationship(const TNode& ast);
 // Return a pair of mapping {{child : parent}, {parent, children}}.
-std::pair<std::unordered_map<int, int>, std::unordered_map<int, std::vector<int>>>
+std::pair<std::unordered_map<int, int>, std::unordered_map<int, STATEMENT_NUMBER_SET>>
 getParentRelationship(const TNode& ast);
 
-template <typename T> std::vector<int> getKeysInMap(const std::unordered_map<int, T>& map) {
-    std::vector<int> result;
+template <typename T> STATEMENT_NUMBER_SET getKeysInMap(const std::unordered_map<int, T>& map) {
+    STATEMENT_NUMBER_SET result;
     for (auto it = map.begin(); it != map.end(); ++it) {
-        result.push_back(it->first);
+        result.insert(it->first);
     }
     return result;
 }
 
-std::vector<int> getVisitedPathFromStart(int start, const std::unordered_map<int, int>& relation);
+STATEMENT_NUMBER_SET getVisitedPathFromStart(int start, const std::unordered_map<int, int>& relation);
 
 /**
  * Get a mapping of pattern to {assignee, stmtNumber, isSubExpr}

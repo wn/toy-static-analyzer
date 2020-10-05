@@ -31,29 +31,29 @@ class PKBMock : public backend::PKB {
     bool isIfElse(STATEMENT_NUMBER s) const override;
     bool isAssign(STATEMENT_NUMBER s) const override;
 
-    const STATEMENT_NUMBER_LIST& getAllStatements() const override;
+    const STATEMENT_NUMBER_SET& getAllStatements() const override;
     const VARIABLE_NAME_LIST& getAllVariables() const override;
     const PROCEDURE_NAME_LIST& getAllProcedures() const override;
     const CONSTANT_NAME_SET& getAllConstants() const override;
 
     // FOLLOWS
-    STATEMENT_NUMBER_LIST getDirectFollow(STATEMENT_NUMBER s) const override;
-    STATEMENT_NUMBER_LIST getDirectFollowedBy(STATEMENT_NUMBER s) const override;
-    STATEMENT_NUMBER_LIST getStatementsFollowedBy(STATEMENT_NUMBER s) const override;
-    STATEMENT_NUMBER_LIST getAllStatementsThatAreFollowed() const override;
-    STATEMENT_NUMBER_LIST getStatementsThatFollows(STATEMENT_NUMBER s) const override;
-    STATEMENT_NUMBER_LIST getAllStatementsThatFollows() const override;
+    STATEMENT_NUMBER_SET getDirectFollow(STATEMENT_NUMBER s) const override;
+    STATEMENT_NUMBER_SET getDirectFollowedBy(STATEMENT_NUMBER s) const override;
+    STATEMENT_NUMBER_SET getStatementsFollowedBy(STATEMENT_NUMBER s) const override;
+    STATEMENT_NUMBER_SET getAllStatementsThatAreFollowed() const override;
+    STATEMENT_NUMBER_SET getStatementsThatFollows(STATEMENT_NUMBER s) const override;
+    STATEMENT_NUMBER_SET getAllStatementsThatFollows() const override;
 
     // PARENT
-    STATEMENT_NUMBER_LIST getParent(STATEMENT_NUMBER statementNumber) const override;
-    STATEMENT_NUMBER_LIST getChildren(STATEMENT_NUMBER statementNumber) const override;
-    STATEMENT_NUMBER_LIST getAncestors(STATEMENT_NUMBER statementNumber) const override;
-    STATEMENT_NUMBER_LIST getStatementsThatHaveAncestors() const override;
-    STATEMENT_NUMBER_LIST getDescendants(STATEMENT_NUMBER statementNumber) const override;
-    STATEMENT_NUMBER_LIST getStatementsThatHaveDescendants() const override;
+    STATEMENT_NUMBER_SET getParent(STATEMENT_NUMBER statementNumber) const override;
+    STATEMENT_NUMBER_SET getChildren(STATEMENT_NUMBER statementNumber) const override;
+    STATEMENT_NUMBER_SET getAncestors(STATEMENT_NUMBER statementNumber) const override;
+    STATEMENT_NUMBER_SET getStatementsThatHaveAncestors() const override;
+    STATEMENT_NUMBER_SET getDescendants(STATEMENT_NUMBER statementNumber) const override;
+    STATEMENT_NUMBER_SET getStatementsThatHaveDescendants() const override;
 
-    STATEMENT_NUMBER_LIST getStatementsThatUse(VARIABLE_NAME v) const override;
-    STATEMENT_NUMBER_LIST getStatementsThatUseSomeVariable() const override;
+    STATEMENT_NUMBER_SET getStatementsThatUse(VARIABLE_NAME v) const override;
+    STATEMENT_NUMBER_SET getStatementsThatUseSomeVariable() const override;
     PROCEDURE_NAME_LIST getProceduresThatUse(VARIABLE_NAME v) const override;
     PROCEDURE_NAME_LIST getProceduresThatUseSomeVariable() const override;
     VARIABLE_NAME_LIST getVariablesUsedIn(PROCEDURE_NAME p) const override;
@@ -61,8 +61,8 @@ class PKBMock : public backend::PKB {
     VARIABLE_NAME_LIST getVariablesUsedIn(STATEMENT_NUMBER s) const override;
     VARIABLE_NAME_LIST getVariablesUsedBySomeStatement() const override;
 
-    STATEMENT_NUMBER_LIST getStatementsThatModify(VARIABLE_NAME v) const override;
-    STATEMENT_NUMBER_LIST getStatementsThatModifySomeVariable() const override;
+    STATEMENT_NUMBER_SET getStatementsThatModify(VARIABLE_NAME v) const override;
+    STATEMENT_NUMBER_SET getStatementsThatModifySomeVariable() const override;
     PROCEDURE_NAME_LIST getProceduresThatModify(VARIABLE_NAME v) const override;
     PROCEDURE_NAME_LIST getProceduresThatModifySomeVariable() const override;
     VARIABLE_NAME_LIST getVariablesModifiedBy(PROCEDURE_NAME p) const override;
@@ -76,7 +76,7 @@ class PKBMock : public backend::PKB {
     STATEMENT_NUMBER_SET getNextStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const override;
     STATEMENT_NUMBER_SET getPreviousStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const override;
 
-    STATEMENT_NUMBER_LIST
+    STATEMENT_NUMBER_SET
     getAllAssignmentStatementsThatMatch(const std::string& assignee, const std::string& pattern, bool isSubExpr) const override;
 };
 

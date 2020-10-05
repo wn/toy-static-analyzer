@@ -1,9 +1,13 @@
 #include "QueryEvaluator.h"
 
 #include "Logger.h"
+#include "PKB.h"
 #include "QEHelper.h"
 #include "QPTypes.h"
+#include "Query.h"
 
+#include <algorithm>
+#include <functional>
 #include <set>
 #include <stdexcept>
 #include <unordered_set>
@@ -108,54 +112,41 @@ void SingleQueryEvaluator::initializeCandidate(const backend::PKB* pkb,
                                                EntityType entityType) {
     // initialize the possible values of all synonyms
     if (entityType == VARIABLE) {
-        synonym_candidates[synonymName] = pkb->getAllVariables();
+        VARIABLE_NAME_LIST variables = pkb->getAllVariables();
+        synonym_candidates[synonymName] = std::vector<std::string>(variables.begin(), variables.end());
     } else if (entityType == PROCEDURE) {
-        synonym_candidates[synonymName] = pkb->getAllProcedures();
+        PROCEDURE_NAME_LIST procs = pkb->getAllProcedures();
+        synonym_candidates[synonymName] = std::vector<PROCEDURE_NAME>(procs.begin(), procs.end());
     } else if (entityType == CONSTANT) {
         CONSTANT_NAME_SET consts = pkb->getAllConstants();
         std::vector<std::string> constStrs;
         std::copy(consts.begin(), consts.end(), std::back_inserter(constStrs));
         synonym_candidates[synonymName] = constStrs;
     } else {
-        STATEMENT_NUMBER_LIST result = pkb->getAllStatements();
-        if (entityType != STMT) {
-            switch (entityType) {
-            case READ: {
-                auto unary_predictor = [pkb](STATEMENT_NUMBER x) { return !(pkb->isRead(x)); };
-                result.erase(std::remove_if(result.begin(), result.end(), unary_predictor), result.end());
-                break;
-            }
-            case PRINT: {
-                auto unary_predictor = [pkb](STATEMENT_NUMBER x) { return !(pkb->isPrint(x)); };
-                result.erase(std::remove_if(result.begin(), result.end(), unary_predictor), result.end());
-                break;
-            }
-            case CALL: {
-                auto unary_predictor = [pkb](STATEMENT_NUMBER x) { return !(pkb->isCall(x)); };
-                result.erase(std::remove_if(result.begin(), result.end(), unary_predictor), result.end());
-                break;
-            }
-            case WHILE: {
-                auto unary_predictor = [pkb](STATEMENT_NUMBER x) { return !(pkb->isWhile(x)); };
-                result.erase(std::remove_if(result.begin(), result.end(), unary_predictor), result.end());
-                break;
-            }
-            case IF: {
-                auto unary_predictor = [pkb](STATEMENT_NUMBER x) { return !(pkb->isIfElse(x)); };
-                result.erase(std::remove_if(result.begin(), result.end(), unary_predictor), result.end());
-                break;
-            }
-            case ASSIGN: {
-                auto unary_predictor = [pkb](STATEMENT_NUMBER x) { return !(pkb->isAssign(x)); };
-                result.erase(std::remove_if(result.begin(), result.end(), unary_predictor), result.end());
-                break;
-            }
-            default:
-                handleError("invalid entity type"); // TODO: handle invalid entity type
-                return;
+        std::map<EntityType, std::function<bool(STATEMENT_NUMBER)>> entityTypeToUnaryPredictor = {
+            { ASSIGN, [pkb](STATEMENT_NUMBER x) { return pkb->isAssign(x); } },
+            { CALL, [pkb](STATEMENT_NUMBER x) { return pkb->isCall(x); } },
+            { IF, [pkb](STATEMENT_NUMBER x) { return pkb->isIfElse(x); } },
+            { PRINT, [pkb](STATEMENT_NUMBER x) { return pkb->isPrint(x); } },
+            { READ, [pkb](STATEMENT_NUMBER x) { return pkb->isRead(x); } },
+            { STMT, [pkb](STATEMENT_NUMBER x) { return true; } },
+            { WHILE, [pkb](STATEMENT_NUMBER x) { return pkb->isWhile(x); } },
+        };
+        if (entityTypeToUnaryPredictor.find(entityType) == entityTypeToUnaryPredictor.end()) {
+            handleError("invalid entity type"); // TODO: handle invalid entity type
+            return;
+        }
+        // Only keep statements that fulfill the predicate
+        STATEMENT_NUMBER_SET allStatements = pkb->getAllStatements();
+        STATEMENT_NUMBER_SET result;
+        auto predicate = entityTypeToUnaryPredictor[entityType];
+        for (STATEMENT_NUMBER statementNumber : allStatements) {
+            if (predicate(statementNumber)) {
+                result.insert(statementNumber);
             }
         }
-        synonym_candidates[synonymName] = castToStrVector<STATEMENT_NUMBER>(result);
+
+        synonym_candidates[synonymName] = castToStrVector<>(result);
     }
 }
 
@@ -482,68 +473,80 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelation(const backe
                                                                      SubRelationType subRelationType,
                                                                      std::string const& arg) {
     std::vector<std::string> result;
-    STATEMENT_NUMBER_LIST stmts;
+    STATEMENT_NUMBER_SET stmts;
     PROCEDURE_NAME_LIST procs;
     VARIABLE_NAME_LIST vars;
     switch (subRelationType) {
     case PREFOLLOWS:
         stmts = pkb->getDirectFollow(std::stoi(arg));
-        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        result = castToStrVector<>(stmts);
         break;
     case POSTFOLLOWS:
         stmts = pkb->getDirectFollowedBy(std::stoi(arg));
-        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        result = castToStrVector<>(stmts);
         break;
     case PREFOLLOWST:
         stmts = pkb->getStatementsThatFollows(std::stoi(arg));
-        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        result = castToStrVector<>(stmts);
         break;
     case POSTFOLLOWST:
         stmts = pkb->getStatementsFollowedBy(std::stoi(arg));
-        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        result = castToStrVector<>(stmts);
         break;
     case PREPARENT:
         stmts = pkb->getChildren(std::stoi(arg));
-        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        result = castToStrVector<>(stmts);
         break;
     case POSTPARENT:
         stmts = pkb->getParent(std::stoi(arg));
-        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        result = castToStrVector<>(stmts);
         break;
     case PREPARENTT:
         stmts = pkb->getDescendants(std::stoi(arg));
-        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        result = castToStrVector<>(stmts);
         break;
     case POSTPARENTT:
         stmts = pkb->getAncestors(std::stoi(arg));
-        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        result = castToStrVector<>(stmts);
         break;
-    case PREUSESS:
-        result = pkb->getVariablesUsedIn(std::stoi(arg));
+    case PREUSESS: {
+        VARIABLE_NAME_LIST variables = pkb->getVariablesUsedIn(std::stoi(arg));
+        result = std::vector<VARIABLE_NAME>(variables.begin(), variables.end());
         break;
+    }
     case POSTUSESS:
         stmts = pkb->getStatementsThatUse(arg);
-        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        result = castToStrVector<>(stmts);
         break;
-    case PREUSESP:
-        result = pkb->getVariablesUsedIn(arg);
+    case PREUSESP: {
+        VARIABLE_NAME_LIST variables = pkb->getVariablesUsedIn(arg);
+        result = std::vector<VARIABLE_NAME>(variables.begin(), variables.end());
         break;
-    case POSTUSESP:
-        result = pkb->getProceduresThatUse(arg);
+    }
+    case POSTUSESP: {
+        auto procs = pkb->getProceduresThatUse(arg);
+        result = std::vector<PROCEDURE_NAME>(procs.begin(), procs.end());
         break;
-    case PREMODIFIESS:
-        result = pkb->getVariablesModifiedBy(std::stoi(arg));
+    }
+    case PREMODIFIESS: {
+        VARIABLE_NAME_LIST variables = pkb->getVariablesModifiedBy(std::stoi(arg));
+        result = std::vector<VARIABLE_NAME>(variables.begin(), variables.end());
         break;
+    }
     case POSTMODIFIESS:
         stmts = pkb->getStatementsThatModify(arg);
-        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        result = castToStrVector<>(stmts);
         break;
-    case PREMODIFIESP:
-        result = pkb->getVariablesModifiedBy(arg);
+    case PREMODIFIESP: {
+        VARIABLE_NAME_LIST variables = pkb->getVariablesModifiedBy(arg);
+        result = std::vector<VARIABLE_NAME>(variables.begin(), variables.end());
         break;
-    case POSTMODIFIESP:
-        result = pkb->getProceduresThatModify(arg);
+    }
+    case POSTMODIFIESP: {
+        auto procs = pkb->getProceduresThatModify(arg);
+        result = std::vector<PROCEDURE_NAME>(procs.begin(), procs.end());
         break;
+    }
     default:
         handleError("unknown sub-relation type");
     }
@@ -559,38 +562,42 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelation(const backe
 std::vector<std::string>
 SingleQueryEvaluator::inquirePKBForRelationWildcard(const backend::PKB* pkb, SubRelationType subRelationType) {
     std::vector<std::string> result;
-    STATEMENT_NUMBER_LIST stmts;
+    STATEMENT_NUMBER_SET stmts;
     switch (subRelationType) {
     case PREFOLLOWS_WILD:
         stmts = pkb->getAllStatementsThatAreFollowed();
-        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        result = castToStrVector<>(stmts);
         break;
     case POSTFOLLOWS_WILD:
         stmts = pkb->getAllStatementsThatFollows();
-        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        result = castToStrVector<>(stmts);
         break;
     case PREPARENT_WILD:
         stmts = pkb->getStatementsThatHaveDescendants();
-        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        result = castToStrVector<>(stmts);
         break;
     case POSTPARENT_WILD:
         stmts = pkb->getStatementsThatHaveAncestors();
-        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        result = castToStrVector<>(stmts);
         break;
     case USES_WILDCARD:
         stmts = pkb->getStatementsThatUseSomeVariable();
-        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        result = castToStrVector<>(stmts);
         break;
-    case USEP_WILDCARD:
-        result = pkb->getProceduresThatUseSomeVariable();
+    case USEP_WILDCARD: {
+        auto procs = pkb->getProceduresThatUseSomeVariable();
+        result = std::vector<PROCEDURE_NAME>(procs.begin(), procs.end());
         break;
+    }
     case MODIFIESS_WILDCARD:
         stmts = pkb->getStatementsThatModifySomeVariable();
-        result = castToStrVector<STATEMENT_NUMBER>(stmts);
+        result = castToStrVector<>(stmts);
         break;
-    case MODIFIESP_WILDCARD:
-        result = pkb->getProceduresThatModifySomeVariable();
+    case MODIFIESP_WILDCARD: {
+        auto procs = pkb->getProceduresThatModifySomeVariable();
+        result = std::vector<PROCEDURE_NAME>(procs.begin(), procs.end());
         break;
+    }
     default:
         handleError("unknown sub-relation type");
     }
@@ -611,7 +618,7 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForPattern(const backen
                                                                     const std::string& assignee,
                                                                     const std::string& assigned,
                                                                     bool isSubExpr) {
-    STATEMENT_NUMBER_LIST stmts;
+    STATEMENT_NUMBER_SET stmts;
     switch (subRelationType) {
     case ASSIGN_PATTERN:
         stmts = pkb->getAllAssignmentStatementsThatMatch(assignee, assigned, isSubExpr);
@@ -619,7 +626,7 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForPattern(const backen
     default:
         stmts = {};
     }
-    return castToStrVector<STATEMENT_NUMBER>(stmts);
+    return castToStrVector<>(stmts);
 }
 
 // TODO: implement error handling other than logging
@@ -672,9 +679,20 @@ ArgType SingleQueryEvaluator::getArgType(const backend::PKB* pkb, std::string co
 /**
  * cast vector to vector of strings
  */
-template <typename T> std::vector<std::string> castToStrVector(const std::vector<T>& v) {
+template <typename T> std::vector<std::string> castToStrVector(const std::vector<T>& vect) {
     std::vector<std::string> result;
-    for (const auto& element : v) {
+    for (const auto& element : vect) {
+        result.push_back(std::to_string(element));
+    }
+    return result;
+}
+
+/**
+ * cast set to vector of strings
+ */
+template <typename T> std::vector<std::string> castToStrVector(const std::unordered_set<T>& s) {
+    std::vector<std::string> result;
+    for (const auto& element : s) {
         result.push_back(std::to_string(element));
     }
     return result;
