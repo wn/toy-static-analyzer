@@ -22,6 +22,7 @@ const std::vector<std::pair<std::string, ClauseType>> kRelationClauseStringClaus
     { "Follows", ClauseType::FOLLOWS }, { "Follows*", ClauseType::FOLLOWST },
     { "Parent", ClauseType::PARENT },   { "Parent*", ClauseType::PARENTT },
     { "Uses", ClauseType::USES },       { "Modifies", ClauseType::MODIFIES },
+    { "Next", ClauseType::NEXT },       { "Next*", ClauseType::NEXTT },
 };
 
 bool isEntityString(const std::string& string) {

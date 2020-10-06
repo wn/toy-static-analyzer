@@ -36,10 +36,10 @@ State parseFilteringClauses(State state);
 // Declarations for such that clauses
 STATESTATUSPAIR parseSingleSuchThatClause(State state);
 STATESTATUSPAIR parseRelRef(State state);
-STATESTATUSPAIR parseRelationStmtStmt(State state, qpbackend::ClauseType relationType);
+STATESTATUSPAIR parseRelationStmtStmtOrLineLine(State state, qpbackend::ClauseType relationClauseType);
 STATESTATUSPAIR parseRelationStmtEntOrEntEnt(State state, qpbackend::ClauseType relationType);
-qpbackend::ARG extractArgFromStmtRefToken(const TOKEN& token, State& state);
-bool isStmtRefToken(const TOKEN& token);
+qpbackend::ARG extractArgFromStmtRefOrLineRefToken(const TOKEN& token, State& state);
+bool isStmtRefOrLineRefToken(const TOKEN& token);
 STATE_ARG_RESULT_STATUS_TRIPLE parseEntRef(State state);
 // Declarations for patten clauses
 STATESTATUSPAIR parseSinglePatternClause(State state);
@@ -355,7 +355,8 @@ STATESTATUSPAIR parseSingleSuchThatClause(State state) {
 }
 
 /**
- * relRef : Follows | FollowsT | Parent | ParentT | UsesS | UsesP | ModifiesS | ModifiesP
+ * relRef : Follows | FollowsT | Parent | ParentT | UsesS | UsesP | ModifiesS | ModifiesP | Calls |
+ * CallsT | Next | NextT | Affects | AffectsT
  * @return <state of parser, isStateInvalid>
  */
 STATESTATUSPAIR parseRelRef(State state) {
@@ -374,17 +375,29 @@ STATESTATUSPAIR parseRelRef(State state) {
     if (!qpbackend::isRelationClauseString(possibleRelationString)) {
         return STATESTATUSPAIR(state, false);
     }
-    qpbackend::ClauseType relationType = qpbackend::relationClauseTypeFromString(possibleRelationString);
-    switch (relationType) {
+    qpbackend::ClauseType relationClauseType = qpbackend::relationClauseTypeFromString(possibleRelationString);
+    switch (relationClauseType) {
     case qpbackend::FOLLOWS:
     case qpbackend::FOLLOWST:
     case qpbackend::PARENT:
     case qpbackend::PARENTT:
-        return parseRelationStmtStmt(state, relationType);
+    case qpbackend::NEXT:
+    case qpbackend::NEXTT:
+        return parseRelationStmtStmtOrLineLine(state, relationClauseType);
     case qpbackend::USES:
     case qpbackend::MODIFIES:
-        return parseRelationStmtEntOrEntEnt(state, relationType);
-    default:
+        return parseRelationStmtEntOrEntEnt(state, relationClauseType);
+    case qpbackend::CALLS: // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/284):
+    case qpbackend::CALLST: // Parse Calls/Calls*
+    case qpbackend::AFFECTS: // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/283):
+    case qpbackend::AFFECTST: // Parse Affects/Affects*
+    case qpbackend::ASSIGN_PATTERN:
+    case qpbackend::ASSIGN_PATTERN_SUB_EXPR:
+    case qpbackend::ASSIGN_PATTERN_WILDCARD:
+    case qpbackend::IF_PATTERN:
+    case qpbackend::WHILE_PATTERN:
+    case qpbackend::WITH:
+    case qpbackend::INVALID_CLAUSE_TYPE:
         return STATESTATUSPAIR(state, false);
     }
 }
@@ -394,21 +407,27 @@ STATESTATUSPAIR parseRelRef(State state) {
  * FollowsT : ... ‘(’ stmtRef ‘,’ stmtRef ‘)’
  * Parent : ... ‘(’ stmtRef ‘,’ stmtRef ‘)’
  * ParentT : ... ‘(’ stmtRef ‘,’ stmtRef ‘)’
+ * Next : ... ‘(’ lineRef ‘,’ lineRef ‘)’
+ * NextT : ... ‘(’ lineRef ‘,’ lineRef ‘)’
+ *
+ * Note that stmtRef and lineRef have the same grammar
+ * stmtRef : synonym | ‘_’ | INTEGER
+ * lineRef : synonym | ‘_’ | INTEGER
  * @return <state of parser, isStateInvalid>
  */
-STATESTATUSPAIR parseRelationStmtStmt(State state, qpbackend::ClauseType relationType) {
+STATESTATUSPAIR parseRelationStmtStmtOrLineLine(State state, qpbackend::ClauseType relationClauseType) {
     TOKEN lParenToken = state.popUntilNonWhitespaceToken();
     if (lParenToken.type != backend::lexer::LPAREN || !state.hasTokensLeftToParse()) {
         logLine(kQppLogWarnPrefix +
-                "parseRelationStmtStmt: Expected more tokens but finished "
+                "parseRelationStmtStmtOrLineLine: Expected more tokens but finished "
                 "consuming tokens or LPAREN token not found. Obtained " +
                 backend::lexer::prettyPrintType(lParenToken.type));
         return STATESTATUSPAIR(state, false);
     }
     TOKEN stmt1Token = state.popUntilNonWhitespaceToken();
-    if (!isStmtRefToken(stmt1Token) || !state.hasTokensLeftToParse()) {
+    if (!isStmtRefOrLineRefToken(stmt1Token) || !state.hasTokensLeftToParse()) {
         logLine(kQppLogWarnPrefix +
-                "parseRelationStmtStmt: Expected more tokens but finished "
+                "parseRelationStmtStmtOrLineLine: Expected more tokens but finished "
                 "consuming tokens or STMT token not found. Obtained " +
                 backend::lexer::prettyPrintType(stmt1Token.type));
         return STATESTATUSPAIR(state, false);
@@ -416,34 +435,34 @@ STATESTATUSPAIR parseRelationStmtStmt(State state, qpbackend::ClauseType relatio
     TOKEN commaToken = state.popUntilNonWhitespaceToken();
     if (commaToken.type != backend::lexer::COMMA || !state.hasTokensLeftToParse()) {
         logLine(kQppLogWarnPrefix +
-                "parseRelationStmtStmt: Expected more tokens but finished "
+                "parseRelationStmtStmtOrLineLine: Expected more tokens but finished "
                 "consuming tokens or COMMA token not found. Obtained " +
                 backend::lexer::prettyPrintType(commaToken.type));
         return STATESTATUSPAIR(state, false);
     }
     TOKEN stmt2Token = state.popUntilNonWhitespaceToken();
-    if (!isStmtRefToken(stmt2Token) || !state.hasTokensLeftToParse()) {
+    if (!isStmtRefOrLineRefToken(stmt2Token) || !state.hasTokensLeftToParse()) {
         logLine(kQppLogWarnPrefix +
-                "parseRelationStmtStmt: Expected more tokens but finished "
+                "parseRelationStmtStmtOrLineLine: Expected more tokens but finished "
                 "consuming tokens or STMT token not found. Obtained " +
                 backend::lexer::prettyPrintType(stmt2Token.type));
         return STATESTATUSPAIR(state, false);
     }
     TOKEN rParenToken = state.popUntilNonWhitespaceToken();
     if (rParenToken.type != backend::lexer::RPAREN) {
-        logLine(kQppLogWarnPrefix + "parseRelationStmtStmt: RPAREN token not found. Obtained " +
+        logLine(kQppLogWarnPrefix + "parseRelationStmtStmtOrLineLine: RPAREN token not found. Obtained " +
                 backend::lexer::prettyPrintType(rParenToken.type));
         return STATESTATUSPAIR(state, false);
     }
-    state.addSuchThatClause(relationType, extractArgFromStmtRefToken(stmt1Token, state),
-                            extractArgFromStmtRefToken(stmt2Token, state));
+    state.addSuchThatClause(relationClauseType, extractArgFromStmtRefOrLineRefToken(stmt1Token, state),
+                            extractArgFromStmtRefOrLineRefToken(stmt2Token, state));
     return STATESTATUSPAIR(state, true);
 }
 
 
-// Helper methods for stmtRef : synonym | ‘_’ | INTEGER
+// Helper methods for stmtRef : synonym | ‘_’ | INTEGER and lineRef : synonym | ‘_’ | INTEGER
 
-qpbackend::ARG extractArgFromStmtRefToken(const TOKEN& token, State& state) {
+qpbackend::ARG extractArgFromStmtRefOrLineRefToken(const TOKEN& token, State& state) {
     switch (token.type) {
     case backend::lexer::INTEGER:
         return { qpbackend::ArgType::NUM_ENTITY, token.integerValue };
@@ -452,12 +471,12 @@ qpbackend::ARG extractArgFromStmtRefToken(const TOKEN& token, State& state) {
     case backend::lexer::NAME:
         return state.getArgFromSynonymString(token.nameValue);
     default:
-        throw std::invalid_argument(kQppErrorPrefix + "extractArgFromStmtRefToken: A non StmtRef token is supplied of type:" +
+        throw std::invalid_argument(kQppErrorPrefix + "extractArgFromStmtRefOrLineRefToken: A non StmtRef or LineRef token is supplied of type:" +
                                     backend::lexer::prettyPrintType(token.type));
     }
 }
 
-bool isStmtRefToken(const TOKEN& token) {
+bool isStmtRefOrLineRefToken(const TOKEN& token) {
     switch (token.type) {
     case backend::lexer::INTEGER:
     case backend::lexer::UNDERSCORE:
@@ -499,9 +518,9 @@ STATESTATUSPAIR parseRelationStmtEntOrEntEnt(State state, qpbackend::ClauseType 
         return STATESTATUSPAIR(state, false);
     }
     TOKEN stmtOrEntToken = state.peekToken();
-    if (isStmtRefToken(stmtOrEntToken)) {
+    if (isStmtRefOrLineRefToken(stmtOrEntToken)) {
         state.popToken();
-        stmtOrEntArg = extractArgFromStmtRefToken(stmtOrEntToken, state);
+        stmtOrEntArg = extractArgFromStmtRefOrLineRefToken(stmtOrEntToken, state);
     } else {
         std::tie(state, stmtOrEntArg, isValidState) = parseEntRef(state);
     }
