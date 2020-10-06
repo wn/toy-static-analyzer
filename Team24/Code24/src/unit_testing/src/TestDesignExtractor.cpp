@@ -991,5 +991,36 @@ TEST_CASE("Test getPreviousRelationship") {
     REQUIRE(actual == expected);
 }
 
+TEST_CASE("Test getConditionVariablesToStatementNumbers") {
+    const char STRUCTURED_STATEMENT[] = "procedure a {         "
+                                        "  while (a + b - c * d == e / (f % g) + (h + i * j)) {  " // 1
+                                        "    y = 1;                                              " // 2
+                                        "  }"
+                                        "  if ((a / b > 0) && (!(c * (d - e) == k))) then {      " // 3
+                                        "    y = 1;                                              " // 4
+                                        "  } else {"
+                                        "    while ((f % g) + (h + i) < l) {                     " // 5
+                                        "      if (f < m) then {  " // 6
+                                        "        y = 1;                                          " // 7
+                                        "      } else {"
+                                        "        y=1;                                            " // 8
+                                        "      }"
+                                        "   }"
+                                        "  }"
+                                        "}";
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto statementNumberToTNode = extractor::getStatementNumberToTNode(tNodeToStatementNumber);
+    auto actual = extractor::getConditionVariablesToStatementNumbers(statementNumberToTNode);
+    std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_SET> expected = {
+        { "a", { 1, 3 } }, { "b", { 1, 3 } },    { "c", { 1, 3 } }, { "d", { 1, 3 } },
+        { "e", { 1, 3 } }, { "f", { 1, 5, 6 } }, { "g", { 1, 5 } }, { "h", { 1, 5 } },
+        { "i", { 1, 5 } }, { "j", { 1 } },       { "k", { 3 } },    { "l", { 5 } },
+        { "m", { 6 } }
+    };
+    REQUIRE(actual == expected);
+}
+
 } // namespace testextractor
 } // namespace backend

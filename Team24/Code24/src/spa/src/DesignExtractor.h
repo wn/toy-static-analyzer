@@ -85,5 +85,8 @@ getNextRelationship(const std::unordered_map<TNodeType, std::vector<const TNode*
  */
 std::unordered_map<int, std::unordered_set<int>>
 getPreviousRelationship(const std::unordered_map<int, std::unordered_set<int>>& nextRelationship);
+
+std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_SET>
+getConditionVariablesToStatementNumbers(const std::unordered_map<int, const TNode*>& statementNumberToTNode);
 } // namespace extractor
 } // namespace backend

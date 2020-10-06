@@ -673,5 +673,38 @@ getPreviousRelationship(const std::unordered_map<int, std::unordered_set<int>>& 
     }
     return result;
 }
+
+std::vector<VARIABLE_NAME> getAllVariablesInTNode(const TNode* node) {
+    std::vector<const TNode*> toVisit = { node };
+    std::vector<VARIABLE_NAME> result;
+    while (!toVisit.empty()) {
+        const TNode* visiting = toVisit.back();
+        toVisit.pop_back();
+        if (visiting->type == Variable) {
+            result.push_back(visiting->name);
+        } else {
+            for (const TNode& child : visiting->children) {
+                toVisit.push_back(&child);
+            }
+        }
+    }
+    return result;
+}
+
+std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_SET>
+getConditionVariablesToStatementNumbers(const std::unordered_map<int, const TNode*>& statementNumberToTNode) {
+    std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_SET> result;
+    for (const std::pair<int, const TNode*>& pair : statementNumberToTNode) {
+        int statementNumber = pair.first;
+        const TNode* tNode = pair.second;
+        if (tNode->type == While || tNode->type == IfElse) {
+            // get all variables in the condition
+            for (const VARIABLE_NAME& var : getAllVariablesInTNode(&tNode->children.front())) {
+                result[var].insert(statementNumber);
+            }
+        }
+    }
+    return result;
+}
 } // namespace extractor
 } // namespace backend
