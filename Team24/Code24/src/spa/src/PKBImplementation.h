@@ -71,6 +71,14 @@ class PKBImplementation : virtual public backend::PKB {
     // Pattern
     STATEMENT_NUMBER_SET
     getAllAssignmentStatementsThatMatch(const std::string& assignee, const std::string& pattern, bool isSubExpr) const override;
+    STATEMENT_NUMBER_SET getAllWhileStatementsThatMatch(const VARIABLE_NAME& variable,
+                                                        const std::string& pattern,
+                                                        bool isSubExpr) const override;
+    STATEMENT_NUMBER_SET getAllIfElseStatementsThatMatch(const VARIABLE_NAME& variable,
+                                                         const std::string& ifPattern,
+                                                         bool ifPatternIsSubExpr,
+                                                         const std::string& elsePattern,
+                                                         bool elsePatternIsSubExpr) const override;
 
   private:
     // Follows helper:
@@ -114,6 +122,7 @@ class PKBImplementation : virtual public backend::PKB {
 
     // Pattern helper:
     std::unordered_map<std::string, std::vector<std::tuple<std::string, STATEMENT_NUMBER, bool>>> patternsMap;
+    std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_SET> conditionVariablesToStatementNumbers;
 
     // Call helper:
     // {key, values} of all procedures, where values are the procedures that is called by key.
@@ -135,6 +144,8 @@ class PKBImplementation : virtual public backend::PKB {
     PROCEDURE_NAME_LIST allProceduresName;
     STATEMENT_NUMBER_SET allStatementsNumber;
     STATEMENT_NUMBER_SET allAssignmentStatements;
+    STATEMENT_NUMBER_SET allWhileStatements;
+    STATEMENT_NUMBER_SET allIfElseStatements;
     std::unordered_map<STATEMENT_NUMBER, const TNode*> statementNumberToTNode;
 
     std::unordered_map<PROCEDURE_NAME, STATEMENT_NUMBER_SET> procedureNameToCallStatements;

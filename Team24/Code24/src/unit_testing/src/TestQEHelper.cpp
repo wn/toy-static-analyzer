@@ -1037,6 +1037,20 @@ STATEMENT_NUMBER_SET PKBMock::getPreviousStatementOf(STATEMENT_NUMBER statementN
     return STATEMENT_NUMBER_SET();
 }
 
+STATEMENT_NUMBER_SET PKBMock::getAllWhileStatementsThatMatch(const VARIABLE_NAME& variable,
+                                                             const std::string& pattern,
+                                                             bool isSubExpr) const {
+    return STATEMENT_NUMBER_SET();
+}
+
+STATEMENT_NUMBER_SET PKBMock::getAllIfElseStatementsThatMatch(const VARIABLE_NAME& variable,
+                                                              const std::string& ifPattern,
+                                                              bool ifPatternIsSubExpr,
+                                                              const std::string& elsePattern,
+                                                              bool elsePatternIsSubExpr) const {
+    return STATEMENT_NUMBER_SET();
+}
+
 
 } // namespace qetest
 } // namespace qpbackend

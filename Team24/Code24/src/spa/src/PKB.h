@@ -191,7 +191,7 @@ class PKB {
     getPreviousStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const = 0;
 
     /* -- Patterns -- */
-    // Get all statements that matches the input pattern.
+    // Get all assignment statements that matches the input pattern.
     // Example:
     //     pattern a(_, "_1+1_") -> getAllAssignmentStatementsThatMatch("", "1+1", true);
     //     pattern a("x", "_") -> getAllAssignmentStatementsThatMatch("x", "", true);
@@ -199,5 +199,40 @@ class PKB {
     virtual STATEMENT_NUMBER_SET getAllAssignmentStatementsThatMatch(const std::string& assignee,
                                                                      const std::string& pattern,
                                                                      bool isSubExpr) const = 0;
+
+
+    // TODO(weineng) this method currently do not take in any pattern. isSubExpr is always true.
+    /**
+     * Example:
+     *   pattern w(_, "_") -> getAllWhileStatementsThatMatch("", "", true, "", true);
+     *   pattern w("x", "_") -> getAllWhileStatementsThatMatch("x", "", true, "", true);
+     * @param variable - variable in a condition. If variable is "_", we consider is as a wildcard.
+     * @param pattern - expression that can be found in an assignment statement of the while-block
+     * @param isSubExpr - whether pattern is a sub-expression
+     * @return while statements that contain the variable and whose body contain an assign stmt that
+     * matches the pattern
+     */
+    virtual STATEMENT_NUMBER_SET getAllWhileStatementsThatMatch(const VARIABLE_NAME& variable,
+                                                                const std::string& pattern,
+                                                                bool isSubExpr) const = 0;
+
+    // TODO(weineng) this method currently do not take in any pattern. isSubExpr is always true.
+    /**
+     * Example:
+     *   pattern ifs(_, "_") -> getAllIfElseStatementsThatMatch("", "", true, "", true);
+     *   pattern ifs("x", "_") -> getAllIfElseStatementsThatMatch("x", "", true, "", true);
+     * @param variable - variable in a condition. If variable is "_", we consider is as a wildcard.
+     * @param ifPattern - expression that can be found in an assignment statement of the if-block
+     * @param ifPatternIsSubExpr - whether if-pattern is a sub-expression
+     * @param elsePattern - expression that can be found in an assignment statement of the else-block
+     * @param elsePatternIsSubExpr - whether else-pattern is a sub-expression
+     * @return if-else statements that contain the variable and has if and else block that matches
+     * the pattern
+     */
+    virtual STATEMENT_NUMBER_SET getAllIfElseStatementsThatMatch(const VARIABLE_NAME& variable,
+                                                                 const std::string& ifPattern,
+                                                                 bool ifPatternIsSubExpr,
+                                                                 const std::string& elsePattern,
+                                                                 bool elsePatternIsSubExpr) const = 0;
 };
 } // namespace backend

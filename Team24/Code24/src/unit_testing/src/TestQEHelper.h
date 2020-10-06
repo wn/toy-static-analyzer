@@ -85,6 +85,14 @@ class PKBMock : public backend::PKB {
 
     STATEMENT_NUMBER_SET
     getAllAssignmentStatementsThatMatch(const std::string& assignee, const std::string& pattern, bool isSubExpr) const override;
+    STATEMENT_NUMBER_SET getAllWhileStatementsThatMatch(const VARIABLE_NAME& variable,
+                                                        const std::string& pattern,
+                                                        bool isSubExpr) const override;
+    STATEMENT_NUMBER_SET getAllIfElseStatementsThatMatch(const VARIABLE_NAME& variable,
+                                                         const std::string& ifPattern,
+                                                         bool ifPatternIsSubExpr,
+                                                         const std::string& elsePattern,
+                                                         bool elsePatternIsSubExpr) const override;
 };
 
 // For string representing two vectors

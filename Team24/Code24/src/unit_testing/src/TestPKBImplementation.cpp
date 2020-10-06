@@ -1273,6 +1273,7 @@ TEST_CASE("getVariableNameFromReadStatement") {
     REQUIRE(pkb.getVariableNameFromReadStatement(4) == "job");
     REQUIRE(pkb.getVariableNameFromReadStatement(5) == "");
 }
+
 TEST_CASE("getVariableNameFromPrintStatement") {
     const char program[] = "procedure a {           "
                            "  print i;              " // 1
@@ -1299,6 +1300,120 @@ TEST_CASE("getVariableNameFromPrintStatement") {
     REQUIRE(pkb.getVariableNameFromPrintStatement(5) == "");
 }
 
+TEST_CASE("Test getAllWhileStatementsThatMatch") {
+    const char program[] = "procedure a {                   "
+                           "  while (a + b == c) {          " // 1
+                           "    y = 1;                      " // 2
+                           "  }                             "
+                           "  if (a + b == d + g) then {    " // 3
+                           "    while (a + d == e) {        " // 4
+                           "      y = 1;                    " // 5
+                           "    }                           "
+                           "  } else {                      "
+                           "    y = 2;                      " // 6
+                           "}                               "
+                           "  while (a + b < f) {           " // 7
+                           "    if (a + b == d * h) then {  " // 8
+                           "      y = 1;                    " // 9
+                           "    } else {                    "
+                           "      y = 2;                    " // 10
+                           "    }                           "
+                           "  }                             "
+                           "}";
 
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    STATEMENT_NUMBER_SET actual1 = pkb.getAllWhileStatementsThatMatch("a", "", true);
+    STATEMENT_NUMBER_SET expected1 = { 1, 4, 7 };
+    REQUIRE(actual1 == expected1);
+
+    STATEMENT_NUMBER_SET actual2 = pkb.getAllWhileStatementsThatMatch("b", "", true);
+    STATEMENT_NUMBER_SET expected2 = { 1, 7 };
+    REQUIRE(actual2 == expected2);
+
+    STATEMENT_NUMBER_SET actual3 = pkb.getAllWhileStatementsThatMatch("c", "", true);
+    STATEMENT_NUMBER_SET expected3 = { 1 };
+    REQUIRE(actual3 == expected3);
+
+    STATEMENT_NUMBER_SET actual4 = pkb.getAllWhileStatementsThatMatch("d", "", true);
+    STATEMENT_NUMBER_SET expected4 = { 4 };
+    REQUIRE(actual4 == expected4);
+
+    STATEMENT_NUMBER_SET actual5 = pkb.getAllWhileStatementsThatMatch("e", "", true);
+    STATEMENT_NUMBER_SET expected5 = { 4 };
+    REQUIRE(actual5 == expected5);
+
+    STATEMENT_NUMBER_SET actual6 = pkb.getAllWhileStatementsThatMatch("f", "", true);
+    STATEMENT_NUMBER_SET expected6 = { 7 };
+    REQUIRE(actual6 == expected6);
+
+    STATEMENT_NUMBER_SET actual7 = pkb.getAllWhileStatementsThatMatch("g", "", true);
+    STATEMENT_NUMBER_SET expected7 = {};
+    REQUIRE(actual7 == expected7);
+
+    STATEMENT_NUMBER_SET actual8 = pkb.getAllWhileStatementsThatMatch("h", "", true);
+    STATEMENT_NUMBER_SET expected8 = {};
+    REQUIRE(actual8 == expected8);
+}
+
+TEST_CASE("Test getAllIfElseStatementsThatMatch") {
+    const char program[] = "procedure a {                   "
+                           "  while (a + b == c) {          " // 1
+                           "    y = 1;                      " // 2
+                           "  }                             "
+                           "  if (a + b == d + g) then {    " // 3
+                           "    while (a + d == e) {        " // 4
+                           "      y = 1;                    " // 5
+                           "    }                           "
+                           "  } else {                      "
+                           "    y = 2;                      " // 6
+                           "}                               "
+                           "  while (a + b < f) {           " // 7
+                           "    if (a + b == h) then {  " // 8
+                           "      y = 1;                    " // 9
+                           "    } else {                    "
+                           "      y = 2;                    " // 10
+                           "    }                           "
+                           "  }                             "
+                           "}";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    STATEMENT_NUMBER_SET actual1 = pkb.getAllIfElseStatementsThatMatch("a", "", true, "", true);
+    STATEMENT_NUMBER_SET expected1 = { 3, 8 };
+    REQUIRE(actual1 == expected1);
+
+    STATEMENT_NUMBER_SET actual2 = pkb.getAllIfElseStatementsThatMatch("b", "", true, "", true);
+    STATEMENT_NUMBER_SET expected2 = { 3, 8 };
+    REQUIRE(actual2 == expected2);
+
+    STATEMENT_NUMBER_SET actual3 = pkb.getAllIfElseStatementsThatMatch("c", "", true, "", true);
+    STATEMENT_NUMBER_SET expected3 = {};
+    REQUIRE(actual3 == expected3);
+
+    STATEMENT_NUMBER_SET actual4 = pkb.getAllIfElseStatementsThatMatch("d", "", true, "", true);
+    STATEMENT_NUMBER_SET expected4 = { 3 };
+    REQUIRE(actual4 == expected4);
+
+    STATEMENT_NUMBER_SET actual5 = pkb.getAllIfElseStatementsThatMatch("e", "", true, "", true);
+    STATEMENT_NUMBER_SET expected5 = {};
+    REQUIRE(actual5 == expected5);
+
+    STATEMENT_NUMBER_SET actual6 = pkb.getAllIfElseStatementsThatMatch("f", "", true, "", true);
+    STATEMENT_NUMBER_SET expected6 = {};
+    REQUIRE(actual6 == expected6);
+
+    STATEMENT_NUMBER_SET actual7 = pkb.getAllIfElseStatementsThatMatch("g", "", true, "", true);
+    STATEMENT_NUMBER_SET expected7 = { 3 };
+    REQUIRE(actual7 == expected7);
+
+    STATEMENT_NUMBER_SET actual8 = pkb.getAllIfElseStatementsThatMatch("h", "", true, "", true);
+    STATEMENT_NUMBER_SET expected8 = { 8 };
+    REQUIRE(actual8 == expected8);
+}
 } // namespace testpkb
 } // namespace backend

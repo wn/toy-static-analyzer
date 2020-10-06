@@ -1,6 +1,7 @@
 #include "PKBImplementation.h"
 
 #include "DesignExtractor.h"
+#include "Foost.hpp"
 #include "Logger.h"
 #include "PKB.h"
 #include "Parser.h"
@@ -11,41 +12,6 @@
 #include <vector>
 
 namespace backend {
-
-template <typename T>
-std::unordered_set<T>
-getVisitedInDFS(const T& start, const std::unordered_map<T, std::unordered_set<T>>& graph, bool isTransitive) {
-    auto it = graph.find(start);
-    if (it == graph.end()) {
-        return {};
-    }
-    const std::unordered_set<T>& nextHops = it->second;
-
-    if (!isTransitive) {
-        return nextHops;
-    }
-
-    std::unordered_set<T> visited;
-    std::vector<T> toVisit;
-    for (const T& elem : nextHops) {
-        toVisit.push_back(elem);
-    }
-
-    while (!toVisit.empty()) {
-        T visiting = toVisit.back();
-        toVisit.pop_back();
-        if (visited.find(visiting) != visited.end()) {
-            continue;
-        }
-        visited.insert(visiting);
-        auto it = graph.find(visiting);
-        if (it == graph.end()) {
-            continue;
-        }
-        toVisit.insert(toVisit.end(), it->second.begin(), it->second.end());
-    }
-    return visited;
-}
 
 PKBImplementation::PKBImplementation(const TNode& ast) {
     logWord("PKB starting with ast");
@@ -102,6 +68,16 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
         allAssignmentStatements.insert(tNodeToStatementNumber[i]);
     }
 
+    // Get all while statements:
+    for (auto i : tNodeTypeToTNodesMap[While]) {
+        allWhileStatements.insert(tNodeToStatementNumber[i]);
+    }
+
+    // Get all if statements:
+    for (auto i : tNodeTypeToTNodesMap[IfElse]) {
+        allIfElseStatements.insert(tNodeToStatementNumber[i]);
+    }
+
     // Attribute-based retrieval
     for (auto tNode : tNodeTypeToTNodesMap[Call]) {
         PROCEDURE_NAME calledProcedureName = tNode->children.front().name;
@@ -137,6 +113,8 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
 
     // Pattern
     patternsMap = extractor::getPatternsMap(tNodeTypeToTNodesMap[Assign], tNodeToStatementNumber);
+    conditionVariablesToStatementNumbers =
+    extractor::getConditionVariablesToStatementNumbers(statementNumberToTNode);
 
     // Uses
     std::unordered_map<const TNode*, std::unordered_set<std::string>> usesMapping =
@@ -585,21 +563,60 @@ bool PKBImplementation::isAssign(STATEMENT_NUMBER s) const {
 
 PROCEDURE_NAME_SET PKBImplementation::getProcedureThatCalls(const VARIABLE_NAME& procedureName,
                                                             bool isTransitive) const {
-    return getVisitedInDFS(procedureName, allProcedureNamesThatCalls, isTransitive);
+    return foost::getVisitedInDFS(procedureName, allProcedureNamesThatCalls, isTransitive);
 }
 
 PROCEDURE_NAME_SET PKBImplementation::getProceduresCalledBy(const VARIABLE_NAME& procedureName,
                                                             bool isTransitive) const {
-    return getVisitedInDFS(procedureName, allProcedureNamesCalledBy, isTransitive);
+    return foost::getVisitedInDFS(procedureName, allProcedureNamesCalledBy, isTransitive);
 }
 
 STATEMENT_NUMBER_SET
 PKBImplementation::getNextStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const {
-    return getVisitedInDFS(statementNumber, nextRelationship, isTransitive);
+    return foost::getVisitedInDFS(statementNumber, nextRelationship, isTransitive);
 }
 
 STATEMENT_NUMBER_SET PKBImplementation::getPreviousStatementOf(STATEMENT_NUMBER statementNumber,
                                                                bool isTransitive) const {
-    return getVisitedInDFS(statementNumber, previousRelationship, isTransitive);
+    return foost::getVisitedInDFS(statementNumber, previousRelationship, isTransitive);
+}
+
+STATEMENT_NUMBER_SET PKBImplementation::getAllWhileStatementsThatMatch(const VARIABLE_NAME& variable,
+                                                                       const std::string& pattern,
+                                                                       bool isSubExpr) const {
+    if (!pattern.empty() || !isSubExpr) {
+        throw std::runtime_error(
+        "getAllWhileStatementsThatMatch: body-pattern match is not implemented yet.");
+    }
+    // Get all while statements, and get all statements whose cond uses variable, and find intersection.
+    auto it = conditionVariablesToStatementNumbers.find(variable);
+    if (it == conditionVariablesToStatementNumbers.end()) {
+        return {};
+    }
+    const STATEMENT_NUMBER_SET& conditionsThatMatches = it->second;
+
+    return foost::SetIntersection(allWhileStatements, conditionsThatMatches);
+}
+
+STATEMENT_NUMBER_SET PKBImplementation::getAllIfElseStatementsThatMatch(const VARIABLE_NAME& variable,
+                                                                        const std::string& ifPattern,
+                                                                        bool ifPatternIsSubExpr,
+                                                                        const std::string& elsePattern,
+                                                                        bool elsePatternIsSubExpr) const {
+    if (!ifPattern.empty() || !elsePattern.empty() || !ifPatternIsSubExpr || !elsePatternIsSubExpr) {
+        throw std::runtime_error(
+        "getAllIfElseStatementsThatMatch: body-pattern match is not implemented yet.");
+    }
+    if (variable == "_") {
+        return allIfElseStatements;
+    }
+    // Get all if statements, and get all statements whose cond uses variable, and find intersection.
+    auto it = conditionVariablesToStatementNumbers.find(variable);
+    if (it == conditionVariablesToStatementNumbers.end()) {
+        return {};
+    }
+    const STATEMENT_NUMBER_SET& conditionsThatMatches = it->second;
+
+    return foost::SetIntersection(allIfElseStatements, conditionsThatMatches);
 }
 } // namespace backend
