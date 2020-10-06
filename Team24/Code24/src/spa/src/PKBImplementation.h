@@ -23,6 +23,13 @@ class PKBImplementation : virtual public backend::PKB {
     bool isIfElse(STATEMENT_NUMBER s) const override;
     bool isAssign(STATEMENT_NUMBER s) const override;
 
+    const STATEMENT_NUMBER_SET getCallStatementsWithProcedureName(PROCEDURE_NAME procedureName) const override;
+    const PROCEDURE_NAME getProcedureNameFromCallStatement(STATEMENT_NUMBER callStatementNumber) const override;
+    const STATEMENT_NUMBER_SET getReadStatementsWithVariableName(VARIABLE_NAME variableName) const override;
+    const VARIABLE_NAME getVariableNameFromReadStatement(STATEMENT_NUMBER readStatementNumber) const override;
+    const STATEMENT_NUMBER_SET getPrintStatementsWithVariableName(VARIABLE_NAME variableName) const override;
+    const VARIABLE_NAME getVariableNameFromPrintStatement(STATEMENT_NUMBER printStatementNumber) const override;
+
     STATEMENT_NUMBER_SET getDirectFollow(STATEMENT_NUMBER s) const override;
     STATEMENT_NUMBER_SET getDirectFollowedBy(STATEMENT_NUMBER s) const override;
     STATEMENT_NUMBER_SET getStatementsFollowedBy(STATEMENT_NUMBER s) const override;
@@ -128,5 +135,10 @@ class PKBImplementation : virtual public backend::PKB {
     PROCEDURE_NAME_LIST allProceduresName;
     STATEMENT_NUMBER_SET allStatementsNumber;
     STATEMENT_NUMBER_SET allAssignmentStatements;
+    std::unordered_map<STATEMENT_NUMBER, const TNode*> statementNumberToTNode;
+
+    std::unordered_map<PROCEDURE_NAME, STATEMENT_NUMBER_SET> procedureNameToCallStatements;
+    std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_SET> variableNameToReadStatements;
+    std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_SET> variableNameToPrintStatements;
 };
 } // namespace backend

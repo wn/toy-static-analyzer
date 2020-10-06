@@ -31,6 +31,13 @@ class PKBMock : public backend::PKB {
     bool isIfElse(STATEMENT_NUMBER s) const override;
     bool isAssign(STATEMENT_NUMBER s) const override;
 
+    const STATEMENT_NUMBER_SET getCallStatementsWithProcedureName(PROCEDURE_NAME procedureName) const override;
+    const PROCEDURE_NAME getProcedureNameFromCallStatement(STATEMENT_NUMBER callStatementNumber) const override;
+    const STATEMENT_NUMBER_SET getReadStatementsWithVariableName(VARIABLE_NAME variableName) const override;
+    const VARIABLE_NAME getVariableNameFromReadStatement(STATEMENT_NUMBER readStatementNumber) const override;
+    const STATEMENT_NUMBER_SET getPrintStatementsWithVariableName(VARIABLE_NAME variableName) const override;
+    const VARIABLE_NAME getVariableNameFromPrintStatement(STATEMENT_NUMBER printStatementNumber) const override;
+
     const STATEMENT_NUMBER_SET& getAllStatements() const override;
     const VARIABLE_NAME_LIST& getAllVariables() const override;
     const PROCEDURE_NAME_LIST& getAllProcedures() const override;

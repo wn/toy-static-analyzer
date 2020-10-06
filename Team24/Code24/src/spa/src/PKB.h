@@ -45,6 +45,19 @@ class PKB {
     virtual bool isIfElse(STATEMENT_NUMBER s) const = 0;
     virtual bool isAssign(STATEMENT_NUMBER s) const = 0;
 
+
+    /* -- ATTRIBUTE-BASED RETRIEVAL * -- */
+    virtual const STATEMENT_NUMBER_SET getCallStatementsWithProcedureName(PROCEDURE_NAME procedureName) const = 0;
+    virtual const PROCEDURE_NAME
+    getProcedureNameFromCallStatement(STATEMENT_NUMBER callStatementNumber) const = 0;
+
+    virtual const STATEMENT_NUMBER_SET getReadStatementsWithVariableName(VARIABLE_NAME variableName) const = 0;
+    virtual const VARIABLE_NAME getVariableNameFromReadStatement(STATEMENT_NUMBER readStatementNumber) const = 0;
+
+    virtual const STATEMENT_NUMBER_SET getPrintStatementsWithVariableName(VARIABLE_NAME variableName) const = 0;
+    virtual const VARIABLE_NAME
+    getVariableNameFromPrintStatement(STATEMENT_NUMBER printStatementNumber) const = 0;
+
     /* -- FOLLOWS / FOLLOWS* -- */
 
     // Retrieves all the statements that appear after the statement at

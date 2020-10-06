@@ -1,5 +1,7 @@
 #include "TestQEHelper.h"
 
+#include "PKB.h"
+
 namespace qpbackend {
 namespace qetest {
 
@@ -80,6 +82,29 @@ const CONSTANT_NAME_SET& PKBMock::getAllConstants() const {
         constants = { "0", "1" };
     }
     return constants;
+}
+
+
+const STATEMENT_NUMBER_SET PKBMock::getCallStatementsWithProcedureName(PROCEDURE_NAME procedureName) const {
+    const STATEMENT_NUMBER_SET result = STATEMENT_NUMBER_SET();
+    return result;
+}
+const PROCEDURE_NAME PKBMock::getProcedureNameFromCallStatement(STATEMENT_NUMBER callStatementNumber) const {
+    return PROCEDURE_NAME();
+}
+const STATEMENT_NUMBER_SET PKBMock::getReadStatementsWithVariableName(VARIABLE_NAME variableName) const {
+    const STATEMENT_NUMBER_SET result = STATEMENT_NUMBER_SET();
+    return result;
+}
+const VARIABLE_NAME PKBMock::getVariableNameFromReadStatement(STATEMENT_NUMBER readStatementNumber) const {
+    return VARIABLE_NAME();
+}
+const STATEMENT_NUMBER_SET PKBMock::getPrintStatementsWithVariableName(VARIABLE_NAME variableName) const {
+    const STATEMENT_NUMBER_SET result = STATEMENT_NUMBER_SET();
+    return result;
+}
+const VARIABLE_NAME PKBMock::getVariableNameFromPrintStatement(STATEMENT_NUMBER printStatementNumber) const {
+    return VARIABLE_NAME();
 }
 
 STATEMENT_NUMBER_SET PKBMock::getDirectFollowedBy(STATEMENT_NUMBER s) const {

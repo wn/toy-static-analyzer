@@ -1132,5 +1132,173 @@ TEST_CASE("Test getPreviousStatementOf") {
     STATEMENT_NUMBER_SET expected_non_transitive_10 = { 9 };
     REQUIRE(actual_non_transitive_10 == expected_non_transitive_10);
 }
+
+TEST_CASE("getCallStatementsWithProcedureName") {
+    const char program[] = "procedure a {         "
+                           "  call b;             " // 1
+                           "  call c;             " // 2
+                           "}"
+                           ""
+                           "procedure b {         "
+                           "  call c;             " // 3
+                           "}"
+                           ""
+                           "procedure c {"
+                           "  x = 1;              " // 4
+                           "}";
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    STATEMENT_NUMBER_SET expected = { 1 };
+    REQUIRE(pkb.getCallStatementsWithProcedureName("b") == expected);
+
+    expected = { 2, 3 };
+    REQUIRE(pkb.getCallStatementsWithProcedureName("c") == expected);
+
+    expected = {};
+    REQUIRE(pkb.getCallStatementsWithProcedureName("nonexistentproc") == expected);
+}
+
+TEST_CASE("getReadStatementsWithVariableName") {
+    const char program[] = "procedure a {         "
+                           "  read a;             " // 1
+                           "  call b;             " // 2
+                           "}"
+                           ""
+                           "procedure b {         "
+                           "  print c;             " // 3
+                           "}"
+                           ""
+                           "procedure c {"
+                           "  read b;              " // 4
+                           "  read c;              " // 5
+                           "}";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    STATEMENT_NUMBER_SET expected = { 1 };
+    REQUIRE(pkb.getReadStatementsWithVariableName("a") == expected);
+
+    expected = { 4 };
+    REQUIRE(pkb.getReadStatementsWithVariableName("b") == expected);
+
+    expected = { 5 };
+    REQUIRE(pkb.getReadStatementsWithVariableName("c") == expected);
+
+    expected = {};
+    REQUIRE(pkb.getReadStatementsWithVariableName("nonexistentvariable") == expected);
+}
+
+TEST_CASE("getPrintStatementsWithVariableName") {
+    const char program[] = "procedure a {         "
+                           "  print a;             " // 1
+                           "  call b;             " // 2
+                           "}"
+                           ""
+                           "procedure b {         "
+                           "  read c;             " // 3
+                           "}"
+                           ""
+                           "procedure c {"
+                           "  print b;              " // 4
+                           "  print c;              " // 5
+                           "}";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    STATEMENT_NUMBER_SET expected = { 1 };
+    REQUIRE(pkb.getPrintStatementsWithVariableName("a") == expected);
+
+    expected = { 4 };
+    REQUIRE(pkb.getPrintStatementsWithVariableName("b") == expected);
+
+    expected = { 5 };
+    REQUIRE(pkb.getPrintStatementsWithVariableName("c") == expected);
+
+    expected = {};
+    REQUIRE(pkb.getPrintStatementsWithVariableName("nonexistentvariable") == expected);
+}
+
+
+TEST_CASE("getProcedureNameFromCallStatement") {
+    const char program[] = "procedure a {         "
+                           "  call c;             " // 1
+                           "  call b;             " // 2
+                           "}"
+                           ""
+                           "procedure b {         "
+                           "  call c;             " // 3
+                           "}"
+                           ""
+                           "procedure c {"
+                           "  x = 1;              " // 4
+                           "}";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    REQUIRE(pkb.getProcedureNameFromCallStatement(1) == "c");
+    REQUIRE(pkb.getProcedureNameFromCallStatement(2) == "b");
+    REQUIRE(pkb.getProcedureNameFromCallStatement(3) == "c");
+    REQUIRE(pkb.getProcedureNameFromCallStatement(4) == "");
+}
+TEST_CASE("getVariableNameFromReadStatement") {
+    const char program[] = "procedure a {         "
+                           "  read i;             " // 1
+                           "  call need;          " // 2
+                           "}"
+                           ""
+                           "procedure need {      "
+                           "  read a;             " // 3
+                           "}"
+                           ""
+                           "procedure c {"
+                           "  read job;           " // 4
+                           "  print badly;        " // 5
+                           "}";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    REQUIRE(pkb.getVariableNameFromReadStatement(1) == "i");
+    REQUIRE(pkb.getVariableNameFromReadStatement(2) == "");
+    REQUIRE(pkb.getVariableNameFromReadStatement(3) == "a");
+    REQUIRE(pkb.getVariableNameFromReadStatement(4) == "job");
+    REQUIRE(pkb.getVariableNameFromReadStatement(5) == "");
+}
+TEST_CASE("getVariableNameFromPrintStatement") {
+    const char program[] = "procedure a {           "
+                           "  print i;              " // 1
+                           "  call need;            " // 2
+                           "}"
+                           ""
+                           "procedure need {        "
+                           "  print a;              " // 3
+                           "}"
+                           ""
+                           "procedure c {"
+                           "  print job;           " // 4
+                           "  read badly;          " // 5
+                           "}";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    REQUIRE(pkb.getVariableNameFromPrintStatement(1) == "i");
+    REQUIRE(pkb.getVariableNameFromPrintStatement(2) == "");
+    REQUIRE(pkb.getVariableNameFromPrintStatement(3) == "a");
+    REQUIRE(pkb.getVariableNameFromPrintStatement(4) == "job");
+    REQUIRE(pkb.getVariableNameFromPrintStatement(5) == "");
+}
+
+
 } // namespace testpkb
 } // namespace backend

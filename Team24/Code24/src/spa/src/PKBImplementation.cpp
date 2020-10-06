@@ -2,7 +2,9 @@
 
 #include "DesignExtractor.h"
 #include "Logger.h"
+#include "PKB.h"
 #include "Parser.h"
+#include "TNode.h"
 
 #include <unordered_map>
 #include <unordered_set>
@@ -55,8 +57,7 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
 
 
     std::unordered_map<const TNode*, int> tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
-    std::unordered_map<int, const TNode*> statementNumberToTNode =
-    extractor::getStatementNumberToTNode(tNodeToStatementNumber);
+    statementNumberToTNode = extractor::getStatementNumberToTNode(tNodeToStatementNumber);
     tNodeTypeToTNodesMap = extractor::getTNodeTypeToTNodes(ast);
     statementNumberToTNodeType = extractor::getStatementNumberToTNodeTypeMap(statementNumberToTNode);
 
@@ -99,6 +100,25 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
     // Get all assignment statements:
     for (auto i : tNodeTypeToTNodesMap[Assign]) {
         allAssignmentStatements.insert(tNodeToStatementNumber[i]);
+    }
+
+    // Attribute-based retrieval
+    for (auto tNode : tNodeTypeToTNodesMap[Call]) {
+        PROCEDURE_NAME calledProcedureName = tNode->children.front().name;
+        STATEMENT_NUMBER statementNumber = tNodeToStatementNumber[tNode];
+        procedureNameToCallStatements[calledProcedureName].insert(statementNumber);
+    }
+
+    for (auto tNode : tNodeTypeToTNodesMap[Read]) {
+        VARIABLE_NAME variableName = tNode->children.front().name;
+        STATEMENT_NUMBER statementNumber = tNodeToStatementNumber[tNode];
+        variableNameToReadStatements[variableName].insert(statementNumber);
+    }
+
+    for (auto tNode : tNodeTypeToTNodesMap[Print]) {
+        VARIABLE_NAME variableName = tNode->children.front().name;
+        STATEMENT_NUMBER statementNumber = tNodeToStatementNumber[tNode];
+        variableNameToPrintStatements[variableName].insert(statementNumber);
     }
 
     // Follow
@@ -208,6 +228,67 @@ const PROCEDURE_NAME_LIST& PKBImplementation::getAllProcedures() const {
 
 const CONSTANT_NAME_SET& PKBImplementation::getAllConstants() const {
     return allConstantsName;
+}
+
+
+/** -------------------------- ATTRIBUTE-BASED RETRIEVAL ---------------------------- **/
+const STATEMENT_NUMBER_SET PKBImplementation::getCallStatementsWithProcedureName(PROCEDURE_NAME procedureName) const {
+    if (procedureNameToCallStatements.find(procedureName) == procedureNameToCallStatements.end()) {
+        return STATEMENT_NUMBER_SET();
+    }
+    return procedureNameToCallStatements.at(procedureName);
+}
+
+const PROCEDURE_NAME
+PKBImplementation::getProcedureNameFromCallStatement(STATEMENT_NUMBER callStatementNumber) const {
+    if (statementNumberToTNode.find(callStatementNumber) == statementNumberToTNode.end()) {
+        return VARIABLE_NAME();
+    }
+
+    if (statementNumberToTNodeType.at(callStatementNumber) != Call) {
+        return VARIABLE_NAME();
+    }
+
+    return statementNumberToTNode.at(callStatementNumber)->children.front().name;
+}
+
+const STATEMENT_NUMBER_SET PKBImplementation::getReadStatementsWithVariableName(VARIABLE_NAME variableName) const {
+    if (variableNameToReadStatements.find(variableName) == variableNameToReadStatements.end()) {
+        return STATEMENT_NUMBER_SET();
+    }
+    return variableNameToReadStatements.at(variableName);
+}
+
+const VARIABLE_NAME PKBImplementation::getVariableNameFromReadStatement(STATEMENT_NUMBER readStatementNumber) const {
+    if (statementNumberToTNode.find(readStatementNumber) == statementNumberToTNode.end()) {
+        return VARIABLE_NAME();
+    }
+
+    if (statementNumberToTNodeType.at(readStatementNumber) != Read) {
+        return VARIABLE_NAME();
+    }
+
+    return statementNumberToTNode.at(readStatementNumber)->children.front().name;
+}
+
+const STATEMENT_NUMBER_SET PKBImplementation::getPrintStatementsWithVariableName(VARIABLE_NAME variableName) const {
+    if (variableNameToPrintStatements.find(variableName) == variableNameToPrintStatements.end()) {
+        return STATEMENT_NUMBER_SET();
+    }
+    return variableNameToPrintStatements.at(variableName);
+}
+
+const VARIABLE_NAME
+PKBImplementation::getVariableNameFromPrintStatement(STATEMENT_NUMBER printStatementNumber) const {
+    if (statementNumberToTNode.find(printStatementNumber) == statementNumberToTNode.end()) {
+        return VARIABLE_NAME();
+    }
+
+    if (statementNumberToTNodeType.at(printStatementNumber) != Print) {
+        return VARIABLE_NAME();
+    }
+
+    return statementNumberToTNode.at(printStatementNumber)->children.front().name;
 }
 
 /** -------------------------- FOLLOWS ---------------------------- **/
