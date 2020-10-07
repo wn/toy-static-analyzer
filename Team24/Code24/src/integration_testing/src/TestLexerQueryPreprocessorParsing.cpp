@@ -550,6 +550,105 @@ TEST_CASE("Test Next*(INTEGER, INTEGER)") {
     REQUIRE(expectedQuery == actualQuery);
 }
 
+// Test Calls ‘(’ entRef ‘,’ entRef ‘)’
+TEST_CASE("Test Calls(synonym, synonym)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that Calls(a, w)");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::CALLS, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::STMT_SYNONYM, "w" } } },
+        {}
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test Calls(_, _)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that Calls(_, _)");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::CALLS, { qpbackend::WILDCARD, "_" }, { qpbackend::WILDCARD, "_" } } },
+        {}
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+
+TEST_CASE("Test Calls(IDENT, IDENT)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that Calls(\"hello\", \"there\")");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::CALLS, { qpbackend::NAME_ENTITY, "hello" }, { qpbackend::NAME_ENTITY, "there" } } },
+        {}
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+// Test Calls* ‘(’ entRef ‘,’ entRef ‘)’
+TEST_CASE("Test Calls*(synonym, synonym)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that Calls*(a, w)");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::CALLST, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::STMT_SYNONYM, "w" } } },
+        {}
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test Calls*(_, _)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that Calls*(_, _)");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::CALLST, { qpbackend::WILDCARD, "_" }, { qpbackend::WILDCARD, "_" } } },
+        {}
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+
+TEST_CASE("Test Calls*(IDENT, IDENT)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that Calls*(\"hello\", \"there\")");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::CALLST, { qpbackend::NAME_ENTITY, "hello" }, { qpbackend::NAME_ENTITY, "there" } } },
+        {}
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
 
 // Test multiple such that clauses
 
