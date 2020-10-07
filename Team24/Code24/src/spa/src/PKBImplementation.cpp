@@ -45,7 +45,6 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
         allConstantsName.insert(i->constant);
     }
 
-    // TODO: allVariablesName is currently a vector. To change to unordered_set
     // Get all variables name:
     std::unordered_set<std::string> varNames;
     for (auto i : tNodeTypeToTNodesMap[Variable]) {
@@ -55,7 +54,6 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
     }
     allVariablesName = { varNames.begin(), varNames.end() };
 
-    // TODO: allProceduresName is currently a vector. To change to unordered_set
     // Get all procedure name:
     std::unordered_set<std::string> procedureNames;
     for (auto i : tNodeTypeToTNodesMap[Procedure]) {
@@ -109,7 +107,13 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
 
     // next
     nextRelationship = extractor::getNextRelationship(tNodeTypeToTNodesMap, tNodeToStatementNumber);
+    for (const auto& pair : nextRelationship) {
+        statementsWithNext.insert(pair.first);
+    }
     previousRelationship = extractor::getPreviousRelationship(nextRelationship);
+    for (const auto& pair : previousRelationship) {
+        statementsWithPrev.insert(pair.first);
+    }
 
     // Pattern
     patternsMap = extractor::getPatternsMap(tNodeTypeToTNodesMap[Assign], tNodeToStatementNumber);
@@ -618,5 +622,13 @@ STATEMENT_NUMBER_SET PKBImplementation::getAllIfElseStatementsThatMatch(const VA
     const STATEMENT_NUMBER_SET& conditionsThatMatches = it->second;
 
     return foost::SetIntersection(allIfElseStatements, conditionsThatMatches);
+}
+
+const STATEMENT_NUMBER_SET& PKBImplementation::getAllStatementsWithNext() const {
+    return statementsWithNext;
+}
+
+const STATEMENT_NUMBER_SET& PKBImplementation::getAllStatementsWithPrev() const {
+    return statementsWithPrev;
 }
 } // namespace backend

@@ -67,6 +67,8 @@ class PKBImplementation : virtual public backend::PKB {
 
     STATEMENT_NUMBER_SET getNextStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const override;
     STATEMENT_NUMBER_SET getPreviousStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const override;
+    const STATEMENT_NUMBER_SET& getAllStatementsWithNext() const override;
+    const STATEMENT_NUMBER_SET& getAllStatementsWithPrev() const override;
 
     // Pattern
     STATEMENT_NUMBER_SET
@@ -133,6 +135,8 @@ class PKBImplementation : virtual public backend::PKB {
     // Next helper:
     std::unordered_map<STATEMENT_NUMBER, std::unordered_set<STATEMENT_NUMBER>> nextRelationship;
     std::unordered_map<STATEMENT_NUMBER, std::unordered_set<STATEMENT_NUMBER>> previousRelationship;
+    STATEMENT_NUMBER_SET statementsWithNext;
+    STATEMENT_NUMBER_SET statementsWithPrev;
 
     // Performance booster fields:
     std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash> tNodeTypeToTNodesMap;

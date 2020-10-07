@@ -1050,6 +1050,14 @@ STATEMENT_NUMBER_SET PKBMock::getAllIfElseStatementsThatMatch(const VARIABLE_NAM
                                                               bool elsePatternIsSubExpr) const {
     return STATEMENT_NUMBER_SET();
 }
+const STATEMENT_NUMBER_SET& PKBMock::getAllStatementsWithNext() const {
+    static STATEMENT_NUMBER_SET tmp;
+    return tmp;
+}
+const STATEMENT_NUMBER_SET& PKBMock::getAllStatementsWithPrev() const {
+    static STATEMENT_NUMBER_SET tmp;
+    return tmp;
+}
 
 
 } // namespace qetest

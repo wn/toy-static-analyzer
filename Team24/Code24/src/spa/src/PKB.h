@@ -190,6 +190,9 @@ class PKB {
     virtual STATEMENT_NUMBER_SET
     getPreviousStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const = 0;
 
+    virtual const STATEMENT_NUMBER_SET& getAllStatementsWithNext() const = 0;
+    virtual const STATEMENT_NUMBER_SET& getAllStatementsWithPrev() const = 0;
+
     /* -- Patterns -- */
     // Get all assignment statements that matches the input pattern.
     // Example:

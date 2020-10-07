@@ -1415,5 +1415,70 @@ TEST_CASE("Test getAllIfElseStatementsThatMatch") {
     STATEMENT_NUMBER_SET expected8 = { 8 };
     REQUIRE(actual8 == expected8);
 }
+
+TEST_CASE("Test getAllStatementsWithNext") {
+    const char program[] = "procedure a {                   "
+                           "  while (a + b == c) {          " // 1
+                           "    y = 1;                      " // 2
+                           "  }                             "
+                           "  if (a + b == d + g) then {    " // 3
+                           "    while (a + d == e) {        " // 4
+                           "      y = 1;                    " // 5
+                           "    }                           "
+                           "  } else {                      "
+                           "    y = 2;                      " // 6
+                           "}                               "
+                           "  if (a + b == h) then {        " // 7
+                           "    y = 1;                      " // 8
+                           "  } else {                      "
+                           "    y = 2;                      " // 9
+                           "  }                             "
+                           "}"
+                           "procedure b {"
+                           "  a = 2;                        " // 10
+                           "  b = 2;                        " // 11
+                           "}";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    STATEMENT_NUMBER_SET actual = pkb.getAllStatementsWithNext();
+    STATEMENT_NUMBER_SET expected = { 1, 2, 3, 4, 5, 6, 7, 10 };
+    REQUIRE(actual == expected);
+}
+
+TEST_CASE("Test getAllStatementsWithPrev") {
+    const char program[] = "procedure a {                   "
+                           "  a = 1;                        " // 1
+                           "  while (a + b == c) {          " // 2
+                           "    y = 1;                      " // 3
+                           "  }                             "
+                           "  if (a + b == d + g) then {    " // 4
+                           "    while (a + d == e) {        " // 5
+                           "      y = 1;                    " // 6
+                           "    }                           "
+                           "  } else {                      "
+                           "    y = 2;                      " // 7
+                           "}                               "
+                           "  if (a + b == h) then {        " // 8
+                           "    y = 1;                      " // 9
+                           "  } else {                      "
+                           "    y = 2;                      " // 10
+                           "  }                             "
+                           "}"
+                           "procedure b {"
+                           "  a = 2;                        " // 11
+                           "  b = 2;                        " // 12
+                           "}";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    STATEMENT_NUMBER_SET actual = pkb.getAllStatementsWithPrev();
+    STATEMENT_NUMBER_SET expected = { 2, 3, 4, 5, 6, 7, 8, 9, 10, 12 };
+    REQUIRE(actual == expected);
+}
 } // namespace testpkb
 } // namespace backend

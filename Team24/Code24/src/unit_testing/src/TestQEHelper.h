@@ -93,6 +93,8 @@ class PKBMock : public backend::PKB {
                                                          bool ifPatternIsSubExpr,
                                                          const std::string& elsePattern,
                                                          bool elsePatternIsSubExpr) const override;
+    const STATEMENT_NUMBER_SET& getAllStatementsWithNext() const override;
+    const STATEMENT_NUMBER_SET& getAllStatementsWithPrev() const override;
 };
 
 // For string representing two vectors
