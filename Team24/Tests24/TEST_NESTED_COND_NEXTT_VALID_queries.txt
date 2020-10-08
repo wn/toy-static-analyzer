@@ -1,0 +1,64 @@
+1 - (Valid Query) Next*(s,s)
+stmt s;
+Select s such that Next*(s,s)
+4, 5, 6, 7, 8, 11, 12
+5000
+2 - (Valid Query) Next*(w,a), a in nested while loops
+assign a; while w;
+Select w such that Next*(w,a)
+4, 5, 7, 11
+5000
+3 - (Valid Query) Next*(7,5), 7 part of stmtLst of while at 5
+read rd;
+Select rd such that Next*(7,5)
+1, 2
+5000
+4 - (Valid Query) Next*(9,12), cross procedure
+stmt s;
+Select s such that Next*(10,12)
+none
+5000
+5 - (Valid Query) Next*(2,_)
+read rd;
+Select rd such that Next*(2,_)
+1, 2
+5000
+6 - (Valid Query) Next*(_,1)
+read rd;
+Select rd such that Next*(_,1)
+none
+5000
+7 - (Valid Query) Next*(_,2)
+read rd;
+Select rd such that Next*(_,2)
+1, 2
+5000
+8 - (Valid Query) Next*(pt,_)
+print pt;
+Select pt such that Next*(pt,_)
+6
+5000
+9 - (Valid Query) Next*(_,a)
+assign a;
+Select a such that Next*(_,a)
+8, 9, 12
+5000
+10 - (Valid Query) Next*(4,w)
+while w;
+Select w such that Next*(4,w)
+4, 5, 7
+5000
+11 - (Valid Query) Next*(a,2)
+assign a;
+Select a such that Next*(a,2)
+none
+5000
+12 - (Valid Query) Next*(_,_)
+read rd;
+Select rd such that Next*(_,_)
+1, 2
+5000
+13 - (Valid Query) Next*(pt,s)
+print pt; stmt s;
+Select s such that Next*(pt,s)
+4, 5, 6, 7, 8, 10

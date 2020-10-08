@@ -1,0 +1,65 @@
+1 - (Valid Query) Next(s,s)
+stmt s;
+Select s such that Next(s,s)
+none
+5000
+2 - (Valid Query) Next(w,a)
+assign a; while w;
+Select a such that Next(w,a)
+8, 12
+5000
+3 - (Valid Query) Next(s,_)
+stmt s;
+Select s such that Next(s,_)
+1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 12
+5000
+4 - (Valid Query) Next(_,pt)
+print pt;
+Select pt such that Next(_,pt)
+6
+5000
+5 - (Valid Query) Next(3,s), if fork in line 3
+stmt s;
+Select s such that Next(3,s)
+4, 9
+5000
+6 - (Valid Query) Next(10,s), last line of proc main in line 10
+stmt s;
+Select s such that Next(10,s)
+none
+5000
+7 - (Valid Query) Next(s,10)
+stmt s;
+Select s such that Next(s,10)
+4, 9
+5000
+8 - (Valid Query) Next(2,3)
+read rd;
+Select rd such that Next(2,3)
+1, 2
+5000
+9 - (Valid Query) Next(3,2)
+read rd;
+Select rd such that Next(3,2)
+none
+5000
+10 - (Valid Query) Next(2,_)
+read rd;
+Select rd such that Next(2,_)
+1, 2
+5000
+11 - (Valid Query) Next(_,2)
+read rd;
+Select rd such that Next(2,_)
+1, 2
+5000
+12 - (Valid Query) Next(10,11), cross procedure
+stmt s;
+Select s such that Next(10,11)
+none
+5000
+13 - (Valid Query) Next(_,_)
+call c;
+Select c such that Next(_,_)
+10
+5000

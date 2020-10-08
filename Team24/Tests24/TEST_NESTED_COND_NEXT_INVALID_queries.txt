@@ -1,0 +1,20 @@
+1 - (Invalid Query) Next(proc, s), procedure as arguments
+stmt s; procedure proc;
+Select s such that Next(proc, s)
+none
+5000
+2 - (Invalid Query) Next(a, s), undefined a
+stmt s;
+Select s such that Next(a, s)
+none
+5000
+3 - (Invalid Query) Next(proc, "main"), string as input
+stmt s; procedure proc;
+Select s such that Next(proc, "main")
+none
+5000
+4 - (Invalid Query) Next(2000,2001), references non-existent lines
+stmt s; procedure proc;
+Select s such that Next(2000, 2001)
+none
+5000

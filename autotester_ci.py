@@ -26,6 +26,11 @@ TEST_NESTED_COND_PREFIX = 'TEST-NESTED-COND_'
 TEST_OPERATORS_N_PATTERNS_PREFIX = 'TEST-OPERATORS-N-PATTERNS_'
 TEST_PARSER_KEYWORDS_RECOGNITION = 'TEST-PARSER-KEYWORDS-RECOGNITION_'
 
+TEST_NESTED_COND_NEXT_VALID = 'TEST_NESTED_COND_NEXT_VALID_'
+TEST_NESTED_COND_NEXT_INVALID = 'TEST_NESTED_COND_NEXT_INVALID_'
+TEST_NESTED_COND_NEXTT_VALID = 'TEST_NESTED_COND_NEXTT_VALID_'
+TEST_NESTED_COND_NEXTT_INVALID = 'TEST_NESTED_COND_NEXTT_INVALID_'
+
 SIMPLE_SOURCE_QPL_QUERY_PAIRS = (
         [('trivial_source', 'trivial_queries')]
         + formatter(TEST_OPERATOR_PREFIX, [('source', 'queries')])
@@ -35,6 +40,10 @@ SIMPLE_SOURCE_QPL_QUERY_PAIRS = (
         + formatter(TEST_NESTED_COND_PREFIX, [('source', 'queries')])
         + formatter(TEST_OPERATORS_N_PATTERNS_PREFIX, [('source', 'queries')])
         + formatter(TEST_PARSER_KEYWORDS_RECOGNITION, [('source', 'queries')])
+        + formatter(TEST_NESTED_COND_NEXT_VALID, [('source', 'queries')])
+        + formatter(TEST_NESTED_COND_NEXT_INVALID, [('source', 'queries')])
+        + formatter(TEST_NESTED_COND_NEXTT_VALID, [('source', 'queries')])
+        + formatter(TEST_NESTED_COND_NEXTT_INVALID, [('source', 'queries')])
 )
 
 SIMPLE_SOURCE_QPL_QUERY_FAILURE_PAIRS = (
