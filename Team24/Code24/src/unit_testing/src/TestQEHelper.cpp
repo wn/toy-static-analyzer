@@ -1164,11 +1164,108 @@ PROCEDURE_NAME_SET PKBMock::getProceduresCalledBy(const VARIABLE_NAME& procedure
 }
 
 STATEMENT_NUMBER_SET PKBMock::getNextStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const {
-    return STATEMENT_NUMBER_SET();
+    STATEMENT_NUMBER_SET lines;
+    if (test_idx == 2) {
+        if (isTransitive) {
+            switch (statementNumber) {
+            case 1:
+                lines = { 2 };
+                break;
+            case 3:
+                lines = { 4, 5, 6, 7, 8, 9 };
+                break;
+            case 4:
+                lines = { 5, 6, 7, 8, 9 };
+                break;
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+                lines = { 7, 8, 9 };
+                break;
+            default:
+                lines = {};
+            }
+        } else {
+            switch (statementNumber) {
+            case 1:
+                lines = { 2 };
+                break;
+            case 3:
+                lines = { 4 };
+                break;
+            case 4:
+                lines = { 5, 6 };
+                break;
+            case 5:
+            case 6:
+                lines = { 7 };
+                break;
+            case 7:
+                lines = { 8 };
+                break;
+            case 8:
+                lines = { 7, 9 };
+                break;
+            case 9:
+                lines = { 8 };
+                break;
+            default:
+                lines = {};
+            }
+        }
+    }
+    return lines;
 }
 
 STATEMENT_NUMBER_SET PKBMock::getPreviousStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const {
-    return STATEMENT_NUMBER_SET();
+    STATEMENT_NUMBER_SET lines;
+    if (test_idx == 2) {
+        if (isTransitive) {
+            switch (statementNumber) {
+            case 2:
+                lines = { 1 };
+                break;
+            case 4:
+                lines = { 3 };
+                break;
+            case 5:
+            case 6:
+                lines = { 3, 4 };
+                break;
+            case 7:
+            case 8:
+            case 9:
+                lines = { 3, 4, 5, 6, 7, 8, 9 };
+                break;
+            default:
+                lines = {};
+            }
+        } else {
+            switch (statementNumber) {
+            case 2:
+                lines = { 1 };
+                break;
+            case 4:
+                lines = { 3 };
+                break;
+            case 5:
+            case 6:
+                lines = { 4 };
+                break;
+            case 7:
+                lines = { 5, 6, 8 };
+                break;
+            case 8:
+                lines = { 7, 9 };
+                break;
+            case 9:
+                lines = { 8 };
+            }
+        }
+    }
+    return lines;
 }
 
 STATEMENT_NUMBER_SET PKBMock::getAllWhileStatementsThatMatch(const VARIABLE_NAME& variable,
@@ -1184,13 +1281,20 @@ STATEMENT_NUMBER_SET PKBMock::getAllIfElseStatementsThatMatch(const VARIABLE_NAM
                                                               bool elsePatternIsSubExpr) const {
     return STATEMENT_NUMBER_SET();
 }
+
 const STATEMENT_NUMBER_SET& PKBMock::getAllStatementsWithNext() const {
-    static STATEMENT_NUMBER_SET tmp;
-    return tmp;
+    static STATEMENT_NUMBER_SET lines;
+    if (test_idx == 2) {
+        lines = { 1, 3, 4, 5, 6, 7, 8, 9 };
+    }
+    return lines;
 }
 const STATEMENT_NUMBER_SET& PKBMock::getAllStatementsWithPrev() const {
-    static STATEMENT_NUMBER_SET tmp;
-    return tmp;
+    static STATEMENT_NUMBER_SET lines;
+    if (test_idx == 2) {
+        lines = { 2, 4, 5, 6, 7, 8, 9 };
+    }
+    return lines;
 }
 
 

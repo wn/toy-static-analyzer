@@ -5,7 +5,6 @@
 
 namespace qpbackend {
 namespace qetest {
-
 TEST_CASE("Test wildcard check in QEHelper") {
     REQUIRE(queryevaluator::isWildCard("_"));
     REQUIRE_FALSE(queryevaluator::isWildCard("\"_\""));
@@ -1069,5 +1068,120 @@ TEST_CASE("multiple relation clauses") {
                      { { "a", "v", "_\"1\"_" } } };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query3), { "n", "y" }));
 }
+
+TEST_CASE("Test evaluation of Next or Next* between synonyms") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryPre = { { { "s1", STMT }, { "s2", STMT } },
+                       { "s1" },
+                       { { NEXT, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                       {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre), { "1", "3", "4", "5", "6", "7", "8", "9" }));
+
+    Query queryPost = { { { "s1", STMT }, { "s2", STMT } },
+                        { "s2" },
+                        { { NEXT, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                        {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), { "2", "4", "5", "6", "7", "8", "9" }));
+
+    Query querySelf = { { { "s", STMT } }, { "s" }, { { NEXT, { STMT_SYNONYM, "s" }, { STMT_SYNONYM, "s" } } }, {} };
+    REQUIRE(qe.evaluateQuery(querySelf).empty());
+
+    Query querySelfTransitive = {
+        { { "s", STMT } }, { "s" }, { { NEXTT, { STMT_SYNONYM, "s" }, { STMT_SYNONYM, "s" } } }, {}
+    };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(querySelfTransitive), { "7", "8", "9" }));
+
+    Query queryNonStmt = { { { "rd", READ }, { "w", WHILE } },
+                           { "w" },
+                           { { NEXTT, { STMT_SYNONYM, "rd" }, { STMT_SYNONYM, "w" } } },
+                           {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryNonStmt), { "7", "8" }));
+}
+
+TEST_CASE("Test evaluation of Next or Next* between entity and synonym") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryPre = { { { "s", STMT } }, { "s" }, { { NEXT, { NUM_ENTITY, "4" }, { STMT_SYNONYM, "s" } } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre), { "5", "6" }));
+
+    Query queryPost = { { { "s", STMT } }, { "s" }, { { NEXTT, { STMT_SYNONYM, "s" }, { NUM_ENTITY, "7" } } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), { "3", "4", "5", "6", "7", "8", "9" }));
+}
+
+TEST_CASE("Test evaluation of Next or Next* between entities") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryFalse = { { { "s", STMT } }, { "s" }, { { NEXT, { NUM_ENTITY, "7" }, { NUM_ENTITY, "7" } } }, {} };
+    REQUIRE(qe.evaluateQuery(queryFalse).empty());
+
+    Query queryTrue = { { { "s", STMT } }, { "s" }, { { NEXTT, { NUM_ENTITY, "9" }, { NUM_ENTITY, "7" } } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryTrue),
+                                       { "1", "2", "3", "4", "5", "6", "7", "8", "9" }));
+}
+
+TEST_CASE("Test evaluation of Next or Next* between synonym and wildcard") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryPre = { { { "s", STMT } }, { "s" }, { { NEXT, { STMT_SYNONYM, "s" }, { WILDCARD, "_" } } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre), { "1", "3", "4", "5", "6", "7", "8", "9" }));
+
+    Query queryPost = { { { "s", STMT } }, { "s" }, { { NEXTT, { WILDCARD, "_" }, { STMT_SYNONYM, "s" } } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), { "2", "4", "5", "6", "7", "8", "9" }));
+}
+
+TEST_CASE("Test evaluation of Next/Next* between entity and wildcard") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryTrue = { { { "s", STMT } }, { "s" }, { { NEXT, { NUM_ENTITY, "9" }, { WILDCARD, "_" } } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryTrue),
+                                       { "1", "2", "3", "4", "5", "6", "7", "8", "9" }));
+
+    Query queryFalse = { { { "s", STMT } }, { "s" }, { { NEXTT, { WILDCARD, "_" }, { NUM_ENTITY, "3" } } }, {} };
+    REQUIRE(qe.evaluateQuery(queryFalse).empty());
+}
+
+TEST_CASE("Test evaluation of Next or Next*(_, _)") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+    Query query = { { { "s", STMT } }, { "s" }, { { NEXT, { WILDCARD, "_" }, { WILDCARD, "_" } } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query), { "1", "2", "3", "4", "5", "6", "7", "8", "9" }));
+}
+
+
+TEST_CASE("Test evaluation of Next or Next* with invalid arguments") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    // invalid query
+    Query query_empty = { { { "s1", STMT }, { "s2", STMT } },
+                          {},
+                          { { NEXT, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                          {} };
+    REQUIRE(qe.evaluateQuery(query_empty).empty());
+
+    // invalid synonyms
+    Query query_var = { { { "v", VARIABLE }, { "s", STMT } },
+                        { "s" },
+                        { { NEXTT, { VAR_SYNONYM, "v" }, { STMT_SYNONYM, "s" } } },
+                        {} };
+    REQUIRE(qe.evaluateQuery(query_var).empty());
+    Query query_const = { { { "c", CONSTANT }, { "s", STMT } },
+                          { "s" },
+                          { { NEXTT, { VAR_SYNONYM, "c" }, { STMT_SYNONYM, "s" } } },
+                          {} };
+    REQUIRE(qe.evaluateQuery(query_const).empty());
+
+    // invalid entity
+    Query query = { { { "s", STMT } }, { "s" }, { { NEXT, { VAR_SYNONYM, "name1" }, { VAR_SYNONYM, "name2" } } }, {} };
+    REQUIRE(qe.evaluateQuery(query).empty());
+}
+
+
 } // namespace qetest
 } // namespace qpbackend

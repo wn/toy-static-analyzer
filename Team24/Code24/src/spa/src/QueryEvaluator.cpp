@@ -250,11 +250,7 @@ bool SingleQueryEvaluator::evaluateSynonymSynonym(const backend::PKB* pkb,
     // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/246)
     // note that relation between the synonym and itself is not allowed
     // however, this does not hold for Next, fix it for the advanced
-    if (arg1 == arg2) {
-        handleError("In basic requirement, the entity has no relation with itself");
-        return false;
-    }
-
+    bool isSelfRelation = (arg1 == arg2);
     std::vector<std::string> candidates_1 = synonym_candidates[arg1];
     std::vector<std::string> candidates_2 = synonym_candidates[arg2];
 
@@ -263,20 +259,32 @@ bool SingleQueryEvaluator::evaluateSynonymSynonym(const backend::PKB* pkb,
     }
 
     // check all pairs
+    std::unordered_set<std::string> singleEntity;
     std::unordered_set<std::vector<std::string>, StringVectorHash> pairs;
     for (const auto& c1 : candidates_1) {
         std::vector<std::string> c1_result;
         c1_result = inquirePKBForRelationOrPattern(pkb, subRelationType, c1, patternStr);
-        for (const auto& c2 : candidates_2) {
-            if (isFoundInVector<std::string>(c1_result, c2)) {
-                pairs.insert({ c1, c2 });
+        if (isSelfRelation) {
+            if (isFoundInVector<std::string>(c1_result, c1)) {
+                singleEntity.insert(c1);
+            }
+        } else {
+            for (const auto& c2 : candidates_2) {
+                if (isFoundInVector<std::string>(c1_result, c2)) {
+                    pairs.insert({ c1, c2 });
+                }
             }
         }
     }
 
     // update IRT table
-    ResultTable newRT({ arg1, arg2 }, pairs);
-    groupResultTable.mergeTable(std::move(newRT));
+    if (isSelfRelation) {
+        ResultTable newRT(arg1, singleEntity);
+        groupResultTable.mergeTable(std::move(newRT));
+    } else {
+        ResultTable newRT({ arg1, arg2 }, pairs);
+        groupResultTable.mergeTable(std::move(newRT));
+    }
     updateSynonymsWithResultTable(groupResultTable);
     return !groupResultTable.isEmpty();
 }
@@ -459,6 +467,26 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelationOrPattern(co
         result = std::vector<PROCEDURE_NAME>(procs.begin(), procs.end());
         break;
     }
+    case PRENEXT: {
+        stmts = pkb->getNextStatementOf(std::stoi(arg), false);
+        result = castToStrVector<>(stmts);
+        break;
+    }
+    case POSTNEXT: {
+        stmts = pkb->getPreviousStatementOf(std::stoi(arg), false);
+        result = castToStrVector<>(stmts);
+        break;
+    }
+    case PRENEXTT: {
+        stmts = pkb->getNextStatementOf(std::stoi(arg), true);
+        result = castToStrVector<>(stmts);
+        break;
+    }
+    case POSTNEXTT: {
+        stmts = pkb->getPreviousStatementOf(std::stoi(arg), true);
+        result = castToStrVector<>(stmts);
+        break;
+    }
     case ASSIGN_PATTERN_EXACT_SRT: {
         stmts = pkb->getAllAssignmentStatementsThatMatch(arg, patternStr, false);
         result = castToStrVector<>(stmts);
@@ -526,6 +554,14 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelationWildcard(con
         result = std::vector<PROCEDURE_NAME>(procs.begin(), procs.end());
         break;
     }
+    case PRENEXT_WILD:
+        stmts = pkb->getAllStatementsWithNext();
+        result = castToStrVector<>(stmts);
+        break;
+    case POSTNEXT_WILD:
+        stmts = pkb->getAllStatementsWithPrev();
+        result = castToStrVector<>(stmts);
+        break;
     case ASSIGN_PATTERN_EXACT_SRT: {
         stmts = pkb->getAllAssignmentStatementsThatMatch("_", patternStr, false);
         result = castToStrVector<>(stmts);
