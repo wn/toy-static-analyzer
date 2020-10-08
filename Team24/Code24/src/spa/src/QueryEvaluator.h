@@ -5,6 +5,7 @@
 #include "QEHelper.h"
 #include "QPTypes.h"
 #include "Query.h"
+#include "ResultTable.h"
 
 #include <map>
 #include <string>
@@ -34,9 +35,8 @@ class SingleQueryEvaluator {
     // table stored candidates of synonyms
     std::unordered_map<std::string, std::vector<std::string>> synonym_candidates;
 
-    // table of pairwise constrain between synonym
-    // the key is pair(a, b), a < b
-    std::map<std::pair<std::string, std::string>, std::vector<std::pair<std::string, std::string>>> pairConstraints;
+    // table store tuples
+    ResultTable resultTable;
 
     // summarize the result as a string
     std::vector<std::string> produceResult();
@@ -46,26 +46,23 @@ class SingleQueryEvaluator {
     void initializeCandidate(const backend::PKB* pkb, const std::string& synonymName, EntityType entityType);
 
     // methods to evaluate generate clause
-    bool evaluateSuchThatClause(const backend::PKB* pkb, const RELATIONTUPLE& suchThatClause);
-    // TODO
-    bool evaluatePatternClause(const backend::PKB* pkb,
-                               const std::tuple<std::string, std::string, std::string>& patternClause);
+    bool evaluateClause(const backend::PKB* pkb, const CLAUSE& clause, ResultTable& groupResultTable);
 
     // evaluate pairwise list relation
     bool evaluateSynonymSynonym(const backend::PKB* pkb,
                                 SubRelationType subrelation,
                                 const std::string& arg1,
                                 const std::string& arg2,
-                                bool isPattern,
-                                const std::pair<std::string, bool> pattern);
+                                std::string const& patternStr,
+                                ResultTable& groupResultTable);
 
     // evaluate entity and list relation
     bool evaluateEntitySynonym(const backend::PKB* pkb,
                                SubRelationType subRelationType,
                                const std::string& arg1,
                                const std::string& arg2,
-                               bool isPattern,
-                               const std::pair<std::string, bool> pattern);
+                               const std::string& patternStr,
+                               ResultTable& groupResultTable);
 
     // evaluate entity and entity relation
     bool evaluateEntityEntity(const backend::PKB* pkb,
@@ -74,7 +71,11 @@ class SingleQueryEvaluator {
                               const std::string& arg2);
 
     // evaluate synonym and Wildcard relation
-    bool evaluateSynonymWildcard(const backend::PKB* pkb, SubRelationType subRelationType, const std::string& arg);
+    bool evaluateSynonymWildcard(const backend::PKB* pkb,
+                                 SubRelationType subRelationType,
+                                 const std::string& arg,
+                                 const std::string& patternStr,
+                                 ResultTable& groupResultTable);
 
     // evaluate entity and Wildcard relation
     bool evaluateEntityWildcard(const backend::PKB* pkb, SubRelationType relationType, const std::string& arg);
@@ -83,20 +84,23 @@ class SingleQueryEvaluator {
     bool evaluateWildcardWildcard(const backend::PKB* pkb, SubRelationType subRelationType);
 
     // methods called to interact with PKB
-    std::vector<std::string>
-    inquirePKBForRelation(const backend::PKB* pkb, SubRelationType subRelationType, const std::string& arg);
-    std::vector<std::string> inquirePKBForRelationWildcard(const backend::PKB* pkb, SubRelationType subRelationType);
-    std::vector<std::string> inquirePKBForPattern(const backend::PKB* pkb,
-                                                  SubRelationType subRelationType,
-                                                  const std::string& assignee,
-                                                  const std::string& assigned,
-                                                  bool isSubExpr);
+    std::vector<std::string> inquirePKBForRelationOrPattern(const backend::PKB* pkb,
+                                                            SubRelationType subRelationType,
+                                                            const std::string& arg,
+                                                            const std::string& patternStr);
+    std::vector<std::string> inquirePKBForRelationWildcard(const backend::PKB* pkb,
+                                                           SubRelationType subRelationType,
+                                                           const std::string& patternStr);
+
+    // sort and group clauses
+    std::vector<CLAUSE_LIST> getClausesSortedAndGrouped(const backend::PKB* pkb);
+
+    // update synonym table with a given result table
+    void updateSynonymsWithResultTable(ResultTable& table);
 
     // helper function
     // check and link synonyms to declared entity type
-    bool isSynonym(const backend::PKB* pkb, const std::string& str);
-    // check the type of the argument.
-    ArgType getArgType(const backend::PKB* pkb, std::string const& arg);
+    bool isSynonym(const std::string& str);
 
     // error handle
     // TODO
@@ -110,8 +114,6 @@ template <typename T> std::vector<std::string> castToStrVector(const std::unorde
 template <typename T> bool isFoundInVector(const std::vector<T>& v, T arg);
 template <typename T>
 std::vector<T> vectorIntersection(const std::vector<T>& lst1, const std::vector<T>& lst2);
-template <typename T>
-std::vector<T> vectorUnhashableIntersection(const std::vector<T>& lst1, const std::vector<T>& lst2);
 
 class QueryEvaluator {
   public:

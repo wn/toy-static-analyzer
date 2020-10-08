@@ -13,6 +13,8 @@ ResultTable::ResultTable(const std::string& synName, const std::unordered_set<st
     }
     rowNum = vals.size();
     colNum = 1;
+    colIndexTable[synName] = 0;
+    isInitialized = true;
 }
 
 ResultTable::ResultTable(const std::vector<std::string>& synNames,
@@ -34,6 +36,8 @@ ResultTable::ResultTable(const std::vector<std::string>& synNames,
         table.push_back(row);
     }
     rowNum = listOfTuples.size();
+
+    isInitialized = true;
 }
 
 bool ResultTable::isEmpty() const {
@@ -45,6 +49,19 @@ bool ResultTable::isSynonymContained(const std::string& synonymName) const {
 }
 
 bool ResultTable::mergeTable(ResultTable&& other) {
+    if (!other.isInitialized) {
+        return rowNum > 0;
+    }
+
+    if (!isInitialized) {
+        rowNum = other.rowNum;
+        colNum = other.colNum;
+        colIndexTable = std::move(other.colIndexTable);
+        table = std::move(other.table);
+        isInitialized = true;
+        return rowNum > 0;
+    }
+
     // get list of common synonyms
     std::vector<std::string> commonSynonyms;
     std::vector<std::string> theirUniqueSynonyms;
@@ -119,6 +136,16 @@ bool ResultTable::updateSynonymValueSet(const std::string& synonymName,
     return true;
 }
 
+bool ResultTable::updateSynonymValueVector(const std::string& synonymName, std::vector<std::string>& result) const {
+    std::unordered_set<std::string> setResult;
+    if (updateSynonymValueSet(synonymName, setResult)) {
+        result.clear();
+        std::copy(setResult.begin(), setResult.end(), std::back_inserter(result));
+        return true;
+    }
+    return false;
+}
+
 bool ResultTable::updateSynonymValueTupleSet(const std::vector<std::string>& synonymNames,
                                              std::unordered_set<std::vector<std::string>, StringVectorHash>& result) const {
     // check if all synonyms are in the table
@@ -140,6 +167,17 @@ bool ResultTable::updateSynonymValueTupleSet(const std::vector<std::string>& syn
         result.insert(newTuple);
     }
     return true;
+}
+
+bool ResultTable::updateSynonymValueTupleVector(const std::vector<std::string>& synonymNames,
+                                                std::vector<std::vector<std::string>>& result) const {
+    std::unordered_set<std::vector<std::string>, StringVectorHash> setResult;
+    if (updateSynonymValueTupleSet(synonymNames, setResult)) {
+        result.clear();
+        std::copy(setResult.begin(), setResult.end(), std::back_inserter(result));
+        return true;
+    }
+    return false;
 }
 
 std::unordered_map<std::string, std::vector<int>> ResultTable::groupTableByProperty(int index) const {

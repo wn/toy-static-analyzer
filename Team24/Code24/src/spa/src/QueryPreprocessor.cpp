@@ -393,7 +393,7 @@ STATESTATUSPAIR parseRelRef(State state) {
         return parseRelationEntEnt(state, relationClauseType);
     case qpbackend::AFFECTS: // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/283):
     case qpbackend::AFFECTST: // Parse Affects/Affects*
-    case qpbackend::ASSIGN_PATTERN:
+    case qpbackend::ASSIGN_PATTERN_EXACT:
     case qpbackend::ASSIGN_PATTERN_SUB_EXPR:
     case qpbackend::ASSIGN_PATTERN_WILDCARD:
     case qpbackend::IF_PATTERN:

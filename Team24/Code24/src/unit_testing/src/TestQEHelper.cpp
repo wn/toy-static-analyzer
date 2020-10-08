@@ -145,6 +145,21 @@ STATEMENT_NUMBER_SET PKBMock::getDirectFollowedBy(STATEMENT_NUMBER s) const {
             stmts = {};
         }
     }
+    if (test_idx == 2) {
+        switch (s) {
+        case 2:
+            stmts = { 1 };
+            break;
+        case 4:
+            stmts = { 3 };
+            break;
+        case 7:
+            stmts = { 4 };
+            break;
+        default:
+            stmts = {};
+        }
+    }
     return stmts;
 }
 
@@ -181,6 +196,21 @@ STATEMENT_NUMBER_SET PKBMock::getDirectFollow(STATEMENT_NUMBER s) const {
             break;
         case 12:
             stmts = { 13 };
+            break;
+        default:
+            stmts = {};
+        }
+    }
+    if (test_idx == 2) {
+        switch (s) {
+        case 1:
+            stmts = { 2 };
+            break;
+        case 3:
+            stmts = { 4 };
+            break;
+        case 4:
+            stmts = { 7 };
             break;
         default:
             stmts = {};
@@ -227,6 +257,21 @@ STATEMENT_NUMBER_SET PKBMock::getStatementsThatFollows(STATEMENT_NUMBER s) const
             stmts = {};
         }
     }
+    if (test_idx == 2) {
+        switch (s) {
+        case 1:
+            stmts = { 2 };
+            break;
+        case 3:
+            stmts = { 4, 7 };
+            break;
+        case 4:
+            stmts = { 7 };
+            break;
+        default:
+            stmts = {};
+        }
+    }
     return stmts;
 }
 
@@ -234,6 +279,9 @@ STATEMENT_NUMBER_SET PKBMock::getAllStatementsThatAreFollowed() const {
     STATEMENT_NUMBER_SET stmts;
     if (test_idx == 0) {
         stmts = { 1, 2, 3, 4, 5, 6, 7, 8, 10, 12 };
+    }
+    if (test_idx == 2) {
+        stmts = { 1, 3, 4 };
     }
     return stmts;
 }
@@ -276,6 +324,21 @@ STATEMENT_NUMBER_SET PKBMock::getStatementsFollowedBy(STATEMENT_NUMBER s) const 
             stmts = {};
         }
     }
+    if (test_idx == 2) {
+        switch (s) {
+        case 2:
+            stmts = { 1 };
+            break;
+        case 4:
+            stmts = { 3 };
+            break;
+        case 7:
+            stmts = { 3, 4 };
+            break;
+        default:
+            stmts = {};
+        }
+    }
     return stmts;
 }
 
@@ -283,6 +346,9 @@ STATEMENT_NUMBER_SET PKBMock::getAllStatementsThatFollows() const {
     STATEMENT_NUMBER_SET stmts;
     if (test_idx == 0) {
         stmts = { 2, 3, 4, 5, 7, 8, 9, 10, 13, 14 };
+    }
+    if (test_idx == 2) {
+        stmts = { 2, 4, 7 };
     }
     return stmts;
 }
@@ -325,6 +391,22 @@ STATEMENT_NUMBER_SET PKBMock::getParent(STATEMENT_NUMBER statementNumber) const 
             stmts = {};
         }
     }
+    if (test_idx == 2) {
+        switch (statementNumber) {
+        case 5:
+        case 6:
+            stmts = { 4 };
+            break;
+        case 8:
+            stmts = { 7 };
+            break;
+        case 9:
+            stmts = { 8 };
+            break;
+        default:
+            stmts = {};
+        }
+    }
     return stmts;
 }
 
@@ -352,6 +434,21 @@ STATEMENT_NUMBER_SET PKBMock::getChildren(STATEMENT_NUMBER statementNumber) cons
             break;
         case 4:
             stmts = { 5, 6 };
+            break;
+        default:
+            stmts = {};
+        }
+    }
+    if (test_idx == 2) {
+        switch (statementNumber) {
+        case 4:
+            stmts = { 5, 6 };
+            break;
+        case 7:
+            stmts = { 8 };
+            break;
+        case 8:
+            stmts = { 9 };
             break;
         default:
             stmts = {};
@@ -398,6 +495,22 @@ STATEMENT_NUMBER_SET PKBMock::getAncestors(STATEMENT_NUMBER statementNumber) con
             stmts = {};
         }
     }
+    if (test_idx == 2) {
+        switch (statementNumber) {
+        case 5:
+        case 6:
+            stmts = { 4 };
+            break;
+        case 8:
+            stmts = { 7 };
+            break;
+        case 9:
+            stmts = { 7, 8 };
+            break;
+        default:
+            stmts = {};
+        }
+    }
     return stmts;
 }
 
@@ -408,6 +521,9 @@ STATEMENT_NUMBER_SET PKBMock::getStatementsThatHaveAncestors() const {
     }
     if (test_idx == 1) {
         stmts = { 2, 3, 4, 5, 6 };
+    }
+    if (test_idx == 2) {
+        stmts = { 5, 6, 8, 9 };
     }
     return stmts;
 }
@@ -441,6 +557,21 @@ STATEMENT_NUMBER_SET PKBMock::getDescendants(STATEMENT_NUMBER statementNumber) c
             stmts = {};
         }
     }
+    if (test_idx == 2) {
+        switch (statementNumber) {
+        case 4:
+            stmts = { 5, 6 };
+            break;
+        case 7:
+            stmts = { 8, 9 };
+            break;
+        case 8:
+            stmts = { 9 };
+            break;
+        default:
+            stmts = {};
+        }
+    }
     return stmts;
 }
 
@@ -451,6 +582,9 @@ STATEMENT_NUMBER_SET PKBMock::getStatementsThatHaveDescendants() const {
     }
     if (test_idx == 1) {
         stmts = { 1, 2, 4 };
+    }
+    if (test_idx == 2) {
+        stmts = { 4, 7, 8 };
     }
     return stmts;
 }
@@ -611,7 +745,7 @@ VARIABLE_NAME_LIST PKBMock::getVariablesModifiedBy(STATEMENT_NUMBER s) const {
     if (test_idx == 2) {
         switch (s) {
         case 2:
-            vars = { "n", "random", "y" };
+            vars = { "a", "n", "random", "y" };
             break;
         case 3:
             vars = { "random" };

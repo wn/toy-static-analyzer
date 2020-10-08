@@ -44,7 +44,7 @@ struct CompareStrVec {
  */
 class ResultTable {
   public:
-    ResultTable() : colNum(0), rowNum(0) {
+    ResultTable() : colNum(0), rowNum(0), isInitialized(false) {
     }
     ResultTable(const std::string& synName, const std::unordered_set<std::string>& vals);
     ResultTable(const std::vector<std::string>& synNames,
@@ -72,6 +72,7 @@ class ResultTable {
      * @return : whether the synonym name is in the table and the set has been updated
      */
     bool updateSynonymValueSet(const std::string& synonymName, std::unordered_set<std::string>& result) const;
+    bool updateSynonymValueVector(const std::string& synonymName, std::vector<std::string>& result) const;
 
     /**
      * update the set of tuples of a group of synonyms
@@ -81,6 +82,8 @@ class ResultTable {
      */
     bool updateSynonymValueTupleSet(const std::vector<std::string>& synonymNames,
                                     std::unordered_set<std::vector<std::string>, StringVectorHash>& result) const;
+    bool updateSynonymValueTupleVector(const std::vector<std::string>& synonymNames,
+                                       std::vector<std::vector<std::string>>& result) const;
 
     // for testing only
     bool operator==(const ResultTable& other) const;
@@ -90,6 +93,7 @@ class ResultTable {
   private:
     int colNum;
     int rowNum;
+    bool isInitialized;
     std::unordered_map<std::string, int> colIndexTable; // table to store mapping between table and column index
     std::vector<std::vector<std::string>> table; // the main table
 

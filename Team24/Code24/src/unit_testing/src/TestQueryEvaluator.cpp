@@ -161,6 +161,7 @@ TEST_CASE("Test evaluation of Follows(_, _)") {
                                                                   "9", "10", "11", "12", "13", "14" }));
 }
 
+
 TEST_CASE("Test evaluation of Follows with invalid arguments") {
     PKBMock pkb(0);
     queryevaluator::QueryEvaluator qe(&pkb);
@@ -298,7 +299,7 @@ TEST_CASE("Test evaluation of Follows* with invalid arguments") {
     REQUIRE(qe.evaluateQuery(query_proc).empty());
 
     Query query_const = {
-        { { "s", CONSTANT } }, { "s" }, { { FOLLOWST, { NUM_ENTITY, "1" }, { STMT_SYNONYM, "s" } } }, {}
+        { { "s", CONSTANT } }, { "s" }, { { FOLLOWST, { NUM_ENTITY, "1" }, { CONST_SYNONYM, "s" } } }, {}
     };
     REQUIRE(qe.evaluateQuery(query_const).empty());
 
@@ -722,7 +723,7 @@ TEST_CASE("Test evaluation of Modifies between entity and synonym") {
     Query queryModsVar = {
         { { "v", VARIABLE } }, { "v" }, { { MODIFIES, { NUM_ENTITY, "2" }, { VAR_SYNONYM, "v" } } }, {}
     };
-    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryModsVar), { "n", "random", "y" }));
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryModsVar), { "a", "n", "random", "y" }));
 
     Query queryModpProc = {
         { { "p", PROCEDURE } }, { "p" }, { { MODIFIES, { PROC_SYNONYM, "p" }, { NAME_ENTITY, "y" } } }, {}
@@ -1037,5 +1038,36 @@ TEST_CASE("Test Modifies and Pattern") {
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query2), { "5" }));
 }
 
+TEST_CASE("multiple relation clauses") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    // stmt s1; stmt s2; variable v; Select s2 such that Parent(s2, s1) and Modifies(s1, v) and Uses(s1, v)
+    Query query1 = { { { "s1", STMT }, { "s2", STMT }, { "v", VARIABLE } },
+                     { "s2" },
+                     { { MODIFIES, { STMT_SYNONYM, "s1" }, { VAR_SYNONYM, "v" } },
+                       { USES, { STMT_SYNONYM, "s1" }, { VAR_SYNONYM, "v" } },
+                       { PARENT, { STMT_SYNONYM, "s2" }, { STMT_SYNONYM, "s1" } } },
+                     {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query1), { "4" }));
+
+    // stmt s1; stmt s2; variable v; Select v such that Uses(s1, "x") and Follows*(s1, s2) and Modifies(s2, v)
+    Query query2 = { { { "s1", STMT }, { "s2", STMT }, { "v", VARIABLE } },
+                     { "v" },
+                     { { MODIFIES, { STMT_SYNONYM, "s2" }, { VAR_SYNONYM, "v" } },
+                       { USES, { STMT_SYNONYM, "s1" }, { NAME_ENTITY, "x" } },
+                       { FOLLOWST, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                     {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query2), { "random", "n", "y", "a" }));
+
+    // assign a; stmt s; variable v; variable v2; Select v2 such that Parent*(s, a) and Modifies(s, v2) and Uses(a, v) pattern a(v, _"1"_)
+    Query query3 = { { { "s", STMT }, { "a", ASSIGN }, { "v", VARIABLE }, { "v2", VARIABLE } },
+                     { "v2" },
+                     { { MODIFIES, { STMT_SYNONYM, "s" }, { VAR_SYNONYM, "v2" } },
+                       { USES, { STMT_SYNONYM, "a" }, { VAR_SYNONYM, "v" } },
+                       { PARENTT, { STMT_SYNONYM, "s" }, { STMT_SYNONYM, "a" } } },
+                     { { "a", "v", "_\"1\"_" } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query3), { "n", "y" }));
+}
 } // namespace qetest
 } // namespace qpbackend

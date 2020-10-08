@@ -22,6 +22,18 @@ TEST_CASE("get table columns") {
     REQUIRE(s1 == s1_expected);
     REQUIRE(s2 == s2_expected);
 
+    // test conversion to vectors
+    std::vector<std::string> v1, v1_expected;
+    std::vector<std::vector<std::string>> v2, v2_expected;
+    REQUIRE(rt.updateSynonymValueVector("A", v1));
+    REQUIRE(rt.updateSynonymValueTupleVector({ "A", "B" }, v2));
+    v1_expected = { "11", "21" };
+    v2_expected = { { "11", "12" }, { "21", "22" } };
+    std::sort(v1.begin(), v1.end());
+    std::sort(v2.begin(), v2.end(), CompareStrVec());
+    REQUIRE(s1 == s1_expected);
+    REQUIRE(s2 == s2_expected);
+
     // test synonyms not exist
     REQUIRE_FALSE(rt.updateSynonymValueSet("E", s1));
     REQUIRE_FALSE(rt.updateSynonymValueTupleSet({ "A", "E" }, s2));

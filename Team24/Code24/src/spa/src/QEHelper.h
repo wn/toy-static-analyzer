@@ -34,7 +34,11 @@ enum SubRelationType {
     POSTMODIFIESP, // check upon v, get p (procedure) that Modifes(p, v)
     MODIFIESS_WILDCARD, // check upon s (stmt), Modifies(s, v)
     MODIFIESP_WILDCARD, // check upon p (procedure), Modifies(p, v)
-    ASSIGN_PATTERN, // evaluate pattern a(v, ...) or a("v", ...)
+    ASSIGN_PATTERN_EXACT_SRT, // evaluate pattern a(..., "...")
+    ASSIGN_PATTERN_SUBEXPR_SRT, // evaluate pattern a(..., _"..."_)
+    ASSIGN_PATTERN_WILDCARD_SRT, // evaluate pattern a(..., _)
+    WHILE_PATTERN_SRT, // evaluate pattern w(..., _)
+    IF_PATTERN_SRT, // evaluate pattern if(..., _)
     INVALID // no suitable subrelation to evaluate
 };
 
