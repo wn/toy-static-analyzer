@@ -63,11 +63,32 @@ qpbackend::EntityType getEntityTypeFromToken(const TOKEN& token) {
 }
 
 /**
- * The state of the query preprocessor.
+ * Encapsulates the state of the parser.
  *
- * This abstracts away all the logic in manipulating the QPL query tokens and Query struct directly.
- * The State will also throw errors or exceptions once it has detected that it is in an invalid
- * state.
+ * That is to say, the State class encapsulates all the information obtained while parsing.
+ * Specifically the knowable synonyms declared, values to return and relations to be queried after
+ * reading a given amount of tokens supplied.
+ *
+ * State captures the parser's state any point of time. Thus, it is handy in allowing the parser
+ * (a recursive descent parser) to backtrack and apply a new grammar rule.
+ *
+ * For example, let's try to parse a Uses relation, the QPL's grammar has these followings rules:
+ * UsesP : ‘Uses’ ‘(’ entRef ‘,’ entRef ‘)’
+ * UsesS : ‘Uses’ ‘(’ stmtRef ‘,’ entRef ‘)’
+ *
+ * After encountering a 'Uses' and '(' token, the parser is expecting either an `entRef` or
+ * `stmtRef`. To handle this, the following can be done:
+ * 1. Save the current State object
+ * 2. Try to parse the next token(s) with the `entRef` grammar rule.
+ * 3. If successful goto VALID
+ * 4. Use the saved State object from 1 and parse the next token(s) with the `stmtRef` rule.
+ * 5. If successful goto VALID
+ * INVALID (6). Parsing is unsuccessful, signal a failure to parse
+ * VALID (7). Parsing is successful, continue with the rest of the Uses* rule.
+ *
+ * State abstracts away all the logic in manipulating the QPL query tokens and Query struct
+ * directly. The State will also throw errors or exceptions once it has detected that it is in an
+ * invalid state.
  */
 class State {
   private:
