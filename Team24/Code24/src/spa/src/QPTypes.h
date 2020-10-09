@@ -3,6 +3,7 @@
 
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <utility> // std::pair
 #include <vector>
 
@@ -72,14 +73,18 @@ enum ArgType {
     INVALID_ARG // invalid argument, not accepted for evaluation
 };
 
+typedef std::unordered_map<std::string, EntityType> DECLARATION_MAP;
 typedef std::pair<ArgType, std::string /*argValue*/> ARG;
 typedef std::tuple<ClauseType, ARG, ARG> RELATIONTUPLE;
-typedef std::tuple<std::string, std::string, std::string> PATTERNTUPLE;
 typedef std::tuple<ClauseType, ARG, ARG, std::string /*expr*/> CLAUSE;
+typedef CLAUSE PATTERNTUPLE;
 typedef std::vector<CLAUSE> CLAUSE_LIST;
 typedef std::pair<ReturnType, std::string /*synonymName*/> RETURN_CANDIDATE;
 typedef std::vector<RETURN_CANDIDATE> RETURN_CANDIDATE_LIST;
+// Legacy typedefs
+typedef std::tuple<std::string /* pattern synonym */, std::string /* var */, std::string /* expression spec */> LEGACY_PATTERN_TUPLE;
 
+std::string prettyPrintArg(const ARG& arg);
 std::string prettyPrintArgType(ArgType argType);
 } // namespace qpbackend
 

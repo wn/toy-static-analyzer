@@ -694,7 +694,7 @@ STATEMENT_NUMBER_SET PKBMock::getStatementsThatModify(VARIABLE_NAME v) const {
         } else if (v == "y") {
             stmts = { 2, 4, 6 };
         } else if (v == "a") {
-            stmts = { 7, 8 };
+            stmts = { 2, 7, 8, 9 };
         }
     }
     return stmts;
@@ -709,7 +709,7 @@ STATEMENT_NUMBER_SET PKBMock::getStatementsThatModifySomeVariable() const {
 PROCEDURE_NAME_LIST PKBMock::getProceduresThatModify(VARIABLE_NAME v) const {
     PROCEDURE_NAME_LIST procs;
     if (test_idx == 2) {
-        if (v == "random" || v == "n" || v == "y") {
+        if (v == "random" || v == "n" || v == "y" || v == "a") {
             procs = { "foo", "bar" };
         }
     }
@@ -1296,7 +1296,6 @@ const STATEMENT_NUMBER_SET& PKBMock::getAllStatementsWithPrev() const {
     }
     return lines;
 }
-
 
 } // namespace qetest
 } // namespace qpbackend

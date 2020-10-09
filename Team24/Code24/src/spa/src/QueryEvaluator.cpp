@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <iostream>
 #include <stdexcept>
 #include <unordered_set>
 #include <utility>
@@ -177,7 +178,7 @@ bool SingleQueryEvaluator::evaluateClause(const backend::PKB* pkb, const CLAUSE&
         case VAR_SYNONYM:
         case PROC_SYNONYM:
         case CONST_SYNONYM:
-            return evaluateSynonymSynonym(pkb, srt, arg1, arg2, patternStr, groupResultTable);
+            return evaluateSynonymSynonym(pkb, srt, arg2, arg1, patternStr, groupResultTable);
         case NUM_ENTITY:
             return evaluateEntitySynonym(pkb, srt, arg2, arg1, patternStr,
                                          groupResultTable); // swap the arguments as the called method required
@@ -498,7 +499,7 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelationOrPattern(co
         break;
     }
     case ASSIGN_PATTERN_WILDCARD_SRT: {
-        stmts = pkb->getAllAssignmentStatementsThatMatch(arg, patternStr, true);
+        stmts = pkb->getAllAssignmentStatementsThatMatch(arg, "", true);
         result = castToStrVector<>(stmts);
         break;
     }
@@ -573,7 +574,7 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelationWildcard(con
         break;
     }
     case ASSIGN_PATTERN_WILDCARD_SRT: {
-        stmts = pkb->getAllAssignmentStatementsThatMatch("_", patternStr, true);
+        stmts = pkb->getAllAssignmentStatementsThatMatch("_", "", true);
         result = castToStrVector<>(stmts);
         break;
     }
@@ -596,56 +597,7 @@ std::vector<CLAUSE_LIST> SingleQueryEvaluator::getClausesSortedAndGrouped(const 
     CLAUSE invalidClause = { INVALID_CLAUSE_TYPE, { INVALID_ARG, "" }, { INVALID_ARG, "" }, "" };
 
     for (const auto& patternClause : query.patternClauses) {
-        bool isValidPattern, isSubExpr; // if the pattern is sub-expression
-        std::string assigned; // the RHS pattern content
-        std::tie(isValidPattern, assigned, isSubExpr) = extractPatternExpr(std::get<2>(patternClause));
-
-        if (!isValidPattern) {
-            handleError("unrecognized pattern: " + std::get<2>(patternClause));
-            clauses.push_back(invalidClause);
-            break;
-        }
-
-        std::string assignment = std::get<0>(patternClause); // the synonym of assignment statement
-        std::string assignee = std::get<1>(patternClause); // the variable assigned to
-
-        // check clause type
-        if (!isSynonym(assignment)) {
-            handleError("the pattern should start with be a synonym");
-            clauses.push_back(invalidClause);
-            break;
-        }
-
-        ClauseType clauseType = INVALID_CLAUSE_TYPE;
-        SubRelationType subRelationType = INVALID;
-        if (query.declarationMap[assignment] == ASSIGN) {
-            if (isSubExpr) {
-                if (assigned == "") {
-                    clauseType = ASSIGN_PATTERN_WILDCARD;
-                } else {
-                    clauseType = ASSIGN_PATTERN_SUB_EXPR;
-                }
-            } else {
-                clauseType = ASSIGN_PATTERN_EXACT;
-            }
-        } else if (query.declarationMap[assignment] == WHILE) {
-            clauseType = WHILE_PATTERN;
-        } else if (query.declarationMap[assignment] == IF) {
-            clauseType = IF_PATTERN;
-        }
-
-        ARG arg2 = { STMT_SYNONYM, assignment };
-        ARG arg1 = { INVALID_ARG, assignee };
-        if (isSynonym(assignee) && query.declarationMap[assignee] == VARIABLE) {
-            arg1 = { VAR_SYNONYM, assignee };
-        } else if (isWildCard(assignee)) {
-            arg1 = { WILDCARD, "_" };
-        } else if (isName(assignee)) {
-            arg1 = { NAME_ENTITY, extractQuotedStr(assignee) };
-        }
-
-        CLAUSE clause = { clauseType, arg1, arg2, assigned };
-        clauses.push_back(clause);
+        clauses.push_back(patternClause);
     }
 
     // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/266)

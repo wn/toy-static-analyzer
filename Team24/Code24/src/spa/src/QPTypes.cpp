@@ -1,5 +1,6 @@
 #include "QPTypes.h"
 
+#include <sstream>
 #include <string>
 
 namespace qpbackend {
@@ -23,4 +24,11 @@ std::string prettyPrintArgType(ArgType argType) {
         return "INVALID_ARG";
     }
 }
+
+std::string prettyPrintArg(const ARG& arg) {
+    std::stringstream stringstream;
+    stringstream << "<" << prettyPrintArgType(arg.first) << ", " << arg.second << '>';
+    return stringstream.str();
+}
+
 } // namespace qpbackend

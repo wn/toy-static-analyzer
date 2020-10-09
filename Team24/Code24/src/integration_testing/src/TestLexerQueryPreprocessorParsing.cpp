@@ -680,11 +680,12 @@ TEST_CASE("Test multiple such that clauses.") {
 TEST_CASE("Test basic pattern clause") {
     std::stringstream queryString =
     std::stringstream("assign a; while w; Select a pattern a (\"v\", _)");
-    qpbackend::Query expectedQuery = { { { "w", qpbackend::EntityType::WHILE },
-                                         { "a", qpbackend::EntityType::ASSIGN } },
-                                       { "a" },
-                                       {},
-                                       { { "a", "\"v\"", "_" } } };
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        {},
+        { { qpbackend::ASSIGN_PATTERN_WILDCARD, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::NAME_ENTITY, "v" }, "_" } }
+    };
 
     std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
@@ -696,9 +697,9 @@ TEST_CASE("Test basic pattern clause") {
 TEST_CASE("Test basic pattern synonym clause") {
     std::stringstream queryString =
     std::stringstream("assign a; while w; Select a pattern a (w, _)");
-    qpbackend::Query expectedQuery =
-    qpbackend::Query({ { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
-                     { "a" }, {}, { { "a", "w", "_" } });
+    qpbackend::Query expectedQuery = qpbackend::Query(
+    { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } }, { "a" }, {},
+    { { qpbackend::ASSIGN_PATTERN_WILDCARD, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::STMT_SYNONYM, "w" }, "_" } });
 
     std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
@@ -708,8 +709,9 @@ TEST_CASE("Test basic pattern synonym clause") {
 
 TEST_CASE("Test pattern clause wild cards") {
     std::stringstream queryString = std::stringstream("assign a; Select a pattern a (_, _)");
-    qpbackend::Query expectedQuery =
-    qpbackend::Query({ { "a", qpbackend::EntityType::ASSIGN } }, { "a" }, {}, { { "a", "_", "_" } });
+    qpbackend::Query expectedQuery = qpbackend::Query(
+    { { "a", qpbackend::EntityType::ASSIGN } }, { "a" }, {},
+    { { qpbackend::ASSIGN_PATTERN_WILDCARD, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::WILDCARD, "_" }, "_" } });
 
     std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
@@ -720,8 +722,9 @@ TEST_CASE("Test pattern clause wild cards") {
 TEST_CASE("Test pattern clause expression") {
     std::stringstream queryString =
     std::stringstream("assign a; Select a pattern a (_, \"x+s+Follows*38\")");
-    qpbackend::Query expectedQuery = qpbackend::Query({ { "a", qpbackend::EntityType::ASSIGN } }, { "a" },
-                                                      {}, { { "a", "_", "\"x+s+Follows*38\"" } });
+    qpbackend::Query expectedQuery = qpbackend::Query(
+    { { "a", qpbackend::EntityType::ASSIGN } }, { "a" }, {},
+    { { qpbackend::ASSIGN_PATTERN_EXACT, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::WILDCARD, "_" }, "x+s+Follows*38" } });
 
     std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
@@ -732,8 +735,9 @@ TEST_CASE("Test pattern clause expression") {
 TEST_CASE("Test pattern clause expression operator") {
     std::stringstream queryString =
     std::stringstream("assign a; Select a pattern a (_, \"x+s*g-3%9\")");
-    qpbackend::Query expectedQuery = qpbackend::Query({ { "a", qpbackend::EntityType::ASSIGN } },
-                                                      { "a" }, {}, { { "a", "_", "\"x+s*g-3%9\"" } });
+    qpbackend::Query expectedQuery = qpbackend::Query(
+    { { "a", qpbackend::EntityType::ASSIGN } }, { "a" }, {},
+    { { qpbackend::ASSIGN_PATTERN_EXACT, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::WILDCARD, "_" }, "x+s*g-3%9" } });
 
     std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
@@ -744,8 +748,12 @@ TEST_CASE("Test pattern clause expression operator") {
 TEST_CASE("Test pattern clause expression white space handling") {
     std::stringstream queryString =
     std::stringstream("assign a; Select a pattern a (_, \"x\r\r\r+s+Follows*\n\r3 8\")");
-    qpbackend::Query expectedQuery = qpbackend::Query({ { "a", qpbackend::EntityType::ASSIGN } }, { "a" },
-                                                      {}, { { "a", "_", "\"x +s+Follows* 3 8\"" } });
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "a", qpbackend::EntityType::ASSIGN } }, { "a" }, {},
+                     { { qpbackend::ASSIGN_PATTERN_EXACT,
+                         { qpbackend::STMT_SYNONYM, "a" },
+                         { qpbackend::WILDCARD, "_" },
+                         "x +s+Follows* 3 8" } });
 
     std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
@@ -756,8 +764,12 @@ TEST_CASE("Test pattern clause expression white space handling") {
 TEST_CASE("Test pattern clause sub-expression") {
     std::stringstream queryString =
     std::stringstream("assign a; Select a pattern a (_, _\"x+s+Follows*38\"_)");
-    qpbackend::Query expectedQuery = qpbackend::Query({ { "a", qpbackend::EntityType::ASSIGN } }, { "a" },
-                                                      {}, { { "a", "_", "_\"x+s+Follows*38\"_" } });
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "a", qpbackend::EntityType::ASSIGN } }, { "a" }, {},
+                     { { qpbackend::ASSIGN_PATTERN_SUB_EXPR,
+                         { qpbackend::STMT_SYNONYM, "a" },
+                         { qpbackend::WILDCARD, "_" },
+                         "x+s+Follows*38" } });
 
     std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
@@ -768,8 +780,12 @@ TEST_CASE("Test pattern clause sub-expression") {
 TEST_CASE("Test pattern clause sub-expression white space handling") {
     std::stringstream queryString = std::stringstream(
     "assign a; Select a pattern a (_, _   \r \"x+s\t+\tFollows       \t*  \n38\"    \t_)");
-    qpbackend::Query expectedQuery = qpbackend::Query({ { "a", qpbackend::EntityType::ASSIGN } }, { "a" },
-                                                      {}, { { "a", "_", "_\"x+s + Follows * 38\"_" } });
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "a", qpbackend::EntityType::ASSIGN } }, { "a" }, {},
+                     { { qpbackend::ASSIGN_PATTERN_SUB_EXPR,
+                         { qpbackend::STMT_SYNONYM, "a" },
+                         { qpbackend::WILDCARD, "_" },
+                         "x+s + Follows * 38" } });
 
     std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
@@ -781,8 +797,9 @@ TEST_CASE("Test pattern clause sub-expression white space handling") {
 
 TEST_CASE("Test pattern clause EXPR valid QPP but invalid PKB") {
     std::stringstream queryString = std::stringstream("assign a; Select a pattern a (_, \"()\" )");
-    qpbackend::Query expectedQuery =
-    qpbackend::Query({ { "a", qpbackend::EntityType::ASSIGN } }, { "a" }, {}, { { "a", "_", "\"()\"" } });
+    qpbackend::Query expectedQuery = qpbackend::Query(
+    { { "a", qpbackend::EntityType::ASSIGN } }, { "a" }, {},
+    { { qpbackend::ASSIGN_PATTERN_EXACT, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::WILDCARD, "_" }, "()" } });
 
     std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
@@ -793,8 +810,9 @@ TEST_CASE("Test pattern clause EXPR valid QPP but invalid PKB") {
 TEST_CASE("Test pattern clause EXPR valid QPP but invalid PKB unbalanced round brackets") {
     std::stringstream queryString =
     std::stringstream("assign a; Select a pattern a (_, \"   (( \" )");
-    qpbackend::Query expectedQuery = qpbackend::Query({ { "a", qpbackend::EntityType::ASSIGN } },
-                                                      { "a" }, {}, { { "a", "_", "\"(( \"" } });
+    qpbackend::Query expectedQuery = qpbackend::Query(
+    { { "a", qpbackend::EntityType::ASSIGN } }, { "a" }, {},
+    { { qpbackend::ASSIGN_PATTERN_EXACT, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::WILDCARD, "_" }, "(( " } });
 
     std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
@@ -808,11 +826,11 @@ TEST_CASE("Test multiple pattern clause") {
     std::stringstream queryString =
     std::stringstream("assign a; Select a pattern a (_, _\"x+s+Follows*38\"_)pattern a (_, "
                       "_\"x+s+Follows*38\"_)pattern a (_, _\"x+s+Follows*38\"_)    ");
-    qpbackend::Query expectedQuery =
-    qpbackend::Query({ { "a", qpbackend::EntityType::ASSIGN } }, { "a" }, {},
-                     { { "a", "_", "_\"x+s+Follows*38\"_" },
-                       { "a", "_", "_\"x+s+Follows*38\"_" },
-                       { "a", "_", "_\"x+s+Follows*38\"_" } });
+    qpbackend::Query expectedQuery = qpbackend::Query(
+    { { "a", qpbackend::EntityType::ASSIGN } }, { "a" }, {},
+    { { qpbackend::ASSIGN_PATTERN_SUB_EXPR, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::WILDCARD, "_" }, "x+s+Follows*38" },
+      { qpbackend::ASSIGN_PATTERN_SUB_EXPR, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::WILDCARD, "_" }, "x+s+Follows*38" },
+      { qpbackend::ASSIGN_PATTERN_SUB_EXPR, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::WILDCARD, "_" }, "x+s+Follows*38" } });
 
     std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
@@ -825,12 +843,12 @@ TEST_CASE("Test multiple pattern clause") {
 TEST_CASE("Test such-that and pattern clause") {
     std::stringstream queryString = std::stringstream(
     "assign a; Select a such that Follows*(a,a) pattern a (_, _\"x+s+Follows*38\"_)    ");
-    qpbackend::Query expectedQuery = { { { "a", qpbackend::EntityType::ASSIGN } },
-                                       { "a" },
-                                       { { qpbackend::ClauseType::FOLLOWST,
-                                           { qpbackend::STMT_SYNONYM, "a" },
-                                           { qpbackend::STMT_SYNONYM, "a" } } },
-                                       { { "a", "_", "_\"x+s+Follows*38\"_" } } };
+    qpbackend::Query expectedQuery = {
+        { { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::FOLLOWST, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::STMT_SYNONYM, "a" } } },
+        { { qpbackend::ASSIGN_PATTERN_SUB_EXPR, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::WILDCARD, "_" }, "x+s+Follows*38" } }
+    };
 
     std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
@@ -841,12 +859,12 @@ TEST_CASE("Test such-that and pattern clause") {
 TEST_CASE("Test pattern and such-that clause") {
     std::stringstream queryString = std::stringstream(
     "assign a; Select a pattern a (_, _\"x+s+Follows*38\"_) such that  Follows*(a,a)   ");
-    qpbackend::Query expectedQuery = { { { "a", qpbackend::EntityType::ASSIGN } },
-                                       { "a" },
-                                       { { qpbackend::ClauseType::FOLLOWST,
-                                           { qpbackend::STMT_SYNONYM, "a" },
-                                           { qpbackend::STMT_SYNONYM, "a" } } },
-                                       { { "a", "_", "_\"x+s+Follows*38\"_" } } };
+    qpbackend::Query expectedQuery = {
+        { { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::FOLLOWST, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::STMT_SYNONYM, "a" } } },
+        { { qpbackend::ASSIGN_PATTERN_SUB_EXPR, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::WILDCARD, "_" }, "x+s+Follows*38" } }
+    };
 
     std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
@@ -863,7 +881,8 @@ TEST_CASE("Test multiple pattern and such-that clause") {
         { "a" },
         { { qpbackend::ClauseType::FOLLOWST, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::STMT_SYNONYM, "a" } },
           { qpbackend::ClauseType::FOLLOWST, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::STMT_SYNONYM, "a" } } },
-        { { "a", "_", "_\"x+s+Follows*38\"_" }, { "a", "_", "_\"x+s+Follows*38\"_" } }
+        { { qpbackend::ASSIGN_PATTERN_SUB_EXPR, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::WILDCARD, "_" }, "x+s+Follows*38" },
+          { qpbackend::ASSIGN_PATTERN_SUB_EXPR, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::WILDCARD, "_" }, "x+s+Follows*38" } }
     };
 
     std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);

@@ -4,23 +4,22 @@
 #include "QPTypes.h"
 
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace qpbackend {
 
 struct Query {
   public:
-    std::unordered_map<std::string, EntityType> declarationMap;
+    DECLARATION_MAP declarationMap;
     std::vector<std::string> synonymsToReturn;
     std::vector<RELATIONTUPLE> suchThatClauses;
     std::vector<PATTERNTUPLE> patternClauses;
 
     explicit Query() : declarationMap(), synonymsToReturn(), suchThatClauses(), patternClauses(){};
-    Query(const std::unordered_map<std::string, EntityType>& declarationMap,
+    Query(const DECLARATION_MAP& declarationMap,
           const std::vector<std::string>& synonymsToReturn,
           const std::vector<RELATIONTUPLE>& suchThatClauses,
-          const std::vector<PATTERNTUPLE>& patternClauses);
+          const CLAUSE_LIST& patternClauses);
 
     bool operator==(const Query& s) const;
     std::string toString() const;

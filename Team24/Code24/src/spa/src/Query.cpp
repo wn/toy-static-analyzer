@@ -111,18 +111,19 @@ std::string Query::toString() const {
     qpbackend::ARG arg2;
     for (const RELATIONTUPLE& suchThatClause : suchThatClauses) {
         std::tie(relationType, arg1, arg2) = suchThatClause;
-        stringstream << "{" << stringFromRelationType(relationType) << ", " << '<'
-                     << prettyPrintArgType(arg1.first) << ", " << arg1.second << ">"
-                     << ", " << '<' << prettyPrintArgType(arg1.first) << ", " << arg2.second << '>' << "} ";
+        stringstream << "{" << stringFromRelationType(relationType) << ", " << prettyPrintArg(arg1)
+                     << ", " << prettyPrintArg(arg1) << "} ";
     }
 
     stringstream << "\nPattern clauses: ";
-    std::string assignSynonym;
-    std::string variable;
+    ClauseType clauseType;
+    ARG clauseSynonym;
+    ARG variable;
     std::string expressionSpec;
-    for (const PATTERNTUPLE& patternClause : patternClauses) {
-        std::tie(assignSynonym, variable, expressionSpec) = patternClause;
-        stringstream << "{" << assignSynonym << ", " << variable << ", " << expressionSpec << "} ";
+    for (const CLAUSE& patternClause : patternClauses) {
+        std::tie(clauseType, clauseSynonym, variable, expressionSpec) = patternClause;
+        stringstream << "{" << prettyPrintArg(clauseSynonym) << ", " << prettyPrintArg(variable)
+                     << ", " << expressionSpec << '>' << "} ";
     }
 
     stringstream << "\n}";

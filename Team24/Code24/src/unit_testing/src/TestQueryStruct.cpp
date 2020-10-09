@@ -26,7 +26,10 @@ TEST_CASE("Test query equality") {
           RELATIONTUPLE{ ClauseType::FOLLOWS, { NUM_ENTITY, "1" }, { NUM_ENTITY, "2" } },
           RELATIONTUPLE{ ClauseType::MODIFIES, { PROC_SYNONYM, "procedure" }, { VAR_SYNONYM, "anyVariable" } },
           },
-          /* patternClauses */ { PATTERNTUPLE{ "a", "a", "_" }, PATTERNTUPLE{ "a", "_", "_a+s*l/d+k-j_" }, PATTERNTUPLE{ "testingisgood", "greedisgood", "(expressionInBrackets)" } }) ==
+          /* patternClauses */
+          { PATTERNTUPLE{ ASSIGN_PATTERN_WILDCARD, { STMT_SYNONYM, "a" }, { STMT_SYNONYM, "a" }, "_" },
+            PATTERNTUPLE{ ASSIGN_PATTERN_SUB_EXPR, { STMT_SYNONYM, "a" }, { WILDCARD, "_" }, "a+s*l/d+k-j" },
+            PATTERNTUPLE{ ASSIGN_PATTERN_EXACT, { STMT_SYNONYM, "testingisgood" }, { NAME_ENTITY, "greedisgood" }, "(expressionInBrackets)" } }) ==
     Query(/* declarationMap */ { { "anyVariable", EntityType::VARIABLE }, { "procedure", EntityType::PROCEDURE } },
           /* synonymsToReturn */ { "anyVariable", "s1", "s2" },
           /* suchThatClauses */
@@ -34,7 +37,10 @@ TEST_CASE("Test query equality") {
           RELATIONTUPLE{ ClauseType::FOLLOWS, { NUM_ENTITY, "1" }, { NUM_ENTITY, "2" } },
           RELATIONTUPLE{ ClauseType::MODIFIES, { PROC_SYNONYM, "procedure" }, { VAR_SYNONYM, "anyVariable" } },
           },
-          /* patternClauses */ { PATTERNTUPLE{ "a", "a", "_" }, PATTERNTUPLE{ "a", "_", "_a+s*l/d+k-j_" }, PATTERNTUPLE{ "testingisgood", "greedisgood", "(expressionInBrackets)" } }));
+          /* patternClauses */
+          { PATTERNTUPLE{ ASSIGN_PATTERN_WILDCARD, { STMT_SYNONYM, "a" }, { STMT_SYNONYM, "a" }, "_" },
+            PATTERNTUPLE{ ASSIGN_PATTERN_SUB_EXPR, { STMT_SYNONYM, "a" }, { WILDCARD, "_" }, "a+s*l/d+k-j" },
+            PATTERNTUPLE{ ASSIGN_PATTERN_EXACT, { STMT_SYNONYM, "testingisgood" }, { NAME_ENTITY, "greedisgood" }, "(expressionInBrackets)" } }));
 }
 
 TEST_CASE("Test query equality failure") {
@@ -46,13 +52,17 @@ TEST_CASE("Test query equality failure") {
           RELATIONTUPLE{ ClauseType::FOLLOWS, { NUM_ENTITY, "1" }, { NUM_ENTITY, "2" } },
           RELATIONTUPLE{ ClauseType::MODIFIES, { PROC_SYNONYM, "procedure" }, { VAR_SYNONYM, "anyVariable" } },
           },
-          /* patternClauses */ { PATTERNTUPLE{ "a", "a", "_" }, PATTERNTUPLE{ "a", "_", "_a+s*l/d+k-j_" }, PATTERNTUPLE{ "testingisgood", "greedisgood", "(expressionInBrackets)" } }) ==
+          /* patternClauses */
+          { PATTERNTUPLE{ ASSIGN_PATTERN_WILDCARD, { STMT_SYNONYM, "a" }, { STMT_SYNONYM, "a" }, "_" },
+            PATTERNTUPLE{ ASSIGN_PATTERN_SUB_EXPR, { STMT_SYNONYM, "a" }, { WILDCARD, "_" }, "a+s*l/d+k-j" },
+            PATTERNTUPLE{ ASSIGN_PATTERN_EXACT, { STMT_SYNONYM, "testingisgood" }, { NAME_ENTITY, "greedisgood" }, "(expressionInBrackets)" } }) ==
     Query({ /* declarationMap */ { "anyVariable", EntityType::VARIABLE } },
           /* synonymsToReturn */ { "anyVariable", "anotherVar", "YetAnotherVar" },
           /* suchThatClauses */ {},
+          /* patternClauses */
           {
-          PATTERNTUPLE{ "a", "a", "_" },
-          /* patternClauses */ PATTERNTUPLE{ "a", "_", "_a+s*l/d+k-j_" },
+          PATTERNTUPLE{ ASSIGN_PATTERN_WILDCARD, { STMT_SYNONYM, "a" }, { STMT_SYNONYM, "a" }, "_" },
+          PATTERNTUPLE{ ASSIGN_PATTERN_SUB_EXPR, { STMT_SYNONYM, "a" }, { WILDCARD, "_" }, "a+s*l/d+k-j" },
           }));
 }
 
