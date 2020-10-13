@@ -166,7 +166,7 @@ TEST_CASE("Test evaluation of Follows with invalid arguments") {
 
     // invalid query
     Query query_empty = { { { "s1", STMT }, { "s2", STMT } },
-                          {},
+                          std::vector<std::string>(),
                           { { FOLLOWS, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
                           {} };
     REQUIRE(qe.evaluateQuery(query_empty).empty());
@@ -284,7 +284,7 @@ TEST_CASE("Test evaluation of Follows* with invalid arguments") {
 
     // invalid query
     Query query_empty = { { { "s1", STMT }, { "s2", STMT } },
-                          {},
+                          std::vector<std::string>(),
                           { { FOLLOWST, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
                           {} };
     REQUIRE(qe.evaluateQuery(query_empty).empty());
@@ -394,7 +394,7 @@ TEST_CASE("Test evaluation of Parent with invalid arguments") {
 
     // invalid query
     Query query_empty = { { { "s1", STMT }, { "s2", STMT } },
-                          {},
+                          std::vector<std::string>(),
                           { { PARENT, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
                           {} };
     REQUIRE(qe.evaluateQuery(query_empty).empty());
@@ -504,7 +504,7 @@ TEST_CASE("Test evaluation of Parent* with invalid arguments") {
 
     // invalid query
     Query query_empty = { { { "s1", STMT }, { "s2", STMT } },
-                          {},
+                          std::vector<std::string>(),
                           { { PARENTT, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
                           {} };
     REQUIRE(qe.evaluateQuery(query_empty).empty());
@@ -641,7 +641,7 @@ TEST_CASE("Test evaluation of Uses with invalid arguments") {
 
     // invalid query
     Query queryEmpty = { { { "s", STMT }, { "V", VARIABLE } },
-                         {},
+                         std::vector<std::string>(),
                          { { USES, { STMT_SYNONYM, "s" }, { VAR_SYNONYM, "V" } } },
                          {} };
     REQUIRE(qe.evaluateQuery(queryEmpty).empty());
@@ -801,7 +801,7 @@ TEST_CASE("Test evaluation of Modifies with invalid arguments") {
 
     // invalid query
     Query queryEmpty = { { { "s", STMT }, { "V", VARIABLE } },
-                         {},
+                         std::vector<std::string>(),
                          { { MODIFIES, { STMT_SYNONYM, "s" }, { VAR_SYNONYM, "V" } } },
                          {} };
     REQUIRE(qe.evaluateQuery(queryEmpty).empty());
@@ -1194,7 +1194,7 @@ TEST_CASE("Test evaluation of Next or Next* with invalid arguments") {
 
     // invalid query
     Query query_empty = { { { "s1", STMT }, { "s2", STMT } },
-                          {},
+                          std::vector<std::string>(),
                           { { NEXT, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
                           {} };
     REQUIRE(qe.evaluateQuery(query_empty).empty());

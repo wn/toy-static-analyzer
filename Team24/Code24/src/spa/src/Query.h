@@ -11,13 +11,19 @@ namespace qpbackend {
 struct Query {
   public:
     DECLARATION_MAP declarationMap;
-    std::vector<std::string> synonymsToReturn;
+    RETURN_CANDIDATE_LIST returnCandidates;
     std::vector<RELATIONTUPLE> suchThatClauses;
     std::vector<PATTERNTUPLE> patternClauses;
 
-    explicit Query() : declarationMap(), synonymsToReturn(), suchThatClauses(), patternClauses(){};
+    explicit Query() : declarationMap(), returnCandidates(), suchThatClauses(), patternClauses(){};
     Query(const DECLARATION_MAP& declarationMap,
-          const std::vector<std::string>& synonymsToReturn,
+          const RETURN_CANDIDATE_LIST& returnCandidates,
+          const std::vector<RELATIONTUPLE>& suchThatClauses,
+          const CLAUSE_LIST& patternClauses);
+
+    // Legacy constructor, for backwards compatibility with existing tests.
+    Query(const DECLARATION_MAP& declarationMap,
+          const std::vector<std::string>& returnCandidates,
           const std::vector<RELATIONTUPLE>& suchThatClauses,
           const CLAUSE_LIST& patternClauses);
 

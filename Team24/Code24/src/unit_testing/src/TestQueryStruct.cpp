@@ -8,7 +8,7 @@ TEST_CASE("Test default constructor produces empty query") {
     Query query = Query();
 
     REQUIRE(query.declarationMap.empty());
-    REQUIRE(query.synonymsToReturn.empty());
+    REQUIRE(query.returnCandidates.empty());
     REQUIRE(query.patternClauses.empty());
     REQUIRE(query.suchThatClauses.empty());
 }
@@ -20,7 +20,7 @@ TEST_CASE("Test empty query equality") {
 TEST_CASE("Test query equality") {
     REQUIRE(
     Query(/* declarationMap */ { { "anyVariable", EntityType::VARIABLE }, { "procedure", EntityType::PROCEDURE } },
-          /* synonymsToReturn */ { "anyVariable", "s1", "s2" },
+          /* returnCandidates */ std::vector<std::string>({ "anyVariable", "procedure" }),
           /* suchThatClauses */
           {
           RELATIONTUPLE{ ClauseType::FOLLOWS, { NUM_ENTITY, "1" }, { NUM_ENTITY, "2" } },
@@ -31,7 +31,7 @@ TEST_CASE("Test query equality") {
             PATTERNTUPLE{ ASSIGN_PATTERN_SUB_EXPR, { STMT_SYNONYM, "a" }, { WILDCARD, "_" }, "a+s*l/d+k-j" },
             PATTERNTUPLE{ ASSIGN_PATTERN_EXACT, { STMT_SYNONYM, "testingisgood" }, { NAME_ENTITY, "greedisgood" }, "(expressionInBrackets)" } }) ==
     Query(/* declarationMap */ { { "anyVariable", EntityType::VARIABLE }, { "procedure", EntityType::PROCEDURE } },
-          /* synonymsToReturn */ { "anyVariable", "s1", "s2" },
+          /* returnCandidates */ std::vector<std::string>({ "anyVariable", "procedure" }),
           /* suchThatClauses */
           {
           RELATIONTUPLE{ ClauseType::FOLLOWS, { NUM_ENTITY, "1" }, { NUM_ENTITY, "2" } },
@@ -46,7 +46,7 @@ TEST_CASE("Test query equality") {
 TEST_CASE("Test query equality failure") {
     REQUIRE_FALSE(
     Query(/* declarationMap */ { { "anyVariable", EntityType::VARIABLE }, { "procedure", EntityType::PROCEDURE } },
-          /* synonymsToReturn */ { "anyVariable", "s1", "s2" },
+          /* returnCandidates */ std::vector<std::string>({ "anyVariable", "procedure" }),
           /* suchThatClauses */
           {
           RELATIONTUPLE{ ClauseType::FOLLOWS, { NUM_ENTITY, "1" }, { NUM_ENTITY, "2" } },
@@ -57,7 +57,7 @@ TEST_CASE("Test query equality failure") {
             PATTERNTUPLE{ ASSIGN_PATTERN_SUB_EXPR, { STMT_SYNONYM, "a" }, { WILDCARD, "_" }, "a+s*l/d+k-j" },
             PATTERNTUPLE{ ASSIGN_PATTERN_EXACT, { STMT_SYNONYM, "testingisgood" }, { NAME_ENTITY, "greedisgood" }, "(expressionInBrackets)" } }) ==
     Query({ /* declarationMap */ { "anyVariable", EntityType::VARIABLE } },
-          /* synonymsToReturn */ { "anyVariable", "anotherVar", "YetAnotherVar" },
+          /* returnCandidates */ std::vector<std::string>({ "anyVariable" }),
           /* suchThatClauses */ {},
           /* patternClauses */
           {

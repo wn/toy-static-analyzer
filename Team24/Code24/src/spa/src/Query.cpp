@@ -1,5 +1,6 @@
 #include "Query.h"
 
+#include "LegacyQueryShims.h"
 #include "QPTypes.h"
 
 #include <algorithm>
@@ -75,17 +76,17 @@ std::string stringFromRelationType(ClauseType relationType) {
 }
 
 bool Query::operator==(const Query& s) const {
-    return declarationMap == s.declarationMap && synonymsToReturn == s.synonymsToReturn &&
+    return declarationMap == s.declarationMap && returnCandidates == s.returnCandidates &&
            suchThatClauses == s.suchThatClauses && patternClauses == s.patternClauses;
 }
 
 
 Query::Query(const std::unordered_map<std::string, EntityType>& declarationMap,
-             const std::vector<std::string>& synonymsToReturn,
+             const RETURN_CANDIDATE_LIST& returnCandidates,
              const std::vector<RELATIONTUPLE>& suchThatClauses,
              const std::vector<PATTERNTUPLE>& patternClauses) {
     this->declarationMap = declarationMap;
-    this->synonymsToReturn = synonymsToReturn;
+    this->returnCandidates = returnCandidates;
     this->suchThatClauses = suchThatClauses;
     this->patternClauses = patternClauses;
 }
@@ -101,8 +102,8 @@ std::string Query::toString() const {
     }
 
     stringstream << "\nSynonyms to return:";
-    for (const auto& synonym : synonymsToReturn) {
-        stringstream << synonym + " ";
+    for (const auto& returnCandidate : returnCandidates) {
+        stringstream << returnCandidate.second + " ";
     }
 
     stringstream << "\nSuch that clauses: ";
@@ -128,6 +129,15 @@ std::string Query::toString() const {
 
     stringstream << "\n}";
     return stringstream.str();
+}
+Query::Query(const DECLARATION_MAP& declarationMap,
+             const std::vector<std::string>& returnCandidates,
+             const std::vector<RELATIONTUPLE>& suchThatClauses,
+             const CLAUSE_LIST& patternClauses) {
+    this->declarationMap = declarationMap;
+    this->suchThatClauses = suchThatClauses;
+    this->returnCandidates = convertToReturnValues(returnCandidates, declarationMap);
+    this->patternClauses = patternClauses;
 }
 
 // Allow for Query struct expansion in Catch framework's error message generation.

@@ -222,7 +222,41 @@ class State {
                                      token.nameValue + " as it has not been declared.");
         }
 
-        query.synonymsToReturn.push_back(token.nameValue);
+        qpbackend::ReturnType returnType;
+        switch (query.declarationMap.at(token.nameValue)) {
+        case qpbackend::ASSIGN:
+            returnType = qpbackend::ASSIGN_STMT_NO;
+            break;
+        case qpbackend::STMT:
+            returnType = qpbackend::STMT_STMT_NO;
+            break;
+        case qpbackend::READ:
+            returnType = qpbackend::READ_STMT_NO;
+            break;
+        case qpbackend::PRINT:
+            returnType = qpbackend::PRINT_STMT_NO;
+            break;
+        case qpbackend::CALL:
+            returnType = qpbackend::CALL_STMT_NO;
+            break;
+        case qpbackend::WHILE:
+            returnType = qpbackend::WHILE_STMT_NO;
+            break;
+        case qpbackend::IF:
+            returnType = qpbackend::IF_STMT_NO;
+            break;
+        case qpbackend::VARIABLE:
+            returnType = qpbackend::VAR_VAR_NAME;
+            break;
+        case qpbackend::CONSTANT:
+            returnType = qpbackend::CONSTANT_VALUE;
+            break;
+        case qpbackend::PROCEDURE:
+            returnType = qpbackend::PROC_PROC_NAME;
+            break;
+        }
+
+        query.returnCandidates.emplace_back(returnType, token.nameValue);
     }
 
     void addSuchThatClause(qpbackend::ClauseType relationType, const qpbackend::ARG& arg1, const qpbackend::ARG& arg2) {

@@ -28,12 +28,12 @@ std::vector<std::string> SingleQueryEvaluator::evaluateQuery(const backend::PKB*
     if (hasEvaluationCompleted) {
         handleError("same single query evaluator should not be called twice");
     }
-    if (query.synonymsToReturn.size() == 0) {
+    if (query.returnCandidates.size() == 0) {
         handleError("no selected, invalid query");
     }
 
-    for (const auto& requested : query.synonymsToReturn) {
-        initializeIfSynonym(pkb, requested);
+    for (const auto& requested : query.returnCandidates) {
+        initializeIfSynonym(pkb, requested.second);
     }
 
     // sort and group clauses
@@ -60,8 +60,8 @@ std::vector<std::string> SingleQueryEvaluator::evaluateQuery(const backend::PKB*
  */
 std::vector<std::string> SingleQueryEvaluator::produceResult() {
     // for basic requirement
-    if (query.synonymsToReturn.size() == 1) {
-        std::string inquired = query.synonymsToReturn[0];
+    if (query.returnCandidates.size() == 1) {
+        std::string inquired = query.returnCandidates[0].second;
         if (!hasClauseFailed) {
             return synonym_candidates[inquired];
         }
