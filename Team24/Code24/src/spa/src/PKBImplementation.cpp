@@ -565,12 +565,12 @@ bool PKBImplementation::isAssign(STATEMENT_NUMBER s) const {
     return it->second == Assign;
 }
 
-PROCEDURE_NAME_SET PKBImplementation::getProcedureThatCalls(const VARIABLE_NAME& procedureName,
+PROCEDURE_NAME_SET PKBImplementation::getProcedureThatCalls(const PROCEDURE_NAME& procedureName,
                                                             bool isTransitive) const {
     return foost::getVisitedInDFS(procedureName, allProcedureNamesThatCalls, isTransitive);
 }
 
-PROCEDURE_NAME_SET PKBImplementation::getProceduresCalledBy(const VARIABLE_NAME& procedureName,
+PROCEDURE_NAME_SET PKBImplementation::getProceduresCalledBy(const PROCEDURE_NAME& procedureName,
                                                             bool isTransitive) const {
     return foost::getVisitedInDFS(procedureName, allProcedureNamesCalledBy, isTransitive);
 }
