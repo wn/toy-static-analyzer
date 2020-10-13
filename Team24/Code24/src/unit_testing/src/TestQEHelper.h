@@ -77,8 +77,10 @@ class PKBMock : public backend::PKB {
     VARIABLE_NAME_LIST getVariablesModifiedBy(STATEMENT_NUMBER s) const override;
     VARIABLE_NAME_LIST getVariablesModifiedBySomeStatement() const override;
 
-    PROCEDURE_NAME_SET getProcedureThatCalls(const PROCEDURE_NAME& procedureName, bool isTransitive) const override;
-    PROCEDURE_NAME_SET getProceduresCalledBy(const PROCEDURE_NAME& procedureName, bool isTransitive) const override;
+    PROCEDURE_NAME_SET getProcedureThatCalls(const VARIABLE_NAME& procedureName, bool isTransitive) const override;
+    PROCEDURE_NAME_SET getProceduresCalledBy(const VARIABLE_NAME& procedureName, bool isTransitive) const override;
+    const PROCEDURE_NAME_SET& getAllProceduresThatCallSomeProcedure() const override;
+    const PROCEDURE_NAME_SET& getAllCalledProcedures() const override;
 
     STATEMENT_NUMBER_SET getNextStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const override;
     STATEMENT_NUMBER_SET getPreviousStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const override;

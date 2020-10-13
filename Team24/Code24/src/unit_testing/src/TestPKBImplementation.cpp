@@ -1160,6 +1160,54 @@ TEST_CASE("getCallStatementsWithProcedureName") {
     REQUIRE(pkb.getCallStatementsWithProcedureName("nonexistentproc") == expected);
 }
 
+TEST_CASE("getAllProceduresThatCallSomeProcedure") {
+    const char program[] = "procedure a {         "
+                           "  call b;             "
+                           "  call c;             "
+                           "}"
+                           ""
+                           "procedure b {         "
+                           "  call c;             "
+                           "}"
+                           ""
+                           "procedure c {         "
+                           "  x = 1;              "
+                           "}"
+                           "procedure d {"
+                           "  y = 2;"
+                           "}";
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    PROCEDURE_NAME_SET expected = { "a", "b" };
+    REQUIRE(pkb.getAllProceduresThatCallSomeProcedure() == expected);
+}
+
+TEST_CASE("getAllCalledProcedures") {
+    const char program[] = "procedure a {         "
+                           "  call b;             "
+                           "  call c;             "
+                           "}"
+                           ""
+                           "procedure b {         "
+                           "  call c;             "
+                           "}"
+                           ""
+                           "procedure c {         "
+                           "  x = 1;              "
+                           "}"
+                           "procedure d {"
+                           "  y = 2;"
+                           "}";
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    PROCEDURE_NAME_SET expected = { "b", "c" };
+    REQUIRE(pkb.getAllCalledProcedures() == expected);
+}
+
 TEST_CASE("getReadStatementsWithVariableName") {
     const char program[] = "procedure a {         "
                            "  read a;             " // 1

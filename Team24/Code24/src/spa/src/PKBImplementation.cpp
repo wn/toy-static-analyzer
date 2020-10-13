@@ -31,12 +31,21 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
         allStatementsNumber.insert(i.first);
     }
 
-    // Get mapping of all procedures that calls (allProcedureNamesThatCalls) and
-    // are called by (allProcedureNamesCalledBy) procedure:
-    for (const auto& procedure : extractor::getProcedureToCallees(tNodeTypeToTNodesMap)) {
-        for (auto node : procedure.second) {
-            allProcedureNamesCalledBy[procedure.first->name].insert(node->name);
-            allProcedureNamesThatCalls[node->name].insert(procedure.first->name);
+    // Get mapping of all procedures that calls (procedureToCalledProcedures) and
+    // are called by procedureToCallers) procedure:
+    for (const auto& p : extractor::getProcedureToCallees(tNodeTypeToTNodesMap)) {
+        PROCEDURE_NAME callerName = p.first->name;
+
+        for (auto calledProcedure : p.second) {
+            PROCEDURE_NAME calleeName = calledProcedure->name;
+
+            // Update Call Mapping
+            procedureToCalledProcedures[callerName].insert(calleeName);
+            procedureToCallers[calleeName].insert(callerName);
+
+            // Register the fact that callee was called by some procedure
+            allProceduresThatCall.insert(callerName);
+            allCalledProcedures.insert(calleeName);
         }
     }
 
@@ -567,12 +576,18 @@ bool PKBImplementation::isAssign(STATEMENT_NUMBER s) const {
 
 PROCEDURE_NAME_SET PKBImplementation::getProcedureThatCalls(const PROCEDURE_NAME& procedureName,
                                                             bool isTransitive) const {
-    return foost::getVisitedInDFS(procedureName, allProcedureNamesThatCalls, isTransitive);
+    return foost::getVisitedInDFS(procedureName, procedureToCallers, isTransitive);
 }
 
 PROCEDURE_NAME_SET PKBImplementation::getProceduresCalledBy(const PROCEDURE_NAME& procedureName,
                                                             bool isTransitive) const {
-    return foost::getVisitedInDFS(procedureName, allProcedureNamesCalledBy, isTransitive);
+    return foost::getVisitedInDFS(procedureName, procedureToCalledProcedures, isTransitive);
+}
+const PROCEDURE_NAME_SET& PKBImplementation::getAllProceduresThatCallSomeProcedure() const {
+    return allProceduresThatCall;
+}
+const PROCEDURE_NAME_SET& PKBImplementation::getAllCalledProcedures() const {
+    return allCalledProcedures;
 }
 
 STATEMENT_NUMBER_SET

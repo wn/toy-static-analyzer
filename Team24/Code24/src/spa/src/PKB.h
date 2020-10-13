@@ -177,6 +177,9 @@ class PKB {
     virtual PROCEDURE_NAME_SET
     getProceduresCalledBy(const PROCEDURE_NAME& procedureName, bool isTransitive) const = 0;
 
+    virtual const PROCEDURE_NAME_SET& getAllProceduresThatCallSomeProcedure() const = 0;
+    virtual const PROCEDURE_NAME_SET& getAllCalledProcedures() const = 0;
+
     // -- NEXTS -- */
     // For two program lines n1 and n2 in the same procedure:
     //

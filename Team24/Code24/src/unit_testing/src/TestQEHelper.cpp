@@ -1162,6 +1162,12 @@ PROCEDURE_NAME_SET PKBMock::getProcedureThatCalls(const PROCEDURE_NAME& procedur
 PROCEDURE_NAME_SET PKBMock::getProceduresCalledBy(const PROCEDURE_NAME& procedureName, bool isTransitive) const {
     return PROCEDURE_NAME_SET();
 }
+const PROCEDURE_NAME_SET& PKBMock::getAllProceduresThatCallSomeProcedure() const {
+    return PROCEDURE_NAME_SET();
+}
+const PROCEDURE_NAME_SET& PKBMock::getAllCalledProcedures() const {
+    return PROCEDURE_NAME_SET();
+}
 
 STATEMENT_NUMBER_SET PKBMock::getNextStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const {
     STATEMENT_NUMBER_SET lines;
