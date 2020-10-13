@@ -1,0 +1,45 @@
+1 - (Valid Query) Parent + Follows
+call cl; assign a; if ifs;
+Select a such that Parent(ifs, a) such that Follows(a, cl)
+10
+5000
+2 - (Valid Query) Parent + Follows*
+print pt; stmt s;
+Select s such that Parent(9, s) such that Follows*(s, pt)
+10, 11, 14
+5000
+3 - (Valid Query) Parent + Parent
+stmt s;
+Select s such that Parent(25, 26) such that Parent(7, s)
+8, 16, 17	
+5000
+4 - (Valid Query) Parent + Parent*
+stmt s; if ifs; call c;
+Select s such that Parent(ifs, s) such that Parent*(ifs, c) 
+8, 10, 11, 12, 13, 14, 15, 16, 17
+5000
+5 - (Valid Query) Parent + Uses
+stmt s; assign a;
+Select s such that Parent(s, a) such that Uses(a, "H2O")
+26, 33
+5000
+6 - (Valid Query) Parent + Modifies
+while w; assign a;
+Select w such that Parent(w,a) such that Modifies(a, "naMeWiThDiGiTS85")
+27
+5000
+7 - (Valid Query) Parent + Next
+stmt s; assign a;
+Select s such that Parent(s, a) such that Next(a, s)
+none
+5000
+8 - (Valid Query) Parent + Next*
+stmt s; assign a;
+Select s such that Parent(s, a) such that Next*(a, s)
+9, 26, 27, 33
+5000
+9 - (Valid Query) Parent + pattern
+stmt s; assign a; variable v;
+Select s such that Parent(s,a) pattern a(v, "H2O - 1")
+33
+5000

@@ -1,0 +1,50 @@
+1 - (Valid Query) Follows* + Follows
+stmt s; while w; assign a;
+Select s such that Follows*(a, s) such that Follows(s, w)
+32
+5000
+2 - (Valid Query) Follows* + Follows, no results 
+print pt; stmt s; while w;
+Select s such that Follows*(s, pt) such that Follows(s, w)
+none
+5000
+3 - (Valid Query) Follows* + Follows*
+print pt; stmt s; while w;
+Select s such that Follows*(s, pt) such that Follows*(s, w)
+31
+5000
+4 - (Valid Query) Follows* + Parent
+print pt; stmt s;
+Select s such that Follows*(s, pt) such that Parent(9, s)
+10, 11, 14
+5000
+5 - (Valid Query) Follows* + Parent*
+assign a1, a2; while w;
+Select w such that Follows*(a1, w) such that Parent*(w, a2)
+25, 33
+5000
+6 - (Valid Query) Follows* + Uses
+print pt; assign a; variable v;
+Select a such that Follows*(a, pt) such that Uses(a, v)
+10, 14, 28, 31, 34, 36
+5000
+7 - (Valid Query) Follows* + Modifies
+assign a; while w;
+Select a such that Follows*(a, w) such that Modifies(a, "H2O")
+31
+5000
+8 - (Valid Query) Follows* + Next
+assign a; while w;
+Select a such that Follows*(a, w) such that Next(a, w)
+24
+5000
+9 - (Valid Query) Follows* + Next*
+assign a; while w;
+Select a such that Follows*(a, w) such that Next*(a, w)
+24, 31
+5000
+10 - (Valid Query) Follows* + pattern
+assign a; while w;
+Select a such that Follows*(a, w) pattern a(_, _"H2O"_)
+31
+5000

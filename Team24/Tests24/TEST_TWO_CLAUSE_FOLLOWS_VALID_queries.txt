@@ -1,0 +1,50 @@
+1 - (Valid Query) Follows + Follows
+call c; stmt s; assign a;
+Select c such that Follows(_, 16) such that Follows(a, c)
+3, 11
+5000
+2 - (Valid Query) Follows + Follows*
+stmt s; while w; assign a;
+Select s such that Follows(s, w) such that Follows*(a, s)
+32
+5000
+3 - (Valie Query) Follows + Follows*, no results 
+print pt; stmt s; while w;
+Select s such that Follows(s, w) such that Follows*(s, pt)
+none
+5000
+4 - (Valid Query) Follows + Parent
+call cl; assign a; if ifs;
+Select a such that Follows(a, cl) such that Parent(ifs, a)
+10
+5000
+5 - (Valid Query) Follows + Parent*
+stmt s; assign a;
+Select s such that Follows(a, s) such that Parent*(25, s)
+29, 32, 35, 37
+5000
+6 - (Valid Query) Follows + Uses
+stmt s;
+Select s such that Follows(s, _) such that Uses(s, _)
+3, 5, 8, 10, 11, 12, 14, 21, 22, 27, 28, 31, 32, 34, 35, 36
+5000
+7 - (Valid Query) Follows + Modifies
+assign a; call c;
+Select c such that Follows(a, c) such that Modifies(2, _)
+3, 11
+5000
+8 - (Valid Query) Follows + Next
+assign a; if ifs; call c;
+Select a such that Follows(a, ifs) such that Next(ifs, c)
+none
+5000
+9 - (Valid Query) Follows + Next*
+assign a; if ifs; call c;
+Select a such that Follows(a, ifs) such that Next*(ifs, c)
+6
+5000
+10 - (Valid Query) Follows + pattern(assign)
+stmt s; assign a; print pt;
+Select pt such that Follows(pt, s) pattern a(_ , "a + 1")
+12, 21, 22, 32, 35
+5000

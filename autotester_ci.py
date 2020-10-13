@@ -31,6 +31,10 @@ TEST_NESTED_COND_NEXT_INVALID = 'TEST_NESTED_COND_NEXT_INVALID_'
 TEST_NESTED_COND_NEXTT_VALID = 'TEST_NESTED_COND_NEXTT_VALID_'
 TEST_NESTED_COND_NEXTT_INVALID = 'TEST_NESTED_COND_NEXTT_INVALID_'
 
+TEST_TWO_CLAUSE_FOLLOWS_VALID = "TEST_TWO_CLAUSE_FOLLOWS_VALID_"
+TEST_TWO_CLAUSE_FOLLOWST_VALID = "TEST_TWO_CLAUSE_FOLLOWST_VALID_"
+TEST_TWO_CLAUSE_PARENT_VALID = "TEST_TWO_CLAUSE_PARENT_VALID_"
+
 SIMPLE_SOURCE_QPL_QUERY_PAIRS = (
         [('trivial_source', 'trivial_queries')]
         + formatter(TEST_OPERATOR_PREFIX, [('source', 'queries')])
@@ -44,6 +48,9 @@ SIMPLE_SOURCE_QPL_QUERY_PAIRS = (
         + formatter(TEST_NESTED_COND_NEXT_INVALID, [('source', 'queries')])
         + formatter(TEST_NESTED_COND_NEXTT_VALID, [('source', 'queries')])
         + formatter(TEST_NESTED_COND_NEXTT_INVALID, [('source', 'queries')])
+        + formatter(TEST_TWO_CLAUSE_FOLLOWS_VALID, [('source', 'queries')])
+        + formatter(TEST_TWO_CLAUSE_FOLLOWST_VALID, [('source', 'queries')])
+        + formatter(TEST_TWO_CLAUSE_PARENT_VALID, [('source', 'queries')])
 )
 
 SIMPLE_SOURCE_QPL_QUERY_FAILURE_PAIRS = (
