@@ -1,0 +1,25 @@
+1 - (Valid Query) Calls(p1, p2)
+procedure p1,p2;
+Select p1 such that Calls(p1, p2)
+proc1, proc2, proc3, proc4, proc5
+5000
+2 - (Valid Query) Calls("proc2", "proc3"), test if Calls holds across nesting
+print pt;
+Select pt such that Calls("proc2", "proc3")
+14
+5000
+3 - (Valid Query) Calls("proc2", "proc4"), test if Calls holds across procedures
+print pt
+Select pt such that Calls("proc2", "proc4")
+none
+5000
+4 - (Valid Query) Calls*(p, "proc6"), test if Calls* holds across procedures and nesting
+procedure p;
+Select p such that Calls*(p, "proc6")
+proc1, proc2, proc3, proc4, proc5
+5000
+5 - (Valid Query) Calls*("proc1", p), test if Calls* holds across procedures and nesting
+procedure p;
+Select p such that Calls*("proc1", p)
+proc2, proc3, proc4, proc5, proc6
+5000

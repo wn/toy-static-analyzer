@@ -1,0 +1,50 @@
+1 - (Valid Query) Calls(p1, p2)
+procedure p1, p2;
+Select p1 such that Calls(p1, p2)
+proc1
+5000
+2 - (Valid Query) Calls(p1, p2)
+procedure p1, p2;
+Select p2 such that Calls(p1, p2)
+proc2
+5000
+3 - (Valid Query) Calls(p1, "proc2")
+procedure p1;
+Select p1 such that Calls(p1, "proc2")
+proc1
+5000
+4 - (Valid Query) Calls(p1, _)
+procedure p1;
+Select p1 such that Calls(p1, _)
+proc1
+5000
+5 - (Valid Query) Calls("proc1", p2)
+procedure p2;
+Select p2 such that Calls("proc1", p2)
+proc2
+5000
+6 - (Valid Query) Calls(_, p2)
+procedure p2;
+Select p2 such that Calls(_, p2)
+proc2
+5000
+7 - (Valid Query) Calls(_,_)
+procedure p;
+Select p such that Calls(_,_)
+proc1, proc2
+5000
+8 - (Valid Query) Calls("proc1", "proc2")
+stmt s;
+Select s such that Calls("proc1", "proc2")
+1, 2
+5000
+9 - (Valid Query) Calls(_, "proc2")
+stmt s;
+Select s such that Calls(_, "proc2")
+1, 2
+5000
+10 - (Valid Query) Calls("proc1", _)
+stmt s;
+Select s such that Calls("proc1", _)
+1, 2
+5000

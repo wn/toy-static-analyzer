@@ -1,0 +1,7 @@
+procedure proc1 {
+	call proc2;
+}
+
+procedure proc2 {
+	read x;
+}

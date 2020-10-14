@@ -1,0 +1,35 @@
+1 - (Invalid Query) Calls*(p1, s)
+procedure p1;
+Select p1 such that Calls*(p1, s)
+none
+5000
+2 - (Invalid Query) Calls*(s, p2)
+procedure p2;
+Select p2 such that Calls*(s, p2)
+none
+5000
+3 - (Invalid Query) Calls*(1, p2)
+procedure p2;
+Select p2 such that Calls*(1, p2)
+none
+5000
+4 - (Invalid Query) Calls*(p1, 2)
+procedure p1;
+Select p1 such that Calls*(p1, 2)
+none
+5000
+5 - (Invalid Query) Calls*(p1, "proc3")
+procedure p1;
+Select p1 such that Calls*(p1, "proc3")
+none
+5000
+5 - (Invalid Query) Calls*("proc", p2)
+procedure p2;
+Select p2 such that Calls*("proc", p2)
+none
+5000
+6 -  (Invalid Query) Calls*(s, v)
+stmt s; variable v;
+Select s such that Calls*(s, v)
+none
+5000

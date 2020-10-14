@@ -1,0 +1,70 @@
+procedure proc1 {
+	read x;
+	read y;
+	while (x < 1) {
+		x = x + 1;
+	}
+	call proc2;
+}
+
+procedure proc2 {
+	if (x != 2) then {
+		x = 2;
+	} else {
+		while (x == 2) {
+			call proc4;
+			call proc5;
+			while (y < 1) {
+				call proc3;
+			}
+		}
+	}
+}
+
+procedure proc3 {
+	call proc4;
+}
+
+procedure proc4 {
+	call proc5;
+}
+
+procedure proc5 {
+	call proc6;
+	call proc7;
+}
+
+procedure proc6 {
+	call proc7;
+	call proc8;
+}
+
+procedure proc7 {
+	call proc9;
+	call proc10;
+}
+
+procedure proc8 {
+	print x;
+}
+
+procedure proc9 {
+	print y;
+}
+
+procedure proc10 {
+	call proc11;
+}
+
+procedure proc11 {
+	print x;
+}
+
+procedure orphan1 {
+	call orphan2;
+}
+
+procedure orphan2 {
+	call proc5;
+	call proc7;
+}

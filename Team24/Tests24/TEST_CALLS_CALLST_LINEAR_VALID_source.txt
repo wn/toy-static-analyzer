@@ -1,0 +1,36 @@
+procedure proc1 {
+	read x;
+	read y;
+	while (x < 1) {
+		x = x + 1;
+	}
+	call proc2;
+}
+
+procedure proc2 {
+	if (x != 2) then {
+		x = 2;
+	} else {
+		while (x == 2) {
+			while (y < 1) {
+				call proc3;
+			}
+		}
+	}
+}
+
+procedure proc3 {
+	call proc4;
+}
+
+procedure proc4 {
+	call proc5;
+}
+
+procedure proc5 {
+	call proc6;
+}
+
+procedure proc6 {
+	print x;
+}
