@@ -1,0 +1,45 @@
+1 - (Valid Query) Parent* + Follows
+stmt s; assign a;
+Select s such that Parent*(25, s) such that Follows(a, s)
+29, 32, 35, 37
+5000
+2 - (Valid Query) Parent* + Follows*
+assign a1, a2; while w;
+Select w such that Parent*(w, a2) such that Follows*(a1, w) 
+25, 33
+5000
+3 - (Valid Query) Parent* + Parent
+stmt s; if ifs; call c;
+Select s such that Parent*(ifs, c) such that Parent(ifs, s) 
+8, 10, 11, 12, 13, 14, 15, 16, 17
+5000
+4 - (Valid Query) Parent* + Parent*
+stmt s1, s2; assign a;
+Select s1 such that Parent*(s1, a) such that Parent*(s2, s1)
+8, 9, 26, 27, 33
+5000
+5 - (Valid Query) Parent* + Uses
+stmt s; call c;
+Select s such that Parent*(s, c) such that Uses(c, "mango")
+7, 8, 9
+5000
+6 - (Valid Query) Parent* + Modifies
+stmt s; call c;
+Select s such that Parent*(s, c) such that Modifies(c, "mango")
+7, 8, 9
+5000
+7 - (Valid Query) Parent* + Next
+stmt s; call c;
+Select s such that Parent*(s, c) such that Next(s, s)
+none
+5000
+8 - (Valid Query) Parent* + Next*
+stmt s; call c;
+Select s such that Parent*(s, c) such that Next*(s, s)
+8, 9
+5000
+9 - (Valid Query) Parent* + Pattern
+assign a; while w;
+Select w such that Parent*(w, a) pattern a("a", _)
+25, 33
+5000

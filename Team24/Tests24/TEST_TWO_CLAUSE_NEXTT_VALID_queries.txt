@@ -1,0 +1,45 @@
+1 - (Valid Query) Next* + Follows
+assign a; if ifs; call c;
+Select a such that Next*(ifs, c) such that Follows(a, ifs)
+6
+5000
+2 - (Valid Query) Next* + Follows*
+assign a; while w;
+Select a such that Next(a, w) such that Follows*(a, w)
+24
+5000
+3 - (Valid Query) Next* + Parent
+stmt s; assign a;
+Select s such that Next*(a, s) such that Parent(s, a)
+9, 26, 27, 33
+5000
+4 - (Valid Query) Next* + Parent*
+stmt s; call c;
+Select s such that Next*(s, s) such that Parent*(s, c)
+8, 9
+5000
+5 - (Valid Query) Next* + Uses
+stmt s1, s2;
+Select s1 such that Next*(s1,s2) such that Uses(s2,"tree")
+1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 18, 19, 20, 21, 22
+5000
+6 - (Valid Query) Next* + Modifies
+stmt s; call c;
+Select s such that Next*(s, c) such that Modifies(c, "mango")
+1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+5000
+7 - (Valid Query) Next* + Next
+stmt s1, s2; call c;
+Select s1 such that Next*(s2, c) such that Next(s1,s2)
+1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+5000
+8 - (Valid Query) Next* + Next*
+read rd1, rd2; print pt;
+Select rd1 such that Next*(rd1, pt) such that Next*(rd1, rd2)
+18, 19
+5000
+9 - (Valid Query) Next* + Pattern
+print pt; read rd; assign a;
+Select a such that Next*(pt, rd) pattern a(_,"x-1")
+14
+5000

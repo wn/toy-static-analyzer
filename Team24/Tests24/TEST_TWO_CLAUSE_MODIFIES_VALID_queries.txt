@@ -1,0 +1,45 @@
+1 - (Valid Query) Modifies + Follows
+assign a; call c;
+Select c such that Modifies(2, _) such that Follows(a, c)
+3, 11
+5000
+2 - (Valid Query) Modifies + Follows*
+assign a; while w;
+Select a such that Modifies(a, "H2O") such that Follows*(a, w)
+31
+5000
+3 - (Valid Query) Modifies + Parent
+while w; assign a;
+Select w such that Modifies(a, "naMeWiThDiGiTS85") such that Parent(w,a)
+27
+5000
+4 - (Valid Query) Modifies + Parent*
+stmt s; call c;
+Select s such that Modifies(c, "mango") such that Parent*(s, c)
+7, 8, 9
+5000
+5 - (Valid Query) Modifies + Uses
+stmt s; variable v;
+Select s such that Uses(s, v) such that Modifies(s, v)
+3, 4, 5, 7, 8, 9, 10, 11, 13, 14, 25, 26, 27, 28, 30, 31, 33, 34, 36
+5000
+6 - (Valid Query) Modifies + Modifies
+procedure p;
+Select p such that Modifies (p, "H2O") such that Modifies (p, "mango")
+main
+5000
+7 - (Valid Query) Modifies + Next
+stmt s; call c;
+Select s such that Modifies(c, "mango") such that Next (s, c)
+2, 10
+5000
+8 - (Valid Query) Modifies + Next*
+stmt s; call c;
+Select s such that Modifies(c, "mango") such that Next*(s, c)
+1, 2, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15
+5000
+9 - (Valid Query) Modifies + Pattern
+assign a;
+Select a such that Modifies (a, "a") pattern a("a", _)
+34
+5000
