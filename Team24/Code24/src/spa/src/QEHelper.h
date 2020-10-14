@@ -40,6 +40,12 @@ enum SubRelationType {
     POSTNEXTT, // given s, get all s' s.t. Next*(s', s)
     PRENEXT_WILD, // get all s s.t. Next*(s, _) exist
     POSTNEXT_WILD, // get all s s.t. Next*(_, s) exist
+    PRECALLS, // given p, get all p' s.t. Calls(p, p')
+    POSTCALLS, // given p, get all p' s.t. Calls(p', p)
+    PRECALLST, // given p, get all p' s.t. Calls*(p, p')
+    POSTCALLST, // given p, get all p' s.t. Calls*(p', p)
+    PRECALL_WILD, // given p, get all p s.t. Calls*(p, _) exist
+    POSTCALL_WILD, // given p, get all p s.t. Calls*(_, p) exist
     ASSIGN_PATTERN_EXACT_SRT, // evaluate pattern a(..., "...")
     ASSIGN_PATTERN_SUBEXPR_SRT, // evaluate pattern a(..., _"..."_)
     ASSIGN_PATTERN_WILDCARD_SRT, // evaluate pattern a(..., _)

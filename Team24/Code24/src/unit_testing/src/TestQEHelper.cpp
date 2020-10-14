@@ -41,6 +41,9 @@ const STATEMENT_NUMBER_SET& PKBMock::getAllStatements() const {
     case 3:
         statements = { 1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12,
                        13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23 };
+        break;
+    case 4:
+        statements = { 1, 2, 3, 4, 5 };
     }
     return statements;
 }
@@ -56,6 +59,9 @@ const VARIABLE_NAME_LIST& PKBMock::getAllVariables() const {
         break;
     case 2:
         variables = { "x", "y", "z", "m", "n", "count", "random", "a" };
+        break;
+    case 4:
+        variables = { "a", "b" };
     }
     return variables;
 }
@@ -71,6 +77,9 @@ const PROCEDURE_NAME_LIST& PKBMock::getAllProcedures() const {
         break;
     case 2:
         procedures = { "foo", "bar" };
+        break;
+    case 4:
+        procedures = { "first", "second", "third" };
     }
     return procedures;
 }
@@ -80,6 +89,9 @@ const CONSTANT_NAME_SET& PKBMock::getAllConstants() const {
     switch (test_idx) {
     case 0:
         constants = { "0", "1" };
+        break;
+    case 4:
+        constants = { "1" };
     }
     return constants;
 }
@@ -1155,18 +1167,49 @@ bool PKBMock::isAssign(STATEMENT_NUMBER s) const {
     }
     return false;
 }
+
 PROCEDURE_NAME_SET PKBMock::getProcedureThatCalls(const PROCEDURE_NAME& procedureName, bool isTransitive) const {
-    return PROCEDURE_NAME_SET();
+    PROCEDURE_NAME_SET procs;
+    if (test_idx == 4) {
+        if (isTransitive) {
+            if (procedureName == "second") {
+                procs = { "first" };
+            }
+            if (procedureName == "third") {
+                procs = { "first", "second" };
+            }
+        } else {
+            if (procedureName == "second") {
+                procs = { "first" };
+            }
+            if (procedureName == "third") {
+                procs = { "second" };
+            }
+        }
+    }
+    return procs;
 }
 
 PROCEDURE_NAME_SET PKBMock::getProceduresCalledBy(const PROCEDURE_NAME& procedureName, bool isTransitive) const {
-    return PROCEDURE_NAME_SET();
-}
-const PROCEDURE_NAME_SET& PKBMock::getAllProceduresThatCallSomeProcedure() const {
-    return PROCEDURE_NAME_SET();
-}
-const PROCEDURE_NAME_SET& PKBMock::getAllCalledProcedures() const {
-    return PROCEDURE_NAME_SET();
+    PROCEDURE_NAME_SET procs;
+    if (test_idx == 4) {
+        if (isTransitive) {
+            if (procedureName == "first") {
+                procs = { "second", "third" };
+            }
+            if (procedureName == "second") {
+                procs = { "third" };
+            }
+        } else {
+            if (procedureName == "first") {
+                procs = { "second" };
+            }
+            if (procedureName == "second") {
+                procs = { "third" };
+            }
+        }
+    }
+    return procs;
 }
 
 STATEMENT_NUMBER_SET PKBMock::getNextStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const {
@@ -1223,6 +1266,21 @@ STATEMENT_NUMBER_SET PKBMock::getNextStatementOf(STATEMENT_NUMBER statementNumbe
         }
     }
     return lines;
+}
+
+const PROCEDURE_NAME_SET& PKBMock::getAllProceduresThatCallSomeProcedure() const {
+    static PROCEDURE_NAME_SET procs;
+    if (test_idx == 4) {
+        procs = { "first", "second" };
+    }
+    return procs;
+}
+const PROCEDURE_NAME_SET& PKBMock::getAllCalledProcedures() const {
+    static PROCEDURE_NAME_SET procs;
+    if (test_idx == 4) {
+        procs = { "second", "third" };
+    }
+    return procs;
 }
 
 STATEMENT_NUMBER_SET PKBMock::getPreviousStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const {

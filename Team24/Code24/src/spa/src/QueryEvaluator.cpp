@@ -395,7 +395,7 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelationOrPattern(co
                                                                               const std::string& patternStr) {
     std::vector<std::string> result;
     STATEMENT_NUMBER_SET stmts;
-    PROCEDURE_NAME_LIST procs;
+    PROCEDURE_NAME_SET procs;
     VARIABLE_NAME_LIST vars;
     switch (subRelationType) {
     case PREFOLLOWS:
@@ -488,6 +488,26 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelationOrPattern(co
         result = castToStrVector<>(stmts);
         break;
     }
+    case PRECALLS: {
+        procs = pkb->getProceduresCalledBy(arg, false);
+        result = std::vector<PROCEDURE_NAME>(procs.begin(), procs.end());
+        break;
+    }
+    case POSTCALLS: {
+        procs = pkb->getProcedureThatCalls(arg, false);
+        result = std::vector<PROCEDURE_NAME>(procs.begin(), procs.end());
+        break;
+    }
+    case PRECALLST: {
+        procs = pkb->getProceduresCalledBy(arg, true);
+        result = std::vector<PROCEDURE_NAME>(procs.begin(), procs.end());
+        break;
+    }
+    case POSTCALLST: {
+        procs = pkb->getProcedureThatCalls(arg, true);
+        result = std::vector<PROCEDURE_NAME>(procs.begin(), procs.end());
+        break;
+    }
     case ASSIGN_PATTERN_EXACT_SRT: {
         stmts = pkb->getAllAssignmentStatementsThatMatch(arg, patternStr, false);
         result = castToStrVector<>(stmts);
@@ -520,6 +540,7 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelationWildcard(con
                                                                              const std::string& patternStr) {
     std::vector<std::string> result;
     STATEMENT_NUMBER_SET stmts;
+    PROCEDURE_NAME_SET procs;
     switch (subRelationType) {
     case PREFOLLOWS_WILD:
         stmts = pkb->getAllStatementsThatAreFollowed();
@@ -562,6 +583,14 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelationWildcard(con
     case POSTNEXT_WILD:
         stmts = pkb->getAllStatementsWithPrev();
         result = castToStrVector<>(stmts);
+        break;
+    case PRECALL_WILD:
+        procs = pkb->getAllProceduresThatCallSomeProcedure();
+        result = std::vector<PROCEDURE_NAME>(procs.begin(), procs.end());
+        break;
+    case POSTCALL_WILD:
+        procs = pkb->getAllCalledProcedures();
+        result = std::vector<PROCEDURE_NAME>(procs.begin(), procs.end());
         break;
     case ASSIGN_PATTERN_EXACT_SRT: {
         stmts = pkb->getAllAssignmentStatementsThatMatch("_", patternStr, false);

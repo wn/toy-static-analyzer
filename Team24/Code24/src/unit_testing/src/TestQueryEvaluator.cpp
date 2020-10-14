@@ -1216,5 +1216,120 @@ TEST_CASE("Test evaluation of Next or Next* with invalid arguments") {
     REQUIRE(qe.evaluateQuery(query).empty());
 }
 
+TEST_CASE("Test evaluation of Calls or Calls* between synonyms") {
+    PKBMock pkb(4);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryPre = { { { "p1", PROCEDURE }, { "p2", PROCEDURE } },
+                       { "p1" },
+                       { { CALLS, { PROC_SYNONYM, "p1" }, { PROC_SYNONYM, "p2" } } },
+                       {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre), { "first", "second" }));
+
+    Query queryPost = { { { "p1", PROCEDURE }, { "p2", PROCEDURE } },
+                        { "p2" },
+                        { { CALLST, { PROC_SYNONYM, "p1" }, { PROC_SYNONYM, "p2" } } },
+                        {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), { "second", "third" }));
+
+    Query querySelf = {
+        { { "p", PROCEDURE } }, { "p" }, { { CALLST, { PROC_SYNONYM, "p" }, { PROC_SYNONYM, "p" } } }, {}
+    };
+    REQUIRE(qe.evaluateQuery(querySelf).empty());
+}
+
+TEST_CASE("Test evaluation of Calls or Calls* between entity and synonym") {
+    PKBMock pkb(4);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryPre = {
+        { { "p", PROCEDURE } }, { "p" }, { { CALLS, { NAME_ENTITY, "first" }, { PROC_SYNONYM, "p" } } }, {}
+    };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre), { "second" }));
+
+    Query queryPost = { { { "p", PROCEDURE } },
+                        { "p" },
+                        { { CALLST, { PROC_SYNONYM, "p" }, { NAME_ENTITY, "third" } } },
+                        {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), { "first", "second" }));
+}
+
+TEST_CASE("Test evaluation of Calls or Calls* between entities") {
+    PKBMock pkb(4);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryFalse = { { { "p", PROCEDURE } },
+                         { "p" },
+                         { { CALLS, { NAME_ENTITY, "first" }, { NAME_ENTITY, "third" } } },
+                         {} };
+    REQUIRE(qe.evaluateQuery(queryFalse).empty());
+
+    Query queryTrue = { { { "p", PROCEDURE } },
+                        { "p" },
+                        { { CALLST, { NAME_ENTITY, "first" }, { NAME_ENTITY, "second" } } },
+                        {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryTrue), { "first", "second", "third" }));
+}
+
+TEST_CASE("Test evaluation of Calls or Calls* between synonym and wildcard") {
+    PKBMock pkb(4);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryPre = { { { "p", PROCEDURE } }, { "p" }, { { CALLS, { PROC_SYNONYM, "p" }, { WILDCARD, "_" } } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre), { "first", "second" }));
+
+    Query queryPost = {
+        { { "p", PROCEDURE } }, { "p" }, { { CALLST, { WILDCARD, "_" }, { PROC_SYNONYM, "p" } } }, {}
+    };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), { "second", "third" }));
+}
+
+TEST_CASE("Test evaluation of Calls/Calls* between entity and wildcard") {
+    PKBMock pkb(4);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryTrue = {
+        { { "p", PROCEDURE } }, { "p" }, { { CALLS, { NAME_ENTITY, "first" }, { WILDCARD, "_" } } }, {}
+    };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryTrue), { "first", "second", "third" }));
+
+    Query queryFalse = {
+        { { "p", PROCEDURE } }, { "p" }, { { CALLST, { WILDCARD, "_" }, { NAME_ENTITY, "first" } } }, {}
+    };
+    REQUIRE(qe.evaluateQuery(queryFalse).empty());
+}
+
+TEST_CASE("Test evaluation of Calls or Calls*(_, _)") {
+    PKBMock pkb(4);
+    queryevaluator::QueryEvaluator qe(&pkb);
+    Query query = { { { "p", PROCEDURE } }, { "p" }, { { CALLST, { WILDCARD, "_" }, { WILDCARD, "_" } } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query), { "first", "second", "third" }));
+}
+
+TEST_CASE("Test evaluation of Calls or Calls* with invalid arguments") {
+    PKBMock pkb(4);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    // invalid query
+    Query query_empty = { { { "p1", PROCEDURE }, { "p2", PROCEDURE } },
+                          std::vector<std::string>(),
+                          { { CALLS, { PROC_SYNONYM, "p1" }, { PROC_SYNONYM, "p2" } } },
+                          {} };
+    REQUIRE(qe.evaluateQuery(query_empty).empty());
+
+    // invalid synonyms
+    Query query_stmt = { { { "v", VARIABLE }, { "p", PROCEDURE } },
+                         { "v" },
+                         { { CALLST, { VAR_SYNONYM, "v" }, { PROC_SYNONYM, "p" } } },
+                         {} };
+    REQUIRE(qe.evaluateQuery(query_stmt).empty());
+
+    // invalid entity
+    Query query_num = {
+        { { "p", PROCEDURE } }, { "p" }, { { CALLST, { NUM_ENTITY, "2" }, { PROC_SYNONYM, "p" } } }, {}
+    };
+    REQUIRE(qe.evaluateQuery(query_num).empty());
+}
+
 } // namespace qetest
 } // namespace qpbackend
