@@ -73,6 +73,23 @@ enum ArgType {
     INVALID_ARG // invalid argument, not accepted for evaluation
 };
 
+// Get clause argument type, where SynonymEntity implies arg1 is a synonym, and arg2 is an entity.
+enum ClauseArgsType {
+    SynonymSynonym,
+    SynonymEntity,
+    SynonymWildcard,
+
+    EntitySynonym,
+    EntityEntity,
+    EntityWildcard,
+
+    WildcardWildcard,
+    WildcardSynonym,
+    WildcardEntity,
+    Invalid1, // Arg 1 is invalid
+    Invalid2, // Arg 2 is invalid
+};
+
 typedef std::unordered_map<std::string, EntityType> DECLARATION_MAP;
 typedef std::pair<ArgType, std::string /*argValue*/> ARG;
 typedef std::tuple<ClauseType, ARG, ARG> RELATIONTUPLE;
@@ -86,6 +103,8 @@ typedef std::tuple<std::string /* pattern synonym */, std::string /* var */, std
 
 std::string prettyPrintArg(const ARG& arg);
 std::string prettyPrintArgType(ArgType argType);
+
+ClauseArgsType getClauseArgsType(ArgType arg_type_1, ArgType arg_type_2);
 } // namespace qpbackend
 
 #endif // QPTYPES_H
