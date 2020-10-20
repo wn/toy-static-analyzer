@@ -50,7 +50,7 @@ bool ResultTable::isSynonymContained(const std::string& synonymName) const {
 
 bool ResultTable::mergeTable(ResultTable&& other) {
     if (!other.isInitialized) {
-        return rowNum > 0;
+        return !isInitialized || rowNum > 0;
     }
 
     if (!isInitialized) {

@@ -93,7 +93,7 @@ class SingleQueryEvaluator {
                                                            const std::string& patternStr);
 
     // sort and group clauses
-    std::vector<CLAUSE_LIST> getClausesSortedAndGrouped(const backend::PKB* pkb);
+    std::vector<std::vector<CLAUSE_LIST>> getClausesSortedAndGrouped(const backend::PKB* pkb);
 
     // update synonym table with a given result table
     void updateSynonymsWithResultTable(ResultTable& table);

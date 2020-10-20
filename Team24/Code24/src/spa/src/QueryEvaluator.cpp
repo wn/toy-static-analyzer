@@ -28,6 +28,7 @@ std::vector<std::string> SingleQueryEvaluator::evaluateQuery(const backend::PKB*
     if (hasEvaluationCompleted) {
         handleError("same single query evaluator should not be called twice");
     }
+
     if (query.returnCandidates.size() == 0) {
         handleError("no selected, invalid query");
     }
@@ -37,16 +38,29 @@ std::vector<std::string> SingleQueryEvaluator::evaluateQuery(const backend::PKB*
     }
 
     // sort and group clauses
-    std::vector<CLAUSE_LIST> clauses = getClausesSortedAndGrouped(pkb);
+    std::vector<std::vector<CLAUSE_LIST>> clauses = getClausesSortedAndGrouped(pkb);
+
+    // evaluate clauses
     for (const auto& group : clauses) {
+        if (hasClauseFailed) {
+            break;
+        }
         ResultTable stGroupRT;
-        for (const auto& clause : group) {
+        for (const auto& subgroup : group) {
             if (hasClauseFailed) {
                 break;
             }
-            hasClauseFailed = !(evaluateClause(pkb, clause, stGroupRT));
+            ResultTable subGroupRT;
+            for (const auto& clause : subgroup) {
+                if (hasClauseFailed) {
+                    break;
+                }
+                hasClauseFailed = hasClauseFailed || !(evaluateClause(pkb, clause, subGroupRT));
+            }
+            hasClauseFailed = hasClauseFailed || !stGroupRT.mergeTable(std::move(subGroupRT));
+            updateSynonymsWithResultTable(stGroupRT);
         }
-        resultTable.mergeTable(std::move(stGroupRT));
+        hasClauseFailed = hasClauseFailed || !resultTable.mergeTable(std::move(stGroupRT));
         updateSynonymsWithResultTable(resultTable);
     }
 
@@ -587,20 +601,20 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelationWildcard(con
     return result;
 }
 
-std::vector<CLAUSE_LIST> SingleQueryEvaluator::getClausesSortedAndGrouped(const backend::PKB* pkb) {
+std::vector<std::vector<CLAUSE_LIST>> SingleQueryEvaluator::getClausesSortedAndGrouped(const backend::PKB* pkb) {
     // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/271)
     // remove construction of CLAUSE into QPP after refactoring Query struct
-    CLAUSE_LIST clauses;
+    std::vector<CLAUSE_LIST> clauses;
     for (const auto& relationClause : query.suchThatClauses) {
         CLAUSE clause = { std::get<0>(relationClause), std::get<1>(relationClause),
                           std::get<2>(relationClause), "" };
-        clauses.push_back(clause);
+        clauses.push_back({ clause });
     }
 
     CLAUSE invalidClause = { INVALID_CLAUSE_TYPE, { INVALID_ARG, "" }, { INVALID_ARG, "" }, "" };
 
     for (const auto& patternClause : query.patternClauses) {
-        clauses.push_back(patternClause);
+        clauses.push_back({ patternClause });
     }
 
     // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/266)

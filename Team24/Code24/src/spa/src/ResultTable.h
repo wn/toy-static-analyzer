@@ -61,7 +61,8 @@ class ResultTable {
     /**
      * merge another table
      * @param other : another table to merge
-     * @return whether the table is non-empty after merging
+     * @return false if the table is a useless always-empty table after merging. (i.e. isInitialized
+     * && rowNum==0, it's useless because no matter what table it merges in the future it will always be empty), true otherwise
      */
     bool mergeTable(ResultTable&& other);
 
