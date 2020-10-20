@@ -43,3 +43,13 @@ print pt; read rd; assign a;
 Select a such that Next*(pt, rd) pattern a(_,"x-1")
 14
 5000
+10 - (Valid Query) Next* + Next* (Non-intersecting, positive)
+read rd; print pt; assign a; while w;
+Select rd such that Next*(rd, pt) such that Next*(a, w)
+18, 19, 20
+5000
+11 - (Valid Query) Next* + Next* (Non-intersecting, negative)
+read rd; print pt; stmt s;
+Select rd such that Next*(rd, pt) such that Next*(4, s)
+none
+5000

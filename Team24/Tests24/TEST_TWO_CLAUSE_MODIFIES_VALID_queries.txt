@@ -43,3 +43,13 @@ assign a;
 Select a such that Modifies (a, "a") pattern a("a", _)
 34
 5000
+10 - (Valid Query) Modifies + Parent* (Non-intersecting, positive)
+stmt s; call c;
+Select s such that Modifies(s, "mango") such that Parent*(7, 10)
+3, 7, 8, 9, 11, 19
+5000
+11 - (Valid Query) Modifies + Parent* (Non-intersecting, negative)
+stmt s; call c;
+Select s such that Modifies(s, "mango") such that Parent*(1, 1)
+none
+5000

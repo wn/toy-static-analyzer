@@ -48,3 +48,13 @@ stmt s; assign a; print pt;
 Select pt such that Follows(pt, s) pattern a(_ , "a + 1")
 12, 21, 22, 32, 35
 5000
+11 - (Valid Query) Follows + Next* (Non-intesersecting, positive)
+assign a; if ifs;
+Select a such that Follows(a, ifs) such that Next(2, 3)
+6
+5000
+12 - (Valid Query) Follows + Next* (Non-intesersecting, negative)
+assign a; if ifs;
+Select a such that Follows(a, ifs) such that Next(2, 4)
+none
+5000

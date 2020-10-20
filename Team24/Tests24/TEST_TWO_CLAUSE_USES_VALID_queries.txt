@@ -43,3 +43,13 @@ assign a;
 Select a such that Uses(a,"H2O") pattern a(_,_)
 31, 36
 5000
+10 - (Valid Query) Uses + Follows* (Non-intersecting, positive)
+assign a; variable v; stmt s; while w;
+Select a such that Uses(a, v) such that Follows*(s, w)
+5, 10, 13, 14, 28, 30, 31, 34, 36
+5000
+11 - (Valid Query) Uses + Follows* (Non-intersecting, negative)
+assign a; variable v; call c; if ifs;
+Select a such that Uses(a, v) such that Follows*(c, ifs)
+none
+5000

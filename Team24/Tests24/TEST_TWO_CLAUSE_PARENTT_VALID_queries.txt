@@ -43,3 +43,13 @@ assign a; while w;
 Select w such that Parent*(w, a) pattern a("a", _)
 25, 33
 5000
+10 - (Valid Query) Parent* + Parent* (Non-intersecting, positive)
+stmt s1, s2, s3; assign a;
+Select s1 such that Parent*(s1, a) such that Parent*(s2, s3)
+7, 8, 9, 25, 26, 27, 33
+5000
+11 - (Valid Query) Parent* + Parent* (Non-intersecting, negative)
+stmt s; assign a; while w; read rd;
+Select s1 such that Parent*(s, a) such that Parent*(w, rd)
+none
+5000

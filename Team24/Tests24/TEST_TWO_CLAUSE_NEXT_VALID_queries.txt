@@ -43,3 +43,13 @@ print pt; assign a;
 Select pt such that Next(pt, a) pattern a(_,_"dummy"_)
 12
 5000
+10 - (Valid Query) Next + Next (Non-intersecting, positive)
+stmt s; call c; read rd; print pt;
+Select s such that Next(s,c) such that Next(rd, pt)
+2, 3, 10
+5000
+11 - (Valid Query) Next + Next (Non-intersecting, negative)
+stmt s; call c;
+Select s such that Next(s,c) such that Next(1, 3)
+none
+5000

@@ -43,3 +43,13 @@ stmt s; assign a; variable v;
 Select s such that Parent(s,a) pattern a(v, "H2O - 1")
 33
 5000
+10 - (Valid Query) Parent + Parent (Non-intersecting, positive)
+stmt s; while w; if ifs;
+Select s such that Parent(7, s) such that Parent(w, ifs) 
+8, 16, 17
+5000
+11 - (Valid Query) Parent + Parent (Non-intersecting, negative)
+stmt s; while w; read rd;
+Select s such that Parent(7, s) such that Parent(w, rd)
+none
+5000

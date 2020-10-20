@@ -48,3 +48,13 @@ assign a; while w;
 Select a such that Follows*(a, w) pattern a(_, _"H2O"_)
 31
 5000
+11 - (Valid Query) Follows* + Modifies (Non-intersecting, positive)
+assign a; while w; stmt s;
+Select a such that Follows*(a, w) such that Modifies(s, "H2O")
+24, 31
+5000
+12 - (Valid Query) Follows* + Modifies (Non-intersecting, negative)
+assign a; while w; stmt s;
+Select a such that Follows*(a, w) such that Modifies(2, "H2O")
+none
+5000
