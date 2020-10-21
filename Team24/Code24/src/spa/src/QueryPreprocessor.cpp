@@ -32,6 +32,13 @@ State parseSelect(State state);
 State parseDeclarations(State state);
 STATESTATUSPAIR parseSingleDeclaration(State state);
 bool isValidDeclarationDelimiter(const TOKEN& token);
+// Declaration for result clause
+void parseResultClause(State state);
+void parseTuple(State state);
+void parseElem(State state);
+void parseAttrRef(State state);
+void parseAttrName(State state);
+// Declaration for 'filtering' clauses
 State parseFilteringClauses(State state);
 // Declarations for such that clauses
 STATESTATUSPAIR parseSingleSuchThatClause(State state);
@@ -367,6 +374,37 @@ STATESTATUSPAIR parseSingleDeclaration(State state) {
  */
 bool isValidDeclarationDelimiter(const TOKEN& token) {
     return token.type == backend::lexer::SEMICOLON || token.type == backend::lexer::COMMA;
+}
+
+/**
+ * result-cl : tuple | ‘BOOLEAN’
+ */
+void parseResultClause(State state) {
+}
+
+/**
+ * tuple: elem | ‘<’ elem ( ‘,’ elem )* ‘>’
+ */
+void parseTuple(State state) {
+}
+
+/**
+ * elem : synonym | attrRef
+ */
+void parseElem(State state) {
+}
+
+/**
+ * attrRef : synonym ‘.’ attrName
+ *
+ */
+void parseAttrRef(State state) {
+}
+
+/**
+ * attrName : ‘procName’| ‘varName’ | ‘value’ | ‘stmt#’
+ */
+void parseAttrName(State state) {
 }
 
 /**
