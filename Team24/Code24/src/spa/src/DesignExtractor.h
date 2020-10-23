@@ -88,5 +88,21 @@ getPreviousRelationship(const std::unordered_map<int, std::unordered_set<int>>& 
 
 std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_SET>
 getConditionVariablesToStatementNumbers(const std::unordered_map<int, const TNode*>& statementNumberToTNode);
+
+/**
+ * Get mapping of the possible assignment statements that Affect other assignment statements.
+ */
+std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET>
+getAffectsMapping(const std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes,
+                  const std::unordered_map<const TNode*, STATEMENT_NUMBER>& tNodeToStatementNumber,
+                  const std::unordered_map<STATEMENT_NUMBER, const TNode*>& statementNumberToTNode,
+                  const std::unordered_map<int, std::unordered_set<int>> nextRelationship,
+                  const std::unordered_map<int, std::unordered_set<int>> previousRelationship,
+                  const std::unordered_map<const TNode*, std::unordered_set<std::string>> usesMapping,
+                  std::unordered_map<const TNode*, std::unordered_set<std::string>> modifiesMapping);
+
+std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET>
+getAffectedMapping(std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> affectsMapping);
+
 } // namespace extractor
 } // namespace backend

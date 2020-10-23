@@ -1022,5 +1022,178 @@ TEST_CASE("Test getConditionVariablesToStatementNumbers") {
     REQUIRE(actual == expected);
 }
 
+TEST_CASE("Test getAffectsMapping on a linear path ") {
+    const char program[] = "procedure Proc { "
+                           "x = 1;" // 1
+                           "y = x;" // 2
+                           "z = x + y;" // 3
+                           "alas = z - x;" // 4
+                           " }";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto nextRelationship = extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto actual =
+    extractor::getAffectsMapping(tNodeTypeToTNodes, tNodeToStatementNumber,
+                                 extractor::getStatementNumberToTNode(tNodeToStatementNumber),
+                                 nextRelationship, extractor::getPreviousRelationship(nextRelationship),
+                                 extractor::getUsesMapping(tNodeTypeToTNodes),
+                                 extractor::getModifiesMapping(tNodeTypeToTNodes));
+
+    std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> expected = { { 1, { 2, 3, 4 } },
+                                                                            { 2, { 3 } },
+                                                                            { 3, { 4 } } };
+    REQUIRE(actual == expected);
+}
+
+TEST_CASE("Test getAffectsMapping on a if/else ") {
+    const char program[] = "procedure Proc { "
+                           "x = 1;" // 1
+                           "y = 2;" // 2
+                           "if (unrelated == 1) then {" // 3
+                           "  a = x + y;" // 4
+                           "} else {"
+                           "  b = z + y;" // 5
+                           "}"
+                           "c = a;" //  6
+                           "d = b;" // 7
+                           "e = x;" // 8
+                           "f = y;" // 9
+                           "}";
+
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto nextRelationship = extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto actual =
+    extractor::getAffectsMapping(tNodeTypeToTNodes, tNodeToStatementNumber,
+                                 extractor::getStatementNumberToTNode(tNodeToStatementNumber),
+                                 nextRelationship, extractor::getPreviousRelationship(nextRelationship),
+                                 extractor::getUsesMapping(tNodeTypeToTNodes),
+                                 extractor::getModifiesMapping(tNodeTypeToTNodes));
+
+    std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> expected = {
+        { 1, { 4, 8 } },
+        { 2, { 4, 5, 9 } },
+        { 4, { 6 } },
+        { 5, { 7 } },
+    };
+    REQUIRE(actual == expected);
+}
+
+TEST_CASE("Test getAffectsMapping on a while") {
+    const char program[] = "procedure Proc { "
+                           "x = 1;" // 1
+                           "y = 2;" // 2
+                           "while (i < 10) {" // 3
+                           "  if (unrealted == 1) then {" // 4
+                           "    y = y;" // 5
+                           "  } else {"
+                           "    unrelated = 0;" // 6
+                           "  }"
+                           "  i = i + 1;" // 7
+                           "  x = 100;" // 8
+                           "}"
+                           "a = x;" //  9
+                           "b = y;" // 10
+                           "}";
+
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto nextRelationship = extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto actual =
+    extractor::getAffectsMapping(tNodeTypeToTNodes, tNodeToStatementNumber,
+                                 extractor::getStatementNumberToTNode(tNodeToStatementNumber),
+                                 nextRelationship, extractor::getPreviousRelationship(nextRelationship),
+                                 extractor::getUsesMapping(tNodeTypeToTNodes),
+                                 extractor::getModifiesMapping(tNodeTypeToTNodes));
+
+    std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> expected = {
+        { 1, { 9 } }, // the statements in the while looop may not execute, allowing 1 to affect 9
+        { 2, { 5, 10 } }, // y can hit the assignment to y directly (5), or go through the "else" block to affect b (9)
+        { 5, { 5, 10 } }, // the assignment in 5 can either loop or exit.
+        { 7, { 7 } }, // the assignment to i can only affect itself
+        { 8, { 9 } },
+    };
+    REQUIRE(actual == expected);
+}
+
+TEST_CASE("Test getAffectsMapping on code 5") {
+    // Sanity check to ensure that we are at least getting the same results as the Wiki.
+    const char program[] = "procedure Second {"
+                           "x = 0;"
+                           "i = 5;"
+                           "while (i!=0) {"
+                           "x = x + 2*y;"
+                           "call Third;"
+                           "i = i - 1; }"
+                           "if (x==1) then {"
+                           "x = x+1; }"
+                           "else {"
+                           "z = 1; }"
+                           "z = z + x + i;"
+                           "y = z + 2;"
+                           "x = x * y + z; }"
+                           "procedure Third {"
+                           "z = 5;"
+                           "v = z;"
+                           "print v; }";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto nextRelationship = extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto actual =
+    extractor::getAffectsMapping(tNodeTypeToTNodes, tNodeToStatementNumber,
+                                 extractor::getStatementNumberToTNode(tNodeToStatementNumber),
+                                 nextRelationship, extractor::getPreviousRelationship(nextRelationship),
+                                 extractor::getUsesMapping(tNodeTypeToTNodes),
+                                 extractor::getModifiesMapping(tNodeTypeToTNodes));
+
+    // The Wiki misses out on some relationships (because they only list examples.)
+    // The full set of Affects relationships are defined here.
+    std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> expected = {
+        { 2, { 6, 10 } },        { 4, { 4, 8, 10, 12 } }, { 6, { 6, 10 } },
+        { 1, { 4, 8, 10, 12 } }, { 8, { 10, 12 } },       { 9, { 10 } },
+        { 11, { 12 } },          { 10, { 11, 12 } },      { 13, { 14 } }
+    };
+    REQUIRE(actual == expected);
+}
+
+TEST_CASE("Test getAffectedMapping") {
+    const char program[] = "procedure Proc { "
+                           "x = 1;" // 1
+                           "y = x;" // 2
+                           "z = x + y;" // 3
+                           "alas = z - x;" // 4
+                           " }";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto nextRelationship = extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto affectsMapping =
+    extractor::getAffectsMapping(tNodeTypeToTNodes, tNodeToStatementNumber,
+                                 extractor::getStatementNumberToTNode(tNodeToStatementNumber),
+                                 nextRelationship, extractor::getPreviousRelationship(nextRelationship),
+                                 extractor::getUsesMapping(tNodeTypeToTNodes),
+                                 extractor::getModifiesMapping(tNodeTypeToTNodes));
+
+    auto actual = extractor::getAffectedMapping(affectsMapping);
+    std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> expected = { { 2, { 1 } },
+                                                                            { 3, { 1, 2 } },
+                                                                            { 4, { 1, 3 } } };
+    REQUIRE(actual == expected);
+}
+
 } // namespace testextractor
 } // namespace backend

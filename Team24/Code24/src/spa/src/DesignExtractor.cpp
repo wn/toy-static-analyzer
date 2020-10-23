@@ -1,14 +1,18 @@
 #include "DesignExtractor.h"
 
+#include "Foost.hpp"
 #include "Logger.h"
+#include "PKB.h"
 #include "TNode.h"
 
 #include <algorithm>
 #include <cassert>
 #include <set>
 #include <stack>
+#include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 
 namespace backend {
 namespace extractor {
@@ -706,5 +710,152 @@ getConditionVariablesToStatementNumbers(const std::unordered_map<int, const TNod
     }
     return result;
 }
+
+
+std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET>
+getAffectsMapping(const std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes,
+                  const std::unordered_map<const TNode*, STATEMENT_NUMBER>& tNodeToStatementNumber,
+                  const std::unordered_map<STATEMENT_NUMBER, const TNode*>& statementNumberToTNode,
+                  const std::unordered_map<int, std::unordered_set<int>> nextRelationship,
+                  const std::unordered_map<int, std::unordered_set<int>> previousRelationship,
+                  const std::unordered_map<const TNode*, std::unordered_set<std::string>> usesMapping,
+                  std::unordered_map<const TNode*, std::unordered_set<std::string>> modifiesMapping) {
+    // This is an implementation of a worklist algorithm for reaching definition analysis.
+
+    // Represents the assignment that cause a certain variable to be modified.
+    typedef std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_SET> VariableToAssigners;
+
+    std::unordered_map<STATEMENT_NUMBER, VariableToAssigners> variablesReachingIn;
+    for (auto& p : statementNumberToTNode) {
+        variablesReachingIn.insert({ p.first, VariableToAssigners() });
+    }
+    std::unordered_map<STATEMENT_NUMBER, VariableToAssigners> variablesGoingOut;
+    for (auto& p : statementNumberToTNode) {
+        variablesGoingOut.insert({ p.first, VariableToAssigners() });
+    }
+
+
+    // Initialize
+    std::unordered_set<const TNode*> startingTNodes;
+    startingTNodes.insert(tNodeTypeToTNodes.at(Assign).begin(), tNodeTypeToTNodes.at(Assign).end());
+    for (const TNode* tNode : startingTNodes) {
+        STATEMENT_NUMBER statementNumber = tNodeToStatementNumber.at(tNode);
+        VariableToAssigners initialVariableToAssigners;
+        for (const VARIABLE_NAME& variable : modifiesMapping[tNode]) {
+            initialVariableToAssigners[variable] = STATEMENT_NUMBER_SET();
+            initialVariableToAssigners[variable].insert(statementNumber);
+        }
+        variablesGoingOut[statementNumber] = initialVariableToAssigners;
+    }
+
+
+    std::vector<STATEMENT_NUMBER> changedStatements;
+    for (auto& p : statementNumberToTNode) {
+        STATEMENT_NUMBER statementNumber = p.first;
+        changedStatements.push_back(statementNumber);
+    }
+
+
+    while (!changedStatements.empty()) {
+        STATEMENT_NUMBER statementNumber = changedStatements.back();
+        changedStatements.pop_back();
+
+        if (previousRelationship.find(statementNumber) == previousRelationship.end()) {
+            continue;
+        }
+
+        variablesReachingIn[statementNumber] = VariableToAssigners();
+        VariableToAssigners& statementAffects = variablesReachingIn.at(statementNumber);
+
+        for (const STATEMENT_NUMBER& previousStatement : previousRelationship.at(statementNumber)) {
+            for (auto& p1 : variablesGoingOut.at(previousStatement)) {
+                const VARIABLE_NAME& variable = p1.first;
+                const STATEMENT_NUMBER_SET& newAffectors = p1.second;
+
+                if (statementAffects.find(variable) == statementAffects.end()) {
+                    statementAffects[variable] = STATEMENT_NUMBER_SET();
+                }
+
+                statementAffects[variable].insert(newAffectors.begin(), newAffectors.end());
+            }
+        }
+
+        // Make a copy of the old affects
+        const VariableToAssigners oldOutwardAffects = variablesGoingOut[statementNumber];
+
+        // OUT := IN
+        variablesGoingOut[statementNumber] = variablesReachingIn[statementNumber];
+
+        const TNode* tNode = statementNumberToTNode.at(statementNumber);
+        if (tNode->type == Assign) {
+            assert(modifiesMapping[tNode].size() == 1);
+            VARIABLE_NAME variableModified = *modifiesMapping[tNode].begin();
+            // - KILL
+            variablesGoingOut[statementNumber].erase(variableModified);
+            // + GEN
+            variablesGoingOut[statementNumber][variableModified] = { statementNumber };
+        }
+
+        if (variablesGoingOut[statementNumber] != oldOutwardAffects) {
+            if (nextRelationship.find(statementNumber) == nextRelationship.end()) {
+                continue;
+            }
+            for (const STATEMENT_NUMBER& nextStatement : nextRelationship.at(statementNumber)) {
+                changedStatements.push_back(nextStatement);
+            }
+        }
+    }
+
+    std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> affectsMapping;
+    for (auto& p : statementNumberToTNode) {
+        STATEMENT_NUMBER statementNumber = p.first;
+        const TNode* tNode = p.second;
+
+        // Only assignments affect each other
+        if (tNode->type != Assign) {
+            continue;
+        }
+
+        for (auto& p1 : variablesReachingIn[statementNumber]) {
+            VARIABLE_NAME variable = p1.first;
+
+            // If this tNode does not use the variable that reaching this, skip.
+            if (usesMapping.find(tNode) == usesMapping.end()) {
+                continue;
+            }
+            auto& tNodeUses = usesMapping.at(tNode);
+            if (tNodeUses.find(variable) == tNodeUses.end()) {
+                continue;
+            }
+
+            STATEMENT_NUMBER_SET& affectors = p1.second;
+            for (const STATEMENT_NUMBER& affector : affectors) {
+                const TNode* affectorTNode = statementNumberToTNode.at(affector);
+                // Only assignments affect each other
+                if (affectorTNode->type != Assign) {
+                    continue;
+                }
+
+                if (affectsMapping.find(affector) == affectsMapping.end())
+                    affectsMapping[affector] = STATEMENT_NUMBER_SET();
+                affectsMapping[affector].insert(statementNumber);
+            }
+        }
+    }
+
+    return affectsMapping;
+}
+
+std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET>
+getAffectedMapping(const std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> affectsMapping) {
+    std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> result;
+    for (const auto& affectsPair : affectsMapping) {
+        for (int affected : affectsPair.second) {
+            result[affected].insert(affectsPair.first);
+        }
+    }
+    return result;
+}
+
 } // namespace extractor
 } // namespace backend
