@@ -33,8 +33,8 @@ State parseDeclarations(State state);
 STATESTATUSPAIR parseSingleDeclaration(State state);
 bool isValidDeclarationDelimiter(const TOKEN& token);
 // Declaration for result clause
-void parseResultClause(State state);
-void parseTuple(State state);
+STATESTATUSPAIR parseResultClause(State state);
+STATESTATUSPAIR parseTuple(State state);
 void parseElem(State state);
 void parseAttrRef(State state);
 void parseAttrName(State state);
@@ -276,6 +276,12 @@ class State {
                           const std::string& expressionSpec) {
         query.patternClauses.emplace_back(patternType, assignmentSynonym, variableName, expressionSpec);
     }
+
+    void setReturnValueToBoolean() {
+        // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/335): If declaration map is invalid,
+        //  set an invalid boolean.
+        query.returnCandidates = { { qpbackend::ReturnType::BOOLEAN, "BOOLEAN" } };
+    }
 }; // namespace querypreprocessor
 
 // Parser / Business logic methods
@@ -299,10 +305,10 @@ State parseSelect(State state) {
                                  " while parsing, when \"Select\" is expected instead.");
     }
 
-    const TOKEN& synonymToken = state.popUntilNonWhitespaceToken();
-    state.addSynonymToReturn(synonymToken);
-    if (!state.hasTokensLeftToParse()) {
-        return state;
+    bool isQueryValid;
+    std::tie(state, isQueryValid) = parseResultClause(state);
+    if (!isQueryValid) {
+        return {};
     }
     return parseFilteringClauses(state);
 }
@@ -314,6 +320,8 @@ State parseSelect(State state) {
  * return the the most recent valid state.
  */
 State parseDeclarations(State state) {
+    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/335): Support `Select BOOLEAN`
+    //  Current code actually parses declaration+ instead of declaration*
     bool isValidState;
     State tempState = state;
     std::tie(tempState, isValidState) = parseSingleDeclaration(state);
@@ -379,13 +387,40 @@ bool isValidDeclarationDelimiter(const TOKEN& token) {
 /**
  * result-cl : tuple | ‘BOOLEAN’
  */
-void parseResultClause(State state) {
+STATESTATUSPAIR parseResultClause(State state) {
+    STATESTATUSPAIR parseTupleStateStatusPair = parseTuple(state);
+    if (parseTupleStateStatusPair.second) {
+        logLine(kQppLogInfoPrefix +
+                "parseResultClause: parsing tuple is successful, query should return tuples");
+        return parseTupleStateStatusPair;
+    }
+
+    // Parse terminal 'BOOLEAN'
+    TOKEN returnValueToken = state.popUntilNonWhitespaceToken();
+    if (returnValueToken.type != backend::lexer::NAME || returnValueToken.nameValue != "BOOLEAN") {
+        logLine(kQppLogWarnPrefix + "parseResultClause: Unable to parse tuple | 'BOOLEAN' Found:" +
+                backend::lexer::prettyPrintType(returnValueToken.type));
+        return { state, false };
+    }
+
+    state.setReturnValueToBoolean();
+    return { state, true };
 }
 
 /**
  * tuple: elem | ‘<’ elem ( ‘,’ elem )* ‘>’
  */
-void parseTuple(State state) {
+STATESTATUSPAIR parseTuple(State state) {
+    try {
+        // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/335): Parse multiple synonyms.
+        const TOKEN& synonymToken = state.popUntilNonWhitespaceToken();
+        state.addSynonymToReturn(synonymToken);
+        logLine(kQppLogInfoPrefix + "parseTuple: parsed query: " + state.getQuery().toString());
+        return { state, true };
+    } catch (const std::runtime_error& e) {
+        logLine(e.what());
+        return { state, false };
+    }
 }
 
 /**
@@ -411,6 +446,7 @@ void parseAttrName(State state) {
  * ([ suchthat-cl ] | [ pattern-cl ])*
  */
 State parseFilteringClauses(State state) {
+    state.popToNextNonWhitespaceToken();
     if (!state.hasTokensLeftToParse()) return state;
     State tempState = state;
     bool isParseSuchThatValid = true;
@@ -483,6 +519,9 @@ STATESTATUSPAIR parseRelRef(State state) {
         return parseRelationStmtStmtOrLineLine(state, relationClauseType);
     case qpbackend::USES:
     case qpbackend::MODIFIES:
+        // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/335): Currently
+        //  `Modifies(_,...)` and `Uses(_,...)` are coded as syntactic errors, this should
+        //  not be the case.
         return parseRelationStmtEntOrEntEnt(state, relationClauseType);
     case qpbackend::CALLS:
     case qpbackend::CALLST:

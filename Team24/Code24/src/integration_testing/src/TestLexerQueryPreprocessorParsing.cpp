@@ -34,6 +34,17 @@ TEST_CASE("Test selects clause without pattern or such that clause") {
     REQUIRE(expectedQuery == actualQuery);
 }
 
+TEST_CASE("Test selects clause without pattern or such that clause with trailing whitespace") {
+    std::stringstream queryString = std::stringstream("variable v; Select v ");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "v", qpbackend::EntityType::VARIABLE } }, { "v" }, {}, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
 TEST_CASE("Test keywords are not reserved") {
     std::unordered_map<std::string, qpbackend::EntityType> expectedDeclarationMap;
     std::stringstream queryString;
@@ -56,6 +67,44 @@ TEST_CASE("Test keywords are not reserved") {
     }
     queryString << " Select pattern";
     qpbackend::Query expectedQuery = qpbackend::Query(expectedDeclarationMap, { "pattern" }, {}, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test selects clause BOOLEAN as synonym") {
+    std::stringstream queryString = std::stringstream("variable BOOLEAN; Select BOOLEAN");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "BOOLEAN", qpbackend::EntityType::VARIABLE } },
+                     { { qpbackend::ReturnType::VAR_VAR_NAME, "BOOLEAN" } }, {}, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+// select-cl : declaration ‘Select’ BOOLEAN
+
+TEST_CASE("Test selects clause BOOLEAN return type") {
+    std::stringstream queryString = std::stringstream("variable v; Select BOOLEAN");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "v", qpbackend::EntityType::VARIABLE } },
+                     { { qpbackend::ReturnType::BOOLEAN, "BOOLEAN" } }, {}, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test selects clause BOOLEAN return type with trailing whitespace") {
+    std::stringstream queryString = std::stringstream("variable v; Select BOOLEAN  ");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "v", qpbackend::EntityType::VARIABLE } },
+                     { { qpbackend::ReturnType::BOOLEAN, "BOOLEAN" } }, {}, {});
 
     std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
@@ -1061,6 +1110,11 @@ TEST_CASE("Test Modifies first argument '_' failure") {
 
 TEST_CASE("Test non syn-assign used as syn-assign failure") {
     requireParsingInvalidQPLQueryToReturnEmptyQuery("variable v; Select v pattern v (_,_)");
+}
+
+TEST_CASE("Test undeclared synonym with BOOLEAN synonym declaration") {
+    requireParsingInvalidQPLQueryToReturnEmptyQuery("variable BOOLEAN; Select BOOLEAN, v");
+    requireParsingInvalidQPLQueryToReturnEmptyQuery("variable BOOLEAN; Select v, BOOLEAN");
 }
 
 // Test syntax error detection
