@@ -646,4 +646,18 @@ const STATEMENT_NUMBER_SET& PKBImplementation::getAllStatementsWithNext() const 
 const STATEMENT_NUMBER_SET& PKBImplementation::getAllStatementsWithPrev() const {
     return statementsWithPrev;
 }
+
+PROGRAM_LINE_SET PKBImplementation::getStatementsAffectedBy(PROGRAM_LINE statementNumber, bool isTransitive) const {
+    return PROGRAM_LINE_SET();
+}
+PROGRAM_LINE_SET PKBImplementation::getStatementsThatAffect(PROGRAM_LINE statementNumber, bool isTransitive) const {
+    return PROGRAM_LINE_SET();
+}
+const PROGRAM_LINE_SET& PKBImplementation::getAllStatementsThatAffect() const {
+    return PROGRAM_LINE_SET();
+}
+const PROGRAM_LINE_SET& PKBImplementation::getAllStatementsThatAreAffected() const {
+    return PROGRAM_LINE_SET();
+}
+
 } // namespace backend

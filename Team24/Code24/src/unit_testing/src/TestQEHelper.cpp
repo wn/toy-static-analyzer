@@ -1361,5 +1361,18 @@ const STATEMENT_NUMBER_SET& PKBMock::getAllStatementsWithPrev() const {
     return lines;
 }
 
+PROGRAM_LINE_SET PKBMock::getStatementsAffectedBy(PROGRAM_LINE statementNumber, bool isTransitive) const {
+    return PROGRAM_LINE_SET();
+}
+PROGRAM_LINE_SET PKBMock::getStatementsThatAffect(PROGRAM_LINE statementNumber, bool isTransitive) const {
+    return PROGRAM_LINE_SET();
+}
+const PROGRAM_LINE_SET& PKBMock::getAllStatementsThatAffect() const {
+    return PROGRAM_LINE_SET();
+}
+const PROGRAM_LINE_SET& PKBMock::getAllStatementsThatAreAffected() const {
+    return PROGRAM_LINE_SET();
+}
+
 } // namespace qetest
 } // namespace qpbackend

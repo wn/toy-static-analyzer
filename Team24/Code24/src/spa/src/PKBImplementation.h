@@ -72,6 +72,11 @@ class PKBImplementation : virtual public backend::PKB {
     const STATEMENT_NUMBER_SET& getAllStatementsWithNext() const override;
     const STATEMENT_NUMBER_SET& getAllStatementsWithPrev() const override;
 
+    PROGRAM_LINE_SET getStatementsAffectedBy(PROGRAM_LINE statementNumber, bool isTransitive) const override;
+    PROGRAM_LINE_SET getStatementsThatAffect(PROGRAM_LINE statementNumber, bool isTransitive) const override;
+    const PROGRAM_LINE_SET& getAllStatementsThatAffect() const override;
+    const PROGRAM_LINE_SET& getAllStatementsThatAreAffected() const override;
+
     // Pattern
     STATEMENT_NUMBER_SET
     getAllAssignmentStatementsThatMatch(const std::string& assignee, const std::string& pattern, bool isSubExpr) const override;

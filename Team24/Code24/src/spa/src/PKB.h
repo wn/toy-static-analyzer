@@ -18,6 +18,9 @@ typedef std::unordered_set<STATEMENT_NUMBER> STATEMENT_NUMBER_SET;
 typedef std::string CONSTANT_NAME;
 typedef std::unordered_set<CONSTANT_NAME> CONSTANT_NAME_SET;
 
+typedef int PROGRAM_LINE;
+typedef std::unordered_set<PROGRAM_LINE> PROGRAM_LINE_SET;
+
 
 namespace backend {
 class PKB {
@@ -195,6 +198,18 @@ class PKB {
 
     virtual const STATEMENT_NUMBER_SET& getAllStatementsWithNext() const = 0;
     virtual const STATEMENT_NUMBER_SET& getAllStatementsWithPrev() const = 0;
+
+    /* -- AFFECTS -- */
+    // Affects(a,b) holds true iff
+    // 1) a and b are assignment statements
+    // 2) a modifies a variable v that b uses
+    // 3) There is an execution flow (as defined by Next*) such that v does not get modified in that path.
+    // Get all assignment statements affected by some statement,
+    // i.e. get all assignment statements such that Affects(statementNumber, s) is true.
+    virtual PROGRAM_LINE_SET getStatementsAffectedBy(PROGRAM_LINE statementNumber, bool isTransitive) const = 0;
+    virtual PROGRAM_LINE_SET getStatementsThatAffect(PROGRAM_LINE statementNumber, bool isTransitive) const = 0;
+    virtual const PROGRAM_LINE_SET& getAllStatementsThatAffect() const = 0;
+    virtual const PROGRAM_LINE_SET& getAllStatementsThatAreAffected() const = 0;
 
     /* -- Patterns -- */
     // Get all assignment statements that matches the input pattern.
