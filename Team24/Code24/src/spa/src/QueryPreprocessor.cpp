@@ -320,11 +320,8 @@ State parseSelect(State state) {
  * return the the most recent valid state.
  */
 State parseDeclarations(State state) {
-    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/335): Support `Select BOOLEAN`
-    //  Current code actually parses declaration+ instead of declaration*
-    bool isValidState;
+    bool isValidState = true;
     State tempState = state;
-    std::tie(tempState, isValidState) = parseSingleDeclaration(state);
 
     // Optimistically parse for declarations until an invalid state is reached. Only update the
     // `state` with the newly obtained `tempState` if it is valid.

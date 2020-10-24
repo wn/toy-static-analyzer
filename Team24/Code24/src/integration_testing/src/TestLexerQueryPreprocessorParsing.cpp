@@ -86,6 +86,19 @@ TEST_CASE("Test selects clause BOOLEAN as synonym") {
     REQUIRE(expectedQuery == actualQuery);
 }
 
+// select-cl : ‘Select’ BOOLEAN
+
+TEST_CASE("Test selects clause BOOLEAN return type no declarations") {
+    std::stringstream queryString = std::stringstream("Select BOOLEAN");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({}, { { qpbackend::ReturnType::BOOLEAN, "BOOLEAN" } }, {}, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
 // select-cl : declaration ‘Select’ BOOLEAN
 
 TEST_CASE("Test selects clause BOOLEAN return type") {
@@ -1115,6 +1128,10 @@ TEST_CASE("Test non syn-assign used as syn-assign failure") {
 TEST_CASE("Test undeclared synonym with BOOLEAN synonym declaration") {
     requireParsingInvalidQPLQueryToReturnEmptyQuery("variable BOOLEAN; Select BOOLEAN, v");
     requireParsingInvalidQPLQueryToReturnEmptyQuery("variable BOOLEAN; Select v, BOOLEAN");
+}
+
+TEST_CASE("Test undeclared synonym without declaration statement") {
+    requireParsingInvalidQPLQueryToReturnEmptyQuery("Select v");
 }
 
 // Test syntax error detection
