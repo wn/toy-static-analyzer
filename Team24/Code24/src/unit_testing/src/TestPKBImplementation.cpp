@@ -1528,5 +1528,98 @@ TEST_CASE("Test getAllStatementsWithPrev") {
     STATEMENT_NUMBER_SET expected = { 2, 3, 4, 5, 6, 7, 8, 9, 10, 12 };
     REQUIRE(actual == expected);
 }
+
+TEST_CASE("Test getStatementsAffectedBy/getStatementsAffectedBy") {
+    const char program[] = "procedure Proc { "
+                           "while (i < 10) {" // 1
+                           "  x = y;" // 2
+                           "  y = x;" // 3
+                           "  if (unrealted == 1) then {" // 4
+                           "    y = y;" // 5
+                           "  } else {"
+                           "    unrelated = 0;" // 6
+                           "  }"
+                           "  i = i + 1;" // 7
+                           "}"
+                           "unrelated = x+y+i;" //  8
+                           "}";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    // Non existent
+    PROGRAM_LINE_SET expected = {};
+    REQUIRE(pkb.getStatementsAffectedBy(1, false) == expected);
+
+    // Non-transitive Affects
+    expected = { 3, 8 };
+    REQUIRE(pkb.getStatementsAffectedBy(2, false) == expected);
+    expected = { 5, 2, 8 };
+    REQUIRE(pkb.getStatementsAffectedBy(3, false) == expected);
+    expected = { 2, 8 };
+    REQUIRE(pkb.getStatementsAffectedBy(5, false) == expected);
+    expected = { 7, 8 };
+    REQUIRE(pkb.getStatementsAffectedBy(7, false) == expected);
+    expected = {};
+    REQUIRE(pkb.getStatementsAffectedBy(8, false) == expected);
+
+    // Non-transitive Affected (reflection of the above tests)
+    expected = { 3, 5 };
+    REQUIRE(pkb.getStatementsThatAffect(2, false) == expected);
+    expected = { 2 };
+    REQUIRE(pkb.getStatementsThatAffect(3, false) == expected);
+    expected = { 3 };
+    REQUIRE(pkb.getStatementsThatAffect(5, false) == expected);
+    expected = { 7 };
+    REQUIRE(pkb.getStatementsThatAffect(7, false) == expected);
+    expected = { 2, 3, 5, 7 };
+    REQUIRE(pkb.getStatementsThatAffect(8, false) == expected);
+
+    // Transitive
+    expected = { 2, 3, 5, 8 };
+    REQUIRE(pkb.getStatementsAffectedBy(2, true) == expected);
+    REQUIRE(pkb.getStatementsAffectedBy(3, true) == expected);
+    REQUIRE(pkb.getStatementsAffectedBy(5, true) == expected);
+    expected = { 7, 8 };
+    REQUIRE(pkb.getStatementsAffectedBy(7, true) == expected);
+
+    // Transitive Affected (reflection of the above tests)
+    expected = { 2, 3, 5 };
+    REQUIRE(pkb.getStatementsThatAffect(2, true) == expected);
+    REQUIRE(pkb.getStatementsThatAffect(3, true) == expected);
+    REQUIRE(pkb.getStatementsThatAffect(5, true) == expected);
+    expected = { 2, 3, 5, 7 };
+    REQUIRE(pkb.getStatementsThatAffect(8, true) == expected);
+    expected = { 7 };
+    REQUIRE(pkb.getStatementsThatAffect(7, true) == expected);
+    expected = { 2, 3, 5, 7 };
+    REQUIRE(pkb.getStatementsThatAffect(8, true) == expected);
+}
+
+TEST_CASE("Test getAllStatementsThatAffect/getAllStatementsThatAreAffected") {
+    const char program[] = "procedure Proc { "
+                           "while (i < 10) {" // 1
+                           "  x = y;" // 2
+                           "  y = x;" // 3
+                           "  if (unrealted == 1) then {" // 4
+                           "    y = y;" // 5
+                           "  } else {"
+                           "    unrelated = 0;" // 6
+                           "  }"
+                           "  i = i + 1;" // 7
+                           "}"
+                           "unrelated = x+y+i;" //  8
+                           "}";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    PROGRAM_LINE_SET expected = { 2, 3, 5, 7 };
+    REQUIRE(pkb.getAllStatementsThatAffect() == expected);
+    expected = { 2, 3, 5, 7, 8 };
+    REQUIRE(pkb.getAllStatementsThatAreAffected() == expected);
+}
 } // namespace testpkb
 } // namespace backend

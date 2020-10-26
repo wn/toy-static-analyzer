@@ -203,6 +203,18 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
                                      " that should not be Modify-ing any variable");
         }
     }
+
+
+    affectsMapping = extractor::getAffectsMapping(tNodeTypeToTNodesMap, tNodeToStatementNumber,
+                                                  statementNumberToTNode, nextRelationship,
+                                                  previousRelationship, usesMapping, modifiesMapping);
+    for (const auto& p : affectsMapping) {
+        statementsThatAffect.insert(p.first);
+    }
+    affectedMapping = extractor::getAffectedMapping(affectsMapping);
+    for (const auto& p : affectedMapping) {
+        statementsThatAreAffected.insert(p.first);
+    }
 }
 
 const STATEMENT_NUMBER_SET& PKBImplementation::getAllStatements() const {
@@ -648,16 +660,16 @@ const STATEMENT_NUMBER_SET& PKBImplementation::getAllStatementsWithPrev() const 
 }
 
 PROGRAM_LINE_SET PKBImplementation::getStatementsAffectedBy(PROGRAM_LINE statementNumber, bool isTransitive) const {
-    return PROGRAM_LINE_SET();
+    return foost::getVisitedInDFS(statementNumber, affectsMapping, isTransitive);
 }
 PROGRAM_LINE_SET PKBImplementation::getStatementsThatAffect(PROGRAM_LINE statementNumber, bool isTransitive) const {
-    return PROGRAM_LINE_SET();
+    return foost::getVisitedInDFS(statementNumber, affectedMapping, isTransitive);
 }
 const PROGRAM_LINE_SET& PKBImplementation::getAllStatementsThatAffect() const {
-    return PROGRAM_LINE_SET();
+    return statementsThatAffect;
 }
 const PROGRAM_LINE_SET& PKBImplementation::getAllStatementsThatAreAffected() const {
-    return PROGRAM_LINE_SET();
+    return statementsThatAreAffected;
 }
 
 } // namespace backend

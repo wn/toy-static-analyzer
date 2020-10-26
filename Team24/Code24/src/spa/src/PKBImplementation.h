@@ -147,6 +147,12 @@ class PKBImplementation : virtual public backend::PKB {
     STATEMENT_NUMBER_SET statementsWithNext;
     STATEMENT_NUMBER_SET statementsWithPrev;
 
+    // Affects helper:
+    std::unordered_map<PROGRAM_LINE, PROGRAM_LINE_SET> affectsMapping;
+    std::unordered_map<PROGRAM_LINE, PROGRAM_LINE_SET> affectedMapping;
+    STATEMENT_NUMBER_SET statementsThatAffect;
+    STATEMENT_NUMBER_SET statementsThatAreAffected;
+
     // Performance booster fields:
     std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash> tNodeTypeToTNodesMap;
     std::unordered_map<int, TNodeType> statementNumberToTNodeType;
