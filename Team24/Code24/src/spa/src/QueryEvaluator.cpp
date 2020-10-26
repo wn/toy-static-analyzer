@@ -1,6 +1,7 @@
 #include "QueryEvaluator.h"
 
 #include "Logger.h"
+#include "Optimisation.h"
 #include "PKB.h"
 #include "QEHelper.h"
 #include "QPTypes.h"
@@ -8,7 +9,6 @@
 
 #include <algorithm>
 #include <functional>
-#include <iostream>
 #include <stdexcept>
 #include <unordered_set>
 #include <utility>
@@ -37,31 +37,54 @@ std::vector<std::string> SingleQueryEvaluator::evaluateQuery(const backend::PKB*
         initializeIfSynonym(pkb, requested.second);
     }
 
-    // sort and group clauses
-    std::vector<std::vector<CLAUSE_LIST>> clauses = getClausesSortedAndGrouped(pkb);
-
-    // evaluate clauses
-    for (const auto& group : clauses) {
-        if (hasClauseFailed) {
+    // check if there are invalid clauses
+    for (const auto& clause : query.patternClauses) {
+        ClauseType clauseType = std::get<0>(clause);
+        ArgType arg1_type = std::get<1>(clause).first;
+        ArgType arg2_type = std::get<2>(clause).first;
+        if (clauseType == INVALID_CLAUSE_TYPE || arg1_type == INVALID_ARG || arg2_type == INVALID_ARG) {
+            hasClauseFailed = true;
             break;
         }
-        ResultTable stGroupRT;
-        for (const auto& subgroup : group) {
+    }
+
+    for (const auto& clause : query.suchThatClauses) {
+        ClauseType clauseType = std::get<0>(clause);
+        ArgType arg1_type = std::get<1>(clause).first;
+        ArgType arg2_type = std::get<2>(clause).first;
+        if (clauseType == INVALID_CLAUSE_TYPE || arg1_type == INVALID_ARG || arg2_type == INVALID_ARG) {
+            hasClauseFailed = true;
+            break;
+        }
+    }
+
+    // sort and group clauses
+    if (!hasClauseFailed) {
+        std::vector<std::vector<CLAUSE_LIST>> clauses = getClausesSortedAndGrouped(pkb);
+
+        // evaluate clauses
+        for (const auto& group : clauses) {
             if (hasClauseFailed) {
                 break;
             }
-            ResultTable subGroupRT;
-            for (const auto& clause : subgroup) {
+            ResultTable stGroupRT;
+            for (const auto& subgroup : group) {
                 if (hasClauseFailed) {
                     break;
                 }
-                hasClauseFailed = hasClauseFailed || !(evaluateClause(pkb, clause, subGroupRT));
+                ResultTable subGroupRT;
+                for (const auto& clause : subgroup) {
+                    if (hasClauseFailed) {
+                        break;
+                    }
+                    hasClauseFailed = hasClauseFailed || !(evaluateClause(pkb, clause, subGroupRT));
+                }
+                hasClauseFailed = hasClauseFailed || !stGroupRT.mergeTable(std::move(subGroupRT));
+                updateSynonymsWithResultTable(stGroupRT);
             }
-            hasClauseFailed = hasClauseFailed || !stGroupRT.mergeTable(std::move(subGroupRT));
-            updateSynonymsWithResultTable(stGroupRT);
+            hasClauseFailed = hasClauseFailed || !resultTable.mergeTable(std::move(stGroupRT));
+            updateSynonymsWithResultTable(resultTable);
         }
-        hasClauseFailed = hasClauseFailed || !resultTable.mergeTable(std::move(stGroupRT));
-        updateSynonymsWithResultTable(resultTable);
     }
 
     // prepare output
@@ -604,22 +627,20 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelationWildcard(con
 std::vector<std::vector<CLAUSE_LIST>> SingleQueryEvaluator::getClausesSortedAndGrouped(const backend::PKB* pkb) {
     // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/271)
     // remove construction of CLAUSE into QPP after refactoring Query struct
-    std::vector<CLAUSE_LIST> clauses;
+    CLAUSE_LIST clauses;
     for (const auto& relationClause : query.suchThatClauses) {
-        CLAUSE clause = { std::get<0>(relationClause), std::get<1>(relationClause),
-                          std::get<2>(relationClause), "" };
-        clauses.push_back({ clause });
+        clauses.emplace_back(std::get<0>(relationClause), std::get<1>(relationClause),
+                             std::get<2>(relationClause), "");
     }
 
     CLAUSE invalidClause = { INVALID_CLAUSE_TYPE, { INVALID_ARG, "" }, { INVALID_ARG, "" }, "" };
 
     for (const auto& patternClause : query.patternClauses) {
-        clauses.push_back({ patternClause });
+        clauses.push_back(patternClause);
     }
 
-    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/266)
     // sort and group the clauses
-    return { clauses };
+    return optimisation::optimizeQueries(clauses, query.returnCandidates);
 }
 
 /**

@@ -1,5 +1,6 @@
 #include "QPTypes.h"
 
+#include <iostream>
 #include <sstream>
 #include <string>
 
@@ -81,6 +82,84 @@ ClauseArgsType getClauseArgsType(ArgType arg_type_1, ArgType arg_type_2) {
     } else {
         return Invalid1;
     }
+}
+std::string prettyPrintClauseType(ClauseType t) {
+    switch (t) {
+    case FOLLOWS:
+        return "Follows";
+    case FOLLOWST:
+        return "Follows*";
+    case PARENT:
+        return "Parent";
+    case PARENTT:
+        return "Parent*";
+    case USES:
+        return "Uses";
+    case MODIFIES:
+        return "Modifies";
+    case CALLS:
+        return "Calls";
+    case CALLST:
+        return "Calls*";
+    case NEXT:
+        return "Next";
+    case NEXTT:
+        return "Next*";
+    case AFFECTS:
+        return "Affects";
+    case AFFECTST:
+        return "Affects*";
+    case ASSIGN_PATTERN_EXACT:
+        return "ASSIGN_PATTERN_EXACT";
+    case ASSIGN_PATTERN_SUB_EXPR:
+        return "ASSIGN_PATTERN_SUB_EXPR";
+    case ASSIGN_PATTERN_WILDCARD:
+        return "ASSIGN_PATTERN_WILDCARD";
+    case IF_PATTERN:
+        return "IF_PATTERN";
+    case WHILE_PATTERN:
+        return "WHILE_PATTERN";
+    case WITH:
+        return "WITH";
+    case INVALID_CLAUSE_TYPE:
+        return "INVALID_CLAUSE_TYPE";
+    };
+}
+std::string prettyPrintCLAUSE(const CLAUSE& clause) {
+    std::string pattern = std::get<3>(clause);
+    return prettyPrintClauseType(std::get<0>(clause)) + "(" + prettyPrintArg(std::get<1>(clause)) +
+           ", " + prettyPrintArg(std::get<2>(clause)) + (pattern.empty() ? "" : ", " + pattern) + ")";
+}
+
+std::ostream& operator<<(std::ostream& os, const CLAUSE& value) {
+    os << prettyPrintCLAUSE(value);
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const CLAUSE_LIST& value) {
+    if (value.size() == 0) {
+        return os;
+    }
+    for (int i = 0; i < value.size() - 1; ++i) {
+        os << value[i] << ", ";
+    }
+    os << value.back();
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const std::vector<std::vector<CLAUSE_LIST>>& value) {
+    for (int i = 0; i < value.size(); ++i) {
+        os << "Group " << i + 1 << std::endl;
+        const std::vector<CLAUSE_LIST> v = value[i];
+        if (v.size() == 0) {
+            continue;
+        }
+        for (int j = 0; j < v.size() - 1; ++j) {
+            os << j + 1 << ": " << v[j] << std::endl;
+        }
+        os << v.size() << ": " << v.back() << std::endl << std::endl;
+    }
+    return os;
 }
 
 } // namespace qpbackend

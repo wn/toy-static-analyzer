@@ -1,6 +1,7 @@
 #ifndef QPTYPES_H
 #define QPTYPES_H
 
+#include <ostream>
 #include <string>
 #include <tuple>
 #include <unordered_map>
@@ -103,6 +104,16 @@ typedef std::tuple<std::string /* pattern synonym */, std::string /* var */, std
 
 std::string prettyPrintArg(const ARG& arg);
 std::string prettyPrintArgType(ArgType argType);
+std::string prettyPrintClauseType(ClauseType t);
+std::string prettyPrintCLAUSE(const CLAUSE& clause);
+
+std::ostream& operator<<(std::ostream& os, const CLAUSE& value);
+
+std::ostream& operator<<(std::ostream& os, const CLAUSE_LIST& value);
+
+std::ostream& operator<<(std::ostream& os, const std::vector<CLAUSE_LIST>& value);
+
+std::ostream& operator<<(std::ostream& os, const std::vector<std::vector<CLAUSE_LIST>>& value);
 
 ClauseArgsType getClauseArgsType(ArgType arg_type_1, ArgType arg_type_2);
 } // namespace qpbackend
