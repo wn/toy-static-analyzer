@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <memory>
 #include <set>
 #include <stack>
 #include <string>
@@ -579,6 +580,135 @@ bool isValidSimpleProgram(const TNode& ast) {
 
     // The SIMPLE program didn't fail any of the checks, so it is valid.
     return true;
+}
+
+/**
+ * @returns the last lines that will be executed in a procedure, according to the provided
+ * nextRelationship.
+ */
+std::unordered_set<PROGRAM_LINE>
+getTerminatingLinesOfProcedure(const TNode* procedure,
+                               const std::unordered_map<int, std::unordered_set<int>>& nextRelationship,
+                               const std::unordered_map<const TNode*, int>& tNodeToStatementNumber) {
+    const TNode* stmtList = &procedure->children[0];
+    const TNode* firstStmt = &stmtList->children[0];
+    const PROGRAM_LINE firstLine = tNodeToStatementNumber.at(firstStmt);
+
+    std::unordered_set<PROGRAM_LINE> allTNodesInProcedure =
+    foost::getVisitedInDFS(firstLine, nextRelationship, true);
+    allTNodesInProcedure.insert(firstLine);
+
+    std::unordered_set<PROGRAM_LINE> terminatingNodesOfProcedure;
+
+    for (auto& p : tNodeToStatementNumber) {
+        const TNode* currNode = p.first;
+        PROGRAM_LINE currLine = p.second;
+        if (allTNodesInProcedure.find(currLine) == allTNodesInProcedure.end()) {
+            continue;
+        }
+
+        if (nextRelationship.find(currLine) == nextRelationship.end()) {
+            terminatingNodesOfProcedure.insert(currLine);
+            continue;
+        }
+        const std::unordered_set<PROGRAM_LINE>& nextLines = nextRelationship.at(currLine);
+
+        if (nextLines.empty() || (currNode->type == While && nextLines.size() == 1)) {
+            terminatingNodesOfProcedure.insert(currLine);
+        }
+    }
+
+    return terminatingNodesOfProcedure;
+}
+
+// @returns the first program line executed in a procedure.
+PROGRAM_LINE getFirstStatementOfProcedure(const TNode* procedure,
+                                          const std::unordered_map<const TNode*, int>& tNodeToStatementNumber) {
+    const TNode* stmtList = &procedure->children[0];
+    const TNode* firstStmt = &stmtList->children[0];
+    return tNodeToStatementNumber.at(firstStmt);
+}
+
+std::pair<std::unordered_map<PROGRAM_LINE, std::unordered_set<NextBipEdge>>, std::unordered_set<std::unique_ptr<const TNode>>>
+getNextBipRelationship(const std::unordered_map<int, std::unordered_set<int>>& nextRelationship,
+                       const std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNode,
+                       const std::unordered_map<const TNode*, int>& tNodeToStatementNumberOriginal) {
+    std::unordered_map<const TNode*, int> tNodeToStatementNumber = tNodeToStatementNumberOriginal;
+
+
+    std::unordered_map<PROGRAM_LINE, std::unordered_set<NextBipEdge>> nextBipRelationship;
+
+    // Register every statement in NextBip
+    for (auto& p : tNodeToStatementNumber) {
+        nextBipRelationship[p.second] = std::unordered_set<NextBipEdge>();
+    }
+
+    // Copy over edges from the "Next" relationship, with empty labels
+    for (auto& p : nextRelationship) {
+        std::unordered_set<NextBipEdge> edges;
+        for (auto& s : p.second) {
+            edges.insert(NextBipEdge(s));
+        }
+        nextBipRelationship[p.first] = edges;
+    }
+
+    // Keep the end-nodes of each procedure ("dummy" nodes)
+    std::unordered_map<const TNode*, PROGRAM_LINE> procedureToEndNode;
+    std::unordered_set<std::unique_ptr<const TNode>> createdEndNodes;
+    for (int i = 0; i < tNodeTypeToTNode.at(Procedure).size(); ++i) {
+        const TNode* procedureNode = tNodeTypeToTNode.at(Procedure).at(i);
+
+        const TNode* endNode = new TNode(DUMMY);
+        createdEndNodes.insert(std::unique_ptr<const TNode>(endNode));
+
+        PROGRAM_LINE endNodeStatementNumber = -(i + 1);
+        tNodeToStatementNumber[endNode] = endNodeStatementNumber;
+        nextBipRelationship[endNodeStatementNumber] = {};
+        procedureToEndNode[procedureNode] = endNodeStatementNumber;
+    }
+
+    // Link up the terminating nodes in a procedure to the end-nodes
+    // (lines that may not have a line executing after them) with the dummy end-node
+    for (const TNode* procedureNode : tNodeTypeToTNode.at(Procedure)) {
+        PROGRAM_LINE endNodeStatementNumber = procedureToEndNode[procedureNode];
+        const std::unordered_set<PROGRAM_LINE> terminatingLinesOfProcedure =
+        getTerminatingLinesOfProcedure(procedureNode, nextRelationship, tNodeToStatementNumberOriginal);
+
+        for (PROGRAM_LINE terminatingLine : terminatingLinesOfProcedure) {
+            nextBipRelationship[terminatingLine].insert(NextBipEdge(endNodeStatementNumber));
+        }
+    }
+
+    // For every call statement, modify its outgoing edges and add edges from the end-nodes
+    // of the called procedures.
+    for (const TNode* callStatement : tNodeTypeToTNode.at(Call)) {
+        PROGRAM_LINE callProgramLine = tNodeToStatementNumber.at(callStatement);
+        std::unordered_set<NextBipEdge>& callStatementNextBipEdges = nextBipRelationship.at(callProgramLine);
+
+        const TNode* calledProcedure =
+        getProcedureFromProcedureName(callStatement->children[0].name, tNodeTypeToTNode);
+        const PROGRAM_LINE firstStatementOfProcedure =
+        getFirstStatementOfProcedure(calledProcedure, tNodeToStatementNumber);
+
+        assert(callStatementNextBipEdges.size() == 1);
+
+        // Get the next statement that should be executed after the procedure call.
+        PROGRAM_LINE nextProgramLine = callStatementNextBipEdges.begin()->nextLine;
+
+        // Add an outgoing edge to the called proc, with the current line number as the label
+        callStatementNextBipEdges.insert(NextBipEdge(firstStatementOfProcedure, callProgramLine));
+
+        // Add a BranchBack edge from the end-node of the called procedure to the next line that
+        // should be executed.
+        PROGRAM_LINE calledProcedureEndNode = procedureToEndNode[calledProcedure];
+        nextBipRelationship[calledProcedureEndNode].insert(NextBipEdge(nextProgramLine, callProgramLine));
+
+        // Remove the original edge from the call statement line -> next line.
+        // This edge was added by Next, but it should not be preserved by NextBip
+        callStatementNextBipEdges.erase(NextBipEdge(nextProgramLine));
+    }
+
+    return { nextBipRelationship, std::move(createdEndNodes) };
 }
 
 /**

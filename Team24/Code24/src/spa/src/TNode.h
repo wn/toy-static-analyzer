@@ -42,6 +42,9 @@ enum TNodeType {
     Variable,
     Constant,
 
+    // Used for the end-nodes of Procedures (NextBip)
+    DUMMY,
+
     // Used for failure (I hate null)
     INVALID,
 };

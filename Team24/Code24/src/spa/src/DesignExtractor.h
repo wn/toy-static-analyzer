@@ -80,6 +80,32 @@ std::unordered_map<int, std::unordered_set<int>>
 getNextRelationship(const std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNode,
                     const std::unordered_map<const TNode*, int>& tNodeToStatementNumber);
 
+// Represents an edge on the NextBip graph.
+// The label represents the program line of the call statement that
+// links two procedures back and forth.
+class NextBipEdge {
+  public:
+    NextBipEdge(PROGRAM_LINE nextLine, PROGRAM_LINE label = 0) : nextLine(nextLine), label(label) {
+    }
+    PROGRAM_LINE nextLine;
+    PROGRAM_LINE label;
+
+    bool operator==(const NextBipEdge& other) const {
+        return nextLine == other.nextLine && label == other.label;
+    }
+};
+
+/**
+ * Generates the NextBip relationship, that relates program lines to other program lines with
+ * labels on the edge. In NextBip, a negative program line corresponds to a virtual
+ * end-node of a procedure, i.e. a node that denotes the end of the procedure execution.
+ * @return the NextBip relation, as well as any created virtual nodes.
+ */
+std::pair<std::unordered_map<PROGRAM_LINE, std::unordered_set<NextBipEdge>>, std::unordered_set<std::unique_ptr<const TNode>>>
+getNextBipRelationship(const std::unordered_map<int, std::unordered_set<int>>& nextRelationship,
+                       const std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNode,
+                       const std::unordered_map<const TNode*, int>& tNodeToStatementNumber);
+
 /**
  * Get mapping of the possible statements that goes to a statement.
  */
@@ -106,3 +132,11 @@ getAffectedMapping(std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> af
 
 } // namespace extractor
 } // namespace backend
+
+namespace std {
+template <> struct ::std::hash<backend::extractor::NextBipEdge> {
+    std::size_t operator()(backend::extractor::NextBipEdge const& s) const noexcept {
+        return s.nextLine ^ (s.label << 1);
+    }
+};
+} // namespace std

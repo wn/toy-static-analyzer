@@ -1195,5 +1195,168 @@ TEST_CASE("Test getAffectedMapping") {
     REQUIRE(actual == expected);
 }
 
+TEST_CASE("Test getNextBipRelationship basic") {
+    const char program[] = "procedure First { "
+                           "x = 1;" // 1
+                           "call Second;" // 2
+                           "alas = its - over;" // 3
+                           "}" // -2
+                           "procedure Second {"
+                           "hello = folks;" // 4
+                           "}"; // -1
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto nextRelationship = extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto nextBipRelationship =
+    extractor::getNextBipRelationship(nextRelationship, tNodeTypeToTNodes, tNodeToStatementNumber);
+
+    std::unordered_map<PROGRAM_LINE, std::unordered_set<extractor::NextBipEdge>> expected = {
+        { 4, { { -1, 0 } } }, //
+        { -1, { { 3, 2 } } }, // -1 can result in the next statement 3 (due to a call from 2)
+        { 1, { { 2, 0 } } }, //
+        { 2, { { 4, 2 } } }, //
+        { 3, { { -2, 0 } } }, //
+        { -2, {} }, // Nothing can execute after procedure Frist
+    };
+
+    REQUIRE(nextBipRelationship.first == expected);
+}
+
+TEST_CASE("Test getNextBipRelationship on if/else") {
+    const char program[] = "procedure First { "
+                           "x = 1;" // 1
+                           "call Second;" // 2
+                           "alas = its - over;" // 3
+                           "}"
+                           "procedure Second {"
+                           "if (hi == its) then {" // 4
+                           "  me = again;" // 5
+                           "} else {"
+                           "  if (still == wondering) then {" // 6
+                           "    why = youre;" // 7
+                           "  } else {"
+                           "    not = here;" // 8
+                           "  }"
+                           "}"
+                           "}";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto nextRelationship = extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto nextBipRelationship =
+    extractor::getNextBipRelationship(nextRelationship, tNodeTypeToTNodes, tNodeToStatementNumber);
+
+    std::unordered_map<PROGRAM_LINE, std::unordered_set<extractor::NextBipEdge>> expected = {
+        { 1, { { 2, 0 } } }, //
+        { 2, { { 4, 2 } } }, // the call statement branches to statement 4
+        { 3, { { -2, 0 } } }, //
+        { -2, {} }, // This is the last node in the program
+        { 4, { { 6, 0 }, { 5, 0 } } }, // if/else
+        { 5, { { -1, 0 } } }, // we end up at the dummy node for Second
+        { 6, { { 8, 0 }, { 7, 0 } } }, // nested if/else
+        { 7, { { -1, 0 } } }, // we end up at the dummy node for Second
+        { 8, { { -1, 0 } } }, // we end up at the dummy node for Second
+        { -1, { { 3, 2 } } }, // Dummy node for second may end up returning to execute line 3
+    };
+    REQUIRE(nextBipRelationship.first == expected);
+}
+
+TEST_CASE("Test getNextBipRelationship on while") {
+    const char program[] = "procedure First { "
+                           "x = 1;" // 1
+                           "call Second;" // 2
+                           "alas = its - over;" // 3
+                           "}"
+                           "procedure Second {"
+                           "while (hi == its) {" // 4
+                           "  me = again;" // 5
+                           "}"
+                           "}";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto nextRelationship = extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto nextBipRelationship =
+    extractor::getNextBipRelationship(nextRelationship, tNodeTypeToTNodes, tNodeToStatementNumber);
+
+    std::unordered_map<PROGRAM_LINE, std::unordered_set<extractor::NextBipEdge>> expected = {
+        { 1, { { 2, 0 } } }, //
+        { 2, { { 4, 2 } } }, // Call to Second
+        { 3, { { -2, 0 } } }, //
+        { -2, {} }, // Last statement
+        { 4, { { -1, 0 }, { 5, 0 } } }, // We either end or run statement 5
+        { 5, { { 4, 0 } } }, // Always goes back to the condition
+        { -1, { { 3, 2 } } }, // May return back using a branchback edge with label 2
+    };
+
+    REQUIRE(nextBipRelationship.first == expected);
+}
+
+TEST_CASE("Test getNextBipRelationship on has no next if call is the last statement") {
+    const char program[] = "procedure First { "
+                           "x = 1;" // 1
+                           "call Second;" // 2
+                           "}" // -2
+                           "procedure Second {"
+                           "me = again;" // 3
+                           "}"; // -1
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto nextRelationship = extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto nextBipRelationship =
+    extractor::getNextBipRelationship(nextRelationship, tNodeTypeToTNodes, tNodeToStatementNumber);
+
+    std::unordered_map<PROGRAM_LINE, std::unordered_set<extractor::NextBipEdge>> expected = {
+        { 1, { { 2, 0 } } }, //
+        { 2, { { 3, 2 } } }, // We call to statement 3
+        { -2, {} }, // Last statement
+        { 3, { { -1, 0 } } }, //
+        { -1, { { -2, 2 } } }, // We branch back to statement 2
+    };
+    REQUIRE(nextBipRelationship.first == expected);
+}
+
+TEST_CASE("Test getNextBipRelationship maintains tail call reachability") {
+    const char program[] = "procedure First { "
+                           "call Second;" // 1
+                           "last = statement;" // 2
+                           "}" // -3
+                           "procedure Second {"
+                           "call Third;" // 3
+                           "}" // -2
+                           "procedure Third {"
+                           "hi = hello;" // 4
+                           "}"; // -1
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto nextRelationship = extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto nextBipRelationship =
+    extractor::getNextBipRelationship(nextRelationship, tNodeTypeToTNodes, tNodeToStatementNumber);
+
+    std::unordered_map<PROGRAM_LINE, std::unordered_set<extractor::NextBipEdge>> expected = {
+        { 1, { { 3, 1 } } }, // call into Second
+        { 2, { { -3, 0 } } }, // last real statement
+        { -3, {} }, // last dummy statement
+        { 3, { { 4, 3 } } }, // Call into Third
+        { -2, { { 2, 1 } } }, // Branch back into line 2 because of a call from line 1
+        { 4, { { -1, 0 } } }, // Only 1 statement for Third
+        { -1, { { -2, 3 } } } // Branch back into end of Second because of a call from line 3
+    };
+    REQUIRE(nextBipRelationship.first == expected);
+}
+
 } // namespace testextractor
 } // namespace backend
