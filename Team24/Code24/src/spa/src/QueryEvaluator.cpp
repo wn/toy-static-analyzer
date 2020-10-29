@@ -38,54 +38,31 @@ std::vector<std::string> SingleQueryEvaluator::evaluateQuery(const backend::PKB*
         initializeIfSynonym(pkb, requested.second);
     }
 
-    // check if there are invalid clauses
-    for (const auto& clause : query.patternClauses) {
-        ClauseType clauseType = std::get<0>(clause);
-        ArgType arg1_type = std::get<1>(clause).first;
-        ArgType arg2_type = std::get<2>(clause).first;
-        if (clauseType == INVALID_CLAUSE_TYPE || arg1_type == INVALID_ARG || arg2_type == INVALID_ARG) {
-            hasClauseFailed = true;
-            break;
-        }
-    }
-
-    for (const auto& clause : query.suchThatClauses) {
-        ClauseType clauseType = std::get<0>(clause);
-        ArgType arg1_type = std::get<1>(clause).first;
-        ArgType arg2_type = std::get<2>(clause).first;
-        if (clauseType == INVALID_CLAUSE_TYPE || arg1_type == INVALID_ARG || arg2_type == INVALID_ARG) {
-            hasClauseFailed = true;
-            break;
-        }
-    }
-
     // sort and group clauses
-    if (!hasClauseFailed) {
-        std::vector<std::vector<CLAUSE_LIST>> clauses = getClausesSortedAndGrouped(pkb);
+    std::vector<std::vector<CLAUSE_LIST>> clauses = getClausesSortedAndGrouped(pkb);
 
-        // evaluate clauses
-        for (const auto& group : clauses) {
+    // evaluate clauses
+    for (const auto& group : clauses) {
+        if (hasClauseFailed) {
+            break;
+        }
+        ResultTable stGroupRT;
+        for (const auto& subgroup : group) {
             if (hasClauseFailed) {
                 break;
             }
-            ResultTable stGroupRT;
-            for (const auto& subgroup : group) {
+            ResultTable subGroupRT;
+            for (const auto& clause : subgroup) {
                 if (hasClauseFailed) {
                     break;
                 }
-                ResultTable subGroupRT;
-                for (const auto& clause : subgroup) {
-                    if (hasClauseFailed) {
-                        break;
-                    }
-                    hasClauseFailed = hasClauseFailed || !(evaluateClause(pkb, clause, subGroupRT));
-                }
-                hasClauseFailed = hasClauseFailed || !stGroupRT.mergeTable(std::move(subGroupRT));
-                updateSynonymsWithResultTable(stGroupRT);
+                hasClauseFailed = hasClauseFailed || !(evaluateClause(pkb, clause, subGroupRT));
             }
-            hasClauseFailed = hasClauseFailed || !resultTable.mergeTable(std::move(stGroupRT));
-            updateSynonymsWithResultTable(resultTable);
+            hasClauseFailed = hasClauseFailed || !stGroupRT.mergeTable(std::move(subGroupRT));
+            updateSynonymsWithResultTable(stGroupRT);
         }
+        hasClauseFailed = hasClauseFailed || !resultTable.mergeTable(std::move(stGroupRT));
+        updateSynonymsWithResultTable(resultTable);
     }
 
     // prepare output
@@ -231,22 +208,7 @@ bool SingleQueryEvaluator::evaluateClause(const backend::PKB* pkb, const CLAUSE&
 
     const std::string& patternStr = std::get<3>(clause);
 
-    if ((arg_type_1 == INVALID_ARG) || (arg_type_2 == INVALID_ARG)) {
-        handleError("invalid argument type for the clause: " + arg1 + ", " + arg2);
-        return false;
-    }
-
-    SubRelationType srt = INVALID;
-    try {
-        srt = srt_table.at(rt).at(arg_type_1).at(arg_type_2);
-    } catch (const std::out_of_range& oor) {
-        handleError("Evaluation for the relation type not implemented.");
-    }
-
-    if (srt == INVALID) {
-        handleError("invalid argument type for this relation: " + arg1 + ", " + arg2);
-        return false;
-    }
+    SubRelationType srt = srt_table.at(rt).at(arg_type_1).at(arg_type_2);
 
     // Initializes arguments if they point to declared synonyms.
     initializeIfSynonym(pkb, arg1);
@@ -684,6 +646,11 @@ const std::string SingleQueryEvaluator::inquirePKBForAttribute(const backend::PK
     }
 }
 
+/**
+ * optimisation: sort the clauses
+ * @param pkb
+ * @return empty list if any clause is invalid
+ */
 std::vector<std::vector<CLAUSE_LIST>> SingleQueryEvaluator::getClausesSortedAndGrouped(const backend::PKB* pkb) {
     // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/271)
     // remove construction of CLAUSE into QPP after refactoring Query struct
@@ -699,8 +666,38 @@ std::vector<std::vector<CLAUSE_LIST>> SingleQueryEvaluator::getClausesSortedAndG
         clauses.push_back(patternClause);
     }
 
+    // check if there are invalid clauses
+    for (const auto& clause : clauses) {
+        if (!validateClause(clause)) {
+            handleError("the clause is invalid");
+            hasClauseFailed = true;
+            return {};
+        }
+    }
+
     // sort and group the clauses
     return optimisation::optimizeQueries(clauses, query.returnCandidates);
+}
+
+bool SingleQueryEvaluator::validateClause(const CLAUSE& clause) {
+    // check if anything invalid
+    ClauseType clauseType = std::get<0>(clause);
+    ArgType argType1 = std::get<1>(clause).first;
+    ArgType argType2 = std::get<2>(clause).first;
+    if (clauseType == INVALID_CLAUSE_TYPE || argType1 == INVALID_ARG || argType2 == INVALID_ARG) {
+        return false;
+    }
+
+    // check if found in srt table
+    try {
+        srt_table.at(clauseType).at(argType1).at(argType2);
+    } catch (const std::out_of_range& oor) {
+        return false;
+    }
+
+    // check argument type (e.g. for Affects)
+
+    return true;
 }
 
 /**

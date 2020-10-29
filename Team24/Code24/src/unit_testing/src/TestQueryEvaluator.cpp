@@ -963,18 +963,18 @@ TEST_CASE("Test invalid pattern") {
     PKBMock pkb(0);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    // the statment should be an assignment
-    Query query1 = { { { "a", STMT } },
-                     { "a" },
-                     {},
-                     { { ASSIGN_PATTERN_SUB_EXPR, { STMT_SYNONYM, "a" }, { WILDCARD, "_" }, "_" } } };
-    REQUIRE(qe.evaluateQuery(query1).empty());
-
     // assignment should be a synonym
-    Query query2 = { { { "v", VARIABLE } },
+    Query query1 = { { { "v", VARIABLE } },
                      { "v" },
                      {},
-                     { { ASSIGN_PATTERN_SUB_EXPR, { NUM_ENTITY, "1" }, { VAR_SYNONYM, "v" }, "_" } } };
+                     { { ASSIGN_PATTERN_WILDCARD, { NUM_ENTITY, "1" }, { VAR_SYNONYM, "v" }, "_" } } };
+    REQUIRE(qe.evaluateQuery(query1).empty());
+
+    // 1st argument should be a synonym, name-entity or wildcard
+    Query query2 = { { { "a", ASSIGN }, { "p", PROCEDURE } },
+                     { "a" },
+                     {},
+                     { { ASSIGN_PATTERN_EXACT, { STMT_SYNONYM, "a" }, { PROC_SYNONYM, "p" }, "0" } } };
     REQUIRE(qe.evaluateQuery(query2).empty());
 
     // invalid pattern

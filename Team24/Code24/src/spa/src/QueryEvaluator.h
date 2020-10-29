@@ -105,6 +105,9 @@ class SingleQueryEvaluator {
     // check and link synonyms to declared entity type
     bool isSynonym(const std::string& str);
 
+    // validate the clause
+    bool validateClause(const CLAUSE& clause);
+
     // error handle
     // TODO
     void handleError(std::string const& msg);
