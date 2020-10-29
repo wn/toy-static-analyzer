@@ -54,12 +54,24 @@ enum SubRelationType {
     INVALID // no suitable subrelation to evaluate
 };
 
+enum AttrConversion {
+    CALL_STMT_TO_PROC,
+    READ_STMT_TO_VAR,
+    PRINT_STMT_TO_VAR,
+    NO_CONVERSION,
+    INVALID_CONVERSION
+};
+
 // 2nd level SubRelation table: table mapping ArgType to SubRelationType>
 typedef std::unordered_map<int, SubRelationType> SEC_SRT_TABLE;
 // 1st level SubRelation table: table mapping ArgType to SEC_SRT_TABLE
 typedef std::unordered_map<int, SEC_SRT_TABLE> FIR_SRT_TABLE;
 // SubRelation Table: table mapping relation to FIR_SRT_TABLE
 typedef std::unordered_map<int, FIR_SRT_TABLE> SRT_LOOKUP_TABLE;
+
+// sub attribute convert table
+typedef std::unordered_map<int, AttrConversion> SUB_ATTR_CONVERT_TABLE;
+typedef std::unordered_map<int, SUB_ATTR_CONVERT_TABLE> ATTR_CONVERT_TABLE;
 
 bool isWildCard(const std::string& str); // check if the argument is a wildcard
 bool isPosInt(const std::string& str); // check if the argument is a positive integer
@@ -74,6 +86,11 @@ std::string extractQuotedStr(const std::string& str);
 std::tuple<bool, std::string, bool> extractPatternExpr(const std::string& str);
 
 SRT_LOOKUP_TABLE generateSrtTable(); // generate a mapping from relation and argument types to SubRelationType
+ATTR_CONVERT_TABLE generateAttrConvertTable(); // generate a mapping to attribute conversion method
+
+std::string assignSynonymToAttribute(const std::string syn, const ReturnType rt);
+
+std::string tupleToStr(const std::vector<std::string>& t);
 
 } // namespace queryevaluator
 } // namespace qpbackend

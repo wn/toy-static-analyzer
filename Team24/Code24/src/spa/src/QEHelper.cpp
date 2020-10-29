@@ -116,5 +116,44 @@ SRT_LOOKUP_TABLE generateSrtTable() {
 
     return srt_table;
 }
+
+ATTR_CONVERT_TABLE generateAttrConvertTable() {
+    ATTR_CONVERT_TABLE table = {
+        { STMT, { { STMT_STMT_NO, NO_CONVERSION } } },
+        { READ, { { READ_STMT_NO, NO_CONVERSION }, { READ_VAR_NAME, READ_STMT_TO_VAR } } },
+        { PRINT, { { PRINT_STMT_NO, NO_CONVERSION }, { PRINT_VAR_NAME, PRINT_STMT_TO_VAR } } },
+        { CALL, { { CALL_STMT_NO, NO_CONVERSION }, { CALL_PROC_NAME, CALL_STMT_TO_PROC } } },
+        { WHILE, { { WHILE_STMT_NO, NO_CONVERSION } } },
+        { IF, { { IF_STMT_NO, NO_CONVERSION } } },
+        { ASSIGN, { { ASSIGN_STMT_NO, NO_CONVERSION } } },
+        { VARIABLE, { { VAR_VAR_NAME, NO_CONVERSION } } },
+        { CONSTANT, { { CONSTANT_VALUE, NO_CONVERSION } } },
+        { PROCEDURE, { { PROC_PROC_NAME, NO_CONVERSION } } }
+    };
+
+    return table;
+}
+
+std::string assignSynonymToAttribute(std::string syn, ReturnType rt) {
+    return syn + "_" + std::to_string(rt);
+}
+
+std::string tupleToStr(const std::vector<std::string>& t) {
+    if (t.size() == 0) {
+        return "";
+    }
+    if (t.size() == 1) {
+        return t[0];
+    }
+
+    std::string result = t[0];
+    for (size_t idx = 1; idx < t.size(); idx++) {
+        result += " ";
+        result += t[idx];
+    }
+    return result;
+}
+
+
 } // namespace queryevaluator
 } // namespace qpbackend

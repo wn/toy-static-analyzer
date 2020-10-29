@@ -148,6 +148,12 @@ bool ResultTable::updateSynonymValueVector(const std::string& synonymName, std::
 
 bool ResultTable::updateSynonymValueTupleSet(const std::vector<std::string>& synonymNames,
                                              std::unordered_set<std::vector<std::string>, StringVectorHash>& result) const {
+    // if the list of synonym names are empty, the result set should be empty
+    if (synonymNames.empty()) {
+        result.clear();
+        return true;
+    }
+
     // check if all synonyms are in the table
     std::vector<int> indices;
     for (const auto& synName : synonymNames) {

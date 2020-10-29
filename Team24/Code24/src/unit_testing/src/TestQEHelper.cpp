@@ -96,27 +96,80 @@ const CONSTANT_NAME_SET& PKBMock::getAllConstants() const {
     return constants;
 }
 
-
 const STATEMENT_NUMBER_SET PKBMock::getCallStatementsWithProcedureName(PROCEDURE_NAME procedureName) const {
     const STATEMENT_NUMBER_SET result = STATEMENT_NUMBER_SET();
     return result;
 }
+
 const PROCEDURE_NAME PKBMock::getProcedureNameFromCallStatement(STATEMENT_NUMBER callStatementNumber) const {
-    return PROCEDURE_NAME();
+    if (test_idx == 0 && (callStatementNumber == 4 || callStatementNumber == 9)) {
+        return "readPoint";
+    }
+    if (test_idx == 2 && callStatementNumber == 2) {
+        return "bar";
+    }
+    if (test_idx == 3) {
+        switch (callStatementNumber) {
+        case 2:
+            return "computeCentroid";
+        case 3:
+            return "printResults";
+        case 13:
+        case 18:
+            return "readPoint";
+        default:
+            return "";
+        }
+    }
+    return "";
 }
+
 const STATEMENT_NUMBER_SET PKBMock::getReadStatementsWithVariableName(VARIABLE_NAME variableName) const {
     const STATEMENT_NUMBER_SET result = STATEMENT_NUMBER_SET();
     return result;
 }
+
 const VARIABLE_NAME PKBMock::getVariableNameFromReadStatement(STATEMENT_NUMBER readStatementNumber) const {
-    return VARIABLE_NAME();
+    if (test_idx == 2 && readStatementNumber == 3) {
+        return "random";
+    }
+    if (test_idx == 3) {
+        switch (readStatementNumber) {
+        case 4:
+            return "x";
+        case 5:
+            return "y";
+        default:
+            return "";
+        }
+    }
+    return "";
 }
+
 const STATEMENT_NUMBER_SET PKBMock::getPrintStatementsWithVariableName(VARIABLE_NAME variableName) const {
     const STATEMENT_NUMBER_SET result = STATEMENT_NUMBER_SET();
     return result;
 }
+
 const VARIABLE_NAME PKBMock::getVariableNameFromPrintStatement(STATEMENT_NUMBER printStatementNumber) const {
-    return VARIABLE_NAME();
+    if (test_idx == 2 && printStatementNumber == 1) {
+        return "x";
+    }
+    if (test_idx == 3) {
+        switch (printStatementNumber) {
+        case 6:
+            return "flag";
+        case 7:
+            return "cenX";
+        case 8:
+            return "cenY";
+        case 9:
+            return "normSq";
+        default:
+            return "";
+        }
+    }
+    return "";
 }
 
 STATEMENT_NUMBER_SET PKBMock::getDirectFollowedBy(STATEMENT_NUMBER s) const {

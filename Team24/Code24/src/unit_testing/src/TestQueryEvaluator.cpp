@@ -1331,5 +1331,24 @@ TEST_CASE("Test evaluation of Calls or Calls* with invalid arguments") {
     REQUIRE(qe.evaluateQuery(query_num).empty());
 }
 
+TEST_CASE("Test getting attributes") {
+    PKBMock pkb(3);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query query_proc_name = { { { "cl", CALL } }, { { CALL_PROC_NAME, "cl" } }, {}, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query_proc_name),
+                                       { "computeCentroid", "printResults", "readPoint" }));
+
+    Query query_read_var = { { { "rd", READ } }, { { READ_VAR_NAME, "rd" } }, {}, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query_read_var), { "x", "y" }));
+
+    Query query_print_var = { { { "pt", PRINT } }, { { PRINT_VAR_NAME, "pt" } }, {}, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query_print_var), { "flag", "cenX", "cenY", "normSq" }));
+
+    // test invalid attributes
+    Query query_invalid = { { { "rd", STMT } }, { { READ_VAR_NAME, "rd" } }, {}, {} };
+    REQUIRE(qe.evaluateQuery(query_invalid).empty());
+}
+
 } // namespace qetest
 } // namespace qpbackend

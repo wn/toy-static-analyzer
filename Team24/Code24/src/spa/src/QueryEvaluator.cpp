@@ -22,6 +22,7 @@ std::vector<std::string> QueryEvaluator::evaluateQuery(Query query) {
 
 // helper structure to map such-that clause arguments to SubRelationType
 SRT_LOOKUP_TABLE SingleQueryEvaluator::srt_table = generateSrtTable();
+ATTR_CONVERT_TABLE SingleQueryEvaluator::attr_convert_table = generateAttrConvertTable();
 
 std::vector<std::string> SingleQueryEvaluator::evaluateQuery(const backend::PKB* pkb) {
     // initialize the table of candidates
@@ -89,22 +90,65 @@ std::vector<std::string> SingleQueryEvaluator::evaluateQuery(const backend::PKB*
 
     // prepare output
     hasEvaluationCompleted = true;
-    return produceResult();
+    return produceResult(pkb);
 }
 
 /**
  * convert evaluation result to a string
  */
-std::vector<std::string> SingleQueryEvaluator::produceResult() {
-    // for basic requirement
-    if (query.returnCandidates.size() == 1) {
-        std::string inquired = query.returnCandidates[0].second;
-        if (!hasClauseFailed) {
-            return synonym_candidates[inquired];
+std::vector<std::string> SingleQueryEvaluator::produceResult(const backend::PKB* pkb) {
+    // evaluate attribute reference
+    if (hasClauseFailed) {
+        return std::vector<std::string>();
+    }
+
+    std::vector<std::string> synNames;
+    for (const auto& returnSyn : query.returnCandidates) {
+        AttrConversion convertType = INVALID_CONVERSION;
+        const std::string& synName = returnSyn.second;
+        const EntityType entityType = query.declarationMap.at(synName);
+        const ReturnType returnType = returnSyn.first;
+
+        try {
+            convertType = attr_convert_table.at(entityType).at(returnType);
+        } catch (const std::out_of_range& oor) {
+            // invalid return type, e.g. stmt s; Select s.varName
+            // since only variable, read statement, print statement have .varName
+            // a synonym declared as statement type does not have 'varName' attribute
+            handleError("The return type does not match declaration");
+            return std::vector<std::string>();
+        }
+
+        if (convertType == NO_CONVERSION) {
+            if (!resultTable.isSynonymContained(synName)) {
+                std::unordered_set<std::string> tempSet(synonym_candidates[synName].begin(),
+                                                        synonym_candidates[synName].end());
+                ResultTable tempTable(synName, tempSet);
+                resultTable.mergeTable(std::move(tempTable));
+            }
+            synNames.push_back(synName);
+        } else {
+            std::unordered_set<std::vector<std::string>, StringVectorHash> pairs;
+            for (const auto& c1 : synonym_candidates[synName]) {
+                const std::string& attr = inquirePKBForAttribute(pkb, convertType, c1);
+                pairs.insert({ c1, attr });
+            }
+            // assign cl.procName to cl_0
+            std::string attrName = assignSynonymToAttribute(synName, returnType);
+            ResultTable tempTable({ synName, attrName }, pairs);
+            resultTable.mergeTable(std::move(tempTable));
+            synNames.push_back(attrName);
         }
     }
 
-    return std::vector<std::string>();
+    // write tuple to string
+    std::vector<std::vector<std::string>> resultTuples;
+    resultTable.updateSynonymValueTupleVector(synNames, resultTuples);
+    std::vector<std::string> resultStrs;
+    for (const auto& row : resultTuples) {
+        resultStrs.push_back(tupleToStr(row));
+    }
+    return resultStrs;
 };
 
 /**
@@ -622,6 +666,22 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelationWildcard(con
         handleError("unknown sub-relation type");
     }
     return result;
+}
+
+const std::string SingleQueryEvaluator::inquirePKBForAttribute(const backend::PKB* pkb,
+                                                               AttrConversion convertType,
+                                                               const std::string& arg) {
+    switch (convertType) {
+    case CALL_STMT_TO_PROC:
+        return pkb->getProcedureNameFromCallStatement(std::stoi(arg));
+    case READ_STMT_TO_VAR:
+        return pkb->getVariableNameFromReadStatement(std::stoi(arg));
+    case PRINT_STMT_TO_VAR:
+        return pkb->getVariableNameFromPrintStatement(std::stoi(arg));
+    default:
+        handleError("cannot retrieve the attribute");
+        return "";
+    }
 }
 
 std::vector<std::vector<CLAUSE_LIST>> SingleQueryEvaluator::getClausesSortedAndGrouped(const backend::PKB* pkb) {
