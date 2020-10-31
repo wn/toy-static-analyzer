@@ -1404,6 +1404,10 @@ TEST_CASE("Test getAllWhileStatementsThatMatch") {
     STATEMENT_NUMBER_SET actual8 = pkb.getAllWhileStatementsThatMatch("h", "", true);
     STATEMENT_NUMBER_SET expected8 = {};
     REQUIRE(actual8 == expected8);
+
+    STATEMENT_NUMBER_SET actual9 = pkb.getAllWhileStatementsThatMatch("_", "", true);
+    STATEMENT_NUMBER_SET expected9 = { 1, 4, 7 };
+    REQUIRE(actual9 == expected9);
 }
 
 TEST_CASE("Test getAllIfElseStatementsThatMatch") {
@@ -1462,6 +1466,10 @@ TEST_CASE("Test getAllIfElseStatementsThatMatch") {
     STATEMENT_NUMBER_SET actual8 = pkb.getAllIfElseStatementsThatMatch("h", "", true, "", true);
     STATEMENT_NUMBER_SET expected8 = { 8 };
     REQUIRE(actual8 == expected8);
+
+    STATEMENT_NUMBER_SET actual9 = pkb.getAllIfElseStatementsThatMatch("_", "", true, "", true);
+    STATEMENT_NUMBER_SET expected9 = { 3, 8 };
+    REQUIRE(actual9 == expected9);
 }
 
 TEST_CASE("Test getAllStatementsWithNext") {

@@ -141,8 +141,7 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
             STATEMENT_NUMBER statementNumber = tNodeToStatementNumber[tNode];
             // Update statement -> variable
             allStatementsThatUseSomeVariable.insert(statementNumber);
-            statementToUsedVariables[statementNumber] =
-            VARIABLE_NAME_SET(usedVariables.begin(), usedVariables.end());
+            statementToUsedVariables[statementNumber] = usedVariables;
 
             // Update variable -> statement
             for (const VARIABLE_NAME& variable : usedVariables) {
@@ -154,8 +153,7 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
             PROCEDURE_NAME procedureName = tNode->name;
             // Update proc -> variable
             allProceduresThatThatUseSomeVariable.insert(procedureName);
-            procedureToUsedVariables[procedureName] =
-            PROCEDURE_NAME_SET(usedVariables.begin(), usedVariables.end());
+            procedureToUsedVariables[procedureName] = usedVariables;
             // Update variable -> proc
             for (const VARIABLE_NAME& variable : usedVariables) {
                 variableToProceduresThatUseIt[variable].insert(procedureName);
@@ -178,8 +176,7 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
             STATEMENT_NUMBER statementNumber = tNodeToStatementNumber[tNode];
             // Update statement -> variable
             allStatementsThatModifySomeVariable.insert(statementNumber);
-            statementToModifiedVariables[statementNumber] =
-            VARIABLE_NAME_SET(modifiedVariables.begin(), modifiedVariables.end());
+            statementToModifiedVariables[statementNumber] = modifiedVariables;
 
             // Update variable -> statement
             for (const VARIABLE_NAME& variable : modifiedVariables) {
@@ -191,8 +188,7 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
             PROCEDURE_NAME procedureName = tNode->name;
             // Update proc -> variable
             allProceduresThatThatModifySomeVariable.insert(procedureName);
-            procedureToModifiedVariables[procedureName] =
-            PROCEDURE_NAME_SET(modifiedVariables.begin(), modifiedVariables.end());
+            procedureToModifiedVariables[procedureName] = modifiedVariables;
             // Update variable -> proc
             for (const VARIABLE_NAME& variable : modifiedVariables) {
                 variableToProceduresThatModifyIt[variable].insert(procedureName);
@@ -373,7 +369,7 @@ STATEMENT_NUMBER_SET PKBImplementation::getDescendants(STATEMENT_NUMBER statemen
         toVisit.insert(toVisit.end(), it->second.begin(), it->second.end());
     }
     visited.erase(statementNumber);
-    return STATEMENT_NUMBER_SET(visited.begin(), visited.end());
+    return visited;
 }
 
 STATEMENT_NUMBER_SET PKBImplementation::getStatementsThatHaveDescendants() const {
@@ -386,7 +382,7 @@ STATEMENT_NUMBER_SET PKBImplementation::getStatementsThatUse(VARIABLE_NAME v) co
     if (it == variableToStatementsThatUseIt.end()) {
         return STATEMENT_NUMBER_SET();
     } else {
-        return STATEMENT_NUMBER_SET(it->second.begin(), it->second.end());
+        return it->second;
     }
 }
 STATEMENT_NUMBER_SET PKBImplementation::getStatementsThatUseSomeVariable() const {
@@ -436,7 +432,7 @@ STATEMENT_NUMBER_SET PKBImplementation::getStatementsThatModify(VARIABLE_NAME v)
     if (it == variableToStatementsThatModifyIt.end()) {
         return STATEMENT_NUMBER_SET();
     } else {
-        return STATEMENT_NUMBER_SET(it->second.begin(), it->second.end());
+        return it->second;
     }
 }
 STATEMENT_NUMBER_SET PKBImplementation::getStatementsThatModifySomeVariable() const {
@@ -496,7 +492,7 @@ PKBImplementation::getAllAssignmentStatementsThatMatch(const std::string& assign
         }
         if (assignee == "_") {
             // since both pattern and assignee is empty, we return all assignment statements.
-            return { allAssignmentStatements.begin(), allAssignmentStatements.end() };
+            return allAssignmentStatements;
         }
         // Return all s such that Modifies(assignee, s);
         if (variableToStatementsThatModifyIt.find(assignee) == variableToStatementsThatModifyIt.end()) {
@@ -504,8 +500,7 @@ PKBImplementation::getAllAssignmentStatementsThatMatch(const std::string& assign
         }
         STATEMENT_NUMBER_SET statementsThatModifyAssignee =
         variableToStatementsThatModifyIt.find(assignee)->second;
-        return STATEMENT_NUMBER_SET(statementsThatModifyAssignee.begin(),
-                                    statementsThatModifyAssignee.end());
+        return statementsThatModifyAssignee;
     }
 
     // Preprocess pattern using the parser, to set precedence.
@@ -536,6 +531,48 @@ PKBImplementation::getAllAssignmentStatementsThatMatch(const std::string& assign
         result.insert(std::get<1>(tup));
     }
     return result;
+}
+
+STATEMENT_NUMBER_SET PKBImplementation::getAllWhileStatementsThatMatch(const VARIABLE_NAME& variable,
+                                                                       const std::string& pattern,
+                                                                       bool isSubExpr) const {
+    if (!pattern.empty() || !isSubExpr) {
+        throw std::runtime_error(
+        "getAllWhileStatementsThatMatch: body-pattern match is not implemented yet.");
+    }
+    if (variable == "_") {
+        return allWhileStatements;
+    }
+    // Get all while statements, and get all statements whose cond uses variable, and find intersection.
+    auto it = conditionVariablesToStatementNumbers.find(variable);
+    if (it == conditionVariablesToStatementNumbers.end()) {
+        return {};
+    }
+    const STATEMENT_NUMBER_SET& conditionsThatMatches = it->second;
+
+    return foost::SetIntersection(allWhileStatements, conditionsThatMatches);
+}
+
+STATEMENT_NUMBER_SET PKBImplementation::getAllIfElseStatementsThatMatch(const VARIABLE_NAME& variable,
+                                                                        const std::string& ifPattern,
+                                                                        bool ifPatternIsSubExpr,
+                                                                        const std::string& elsePattern,
+                                                                        bool elsePatternIsSubExpr) const {
+    if (!ifPattern.empty() || !elsePattern.empty() || !ifPatternIsSubExpr || !elsePatternIsSubExpr) {
+        throw std::runtime_error(
+        "getAllIfElseStatementsThatMatch: body-pattern match is not implemented yet.");
+    }
+    if (variable == "_") {
+        return allIfElseStatements;
+    }
+    // Get all if statements, and get all statements whose cond uses variable, and find intersection.
+    auto it = conditionVariablesToStatementNumbers.find(variable);
+    if (it == conditionVariablesToStatementNumbers.end()) {
+        return {};
+    }
+    const STATEMENT_NUMBER_SET& conditionsThatMatches = it->second;
+
+    return foost::SetIntersection(allIfElseStatements, conditionsThatMatches);
 }
 
 bool PKBImplementation::isRead(STATEMENT_NUMBER s) const {
@@ -610,45 +647,6 @@ PKBImplementation::getNextStatementOf(STATEMENT_NUMBER statementNumber, bool isT
 STATEMENT_NUMBER_SET PKBImplementation::getPreviousStatementOf(STATEMENT_NUMBER statementNumber,
                                                                bool isTransitive) const {
     return foost::getVisitedInDFS(statementNumber, previousRelationship, isTransitive);
-}
-
-STATEMENT_NUMBER_SET PKBImplementation::getAllWhileStatementsThatMatch(const VARIABLE_NAME& variable,
-                                                                       const std::string& pattern,
-                                                                       bool isSubExpr) const {
-    if (!pattern.empty() || !isSubExpr) {
-        throw std::runtime_error(
-        "getAllWhileStatementsThatMatch: body-pattern match is not implemented yet.");
-    }
-    // Get all while statements, and get all statements whose cond uses variable, and find intersection.
-    auto it = conditionVariablesToStatementNumbers.find(variable);
-    if (it == conditionVariablesToStatementNumbers.end()) {
-        return {};
-    }
-    const STATEMENT_NUMBER_SET& conditionsThatMatches = it->second;
-
-    return foost::SetIntersection(allWhileStatements, conditionsThatMatches);
-}
-
-STATEMENT_NUMBER_SET PKBImplementation::getAllIfElseStatementsThatMatch(const VARIABLE_NAME& variable,
-                                                                        const std::string& ifPattern,
-                                                                        bool ifPatternIsSubExpr,
-                                                                        const std::string& elsePattern,
-                                                                        bool elsePatternIsSubExpr) const {
-    if (!ifPattern.empty() || !elsePattern.empty() || !ifPatternIsSubExpr || !elsePatternIsSubExpr) {
-        throw std::runtime_error(
-        "getAllIfElseStatementsThatMatch: body-pattern match is not implemented yet.");
-    }
-    if (variable == "_") {
-        return allIfElseStatements;
-    }
-    // Get all if statements, and get all statements whose cond uses variable, and find intersection.
-    auto it = conditionVariablesToStatementNumbers.find(variable);
-    if (it == conditionVariablesToStatementNumbers.end()) {
-        return {};
-    }
-    const STATEMENT_NUMBER_SET& conditionsThatMatches = it->second;
-
-    return foost::SetIntersection(allIfElseStatements, conditionsThatMatches);
 }
 
 const STATEMENT_NUMBER_SET& PKBImplementation::getAllStatementsWithNext() const {
