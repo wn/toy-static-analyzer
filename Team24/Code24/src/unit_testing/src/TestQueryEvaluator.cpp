@@ -1350,5 +1350,78 @@ TEST_CASE("Test getting attributes") {
     REQUIRE(qe.evaluateQuery(query_invalid).empty());
 }
 
+TEST_CASE("Test getting tuples as return values") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    // stmt s1; stmt s2; variable v; Select v, s1, s2 such that Parent(s2, s1) and Modifies(s1, v) and Uses(s1, v)
+    Query query1 = { { { "s1", STMT }, { "s2", STMT }, { "v", VARIABLE } },
+                     { { VAR_VAR_NAME, "v" }, { STMT_STMT_NO, "s1" }, { STMT_STMT_NO, "s2" } },
+                     { { MODIFIES, { STMT_SYNONYM, "s1" }, { VAR_SYNONYM, "v" } },
+                       { USES, { STMT_SYNONYM, "s1" }, { VAR_SYNONYM, "v" } },
+                       { PARENT, { STMT_SYNONYM, "s2" }, { STMT_SYNONYM, "s1" } } },
+                     {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query1), { "n 5 4" }));
+
+    // read rd; stmt s; assign a; variable v; Select rd.varName, s, a, v such that Parent*(s, a) pattern a(v, _"1"_)
+    Query query2 = { { { "s", STMT }, { "a", ASSIGN }, { "v", VARIABLE }, { "rd", READ } },
+                     { { READ_VAR_NAME, "rd" }, { STMT_STMT_NO, "s" }, { ASSIGN_STMT_NO, "a" }, { VAR_VAR_NAME, "v" } },
+                     { { PARENTT, { STMT_SYNONYM, "s" }, { STMT_SYNONYM, "a" } } },
+                     { { ASSIGN_PATTERN_SUB_EXPR, { STMT_SYNONYM, "a" }, { VAR_SYNONYM, "v" }, "1" } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query2),
+                                       { "random 4 5 n", "random 7 9 a", "random 8 9 a" }));
+
+    // synonym and its attributes
+    PKBMock pkb2(3);
+    queryevaluator::QueryEvaluator qe2(&pkb2);
+    Query query3 = { { { "cl", CALL }, { "rd", READ } },
+                     { { CALL_STMT_NO, "cl" }, { CALL_PROC_NAME, "cl" }, { READ_STMT_NO, "rd" }, { READ_VAR_NAME, "rd" } },
+                     {},
+                     {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe2.evaluateQuery(query3),
+                                       { "2 computeCentroid 4 x", "3 printResults 4 x", "13 readPoint 4 x",
+                                         "18 readPoint 4 x", "2 computeCentroid 5 y", "3 printResults 5 y",
+                                         "13 readPoint 5 y", "18 readPoint 5 y" }));
+}
+
+TEST_CASE("Test BOOLEAN as return value") {
+    PKBMock pkb(0);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    // Select BOOLEAN
+    Query query1 = { {}, { { BOOLEAN, "BOOLEAN" } }, {}, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query1), { "TRUE" }));
+    // call cl; Select BOOLEAN
+    Query query2 = { { { "cl", CALL } }, { { BOOLEAN, "BOOLEAN" } }, {}, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query2), { "TRUE" }));
+    // read rd; Select BOOLEAN (while no read statement in the program)
+    Query query3 = { { { "rd", READ } }, { { BOOLEAN, "BOOLEAN" } }, {}, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query3), { "TRUE" }));
+    // Select BOOLEAN such that Follows(1, 3)
+    Query query4 = { {}, { { BOOLEAN, "BOOLEAN" } }, { { FOLLOWS, { NUM_ENTITY, "1" }, { NUM_ENTITY, "3" } } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query4), { "FALSE" }));
+    // stmt s1; stmt s2; Select BOOLEAN such that Follows(s1, s2)
+    Query query5 = { { { "s1", STMT }, { "s2", STMT } },
+                     { { BOOLEAN, "BOOLEAN" } },
+                     { { FOLLOWS, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                     {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query5), { "TRUE" }));
+    // semantically invalid (invalid argument)
+    Query query7 = { { { "s", STMT } },
+                     { { BOOLEAN, "BOOLEAN" } },
+                     { { FOLLOWS, { NUM_ENTITY, "1" }, { INVALID_ARG, "s" } } },
+                     {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query7), { "FALSE" }));
+    // semantically invalid (wrong argument type)
+    Query query8 = { {}, { { BOOLEAN, "BOOLEAN" } }, { { FOLLOWS, { NUM_ENTITY, "1" }, { NAME_ENTITY, "v" } } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query8), { "FALSE" }));
+    // Empty return candidates
+    Query query9 = { { { "s1", STMT }, { "s2", STMT } },
+                     std::vector<std::string>(),
+                     { { FOLLOWS, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                     {} };
+    REQUIRE(qe.evaluateQuery(query9).empty());
+}
+
 } // namespace qetest
 } // namespace qpbackend

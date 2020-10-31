@@ -67,6 +67,7 @@ enum ReturnType {
     // Implicit elem types
     PROG_LINE, // prog_line pl; Select pl ...
     BOOLEAN, // `Select BOOLEAN`
+    INVALID_BOOLEAN_RETURN_TYPE,
     // Invalid return type, not accepted for evaluation
     INVALID_RETURN_TYPE
 };

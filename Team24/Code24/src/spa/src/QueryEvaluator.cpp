@@ -30,11 +30,24 @@ std::vector<std::string> SingleQueryEvaluator::evaluateQuery(const backend::PKB*
         handleError("same single query evaluator should not be called twice");
     }
 
-    if (query.returnCandidates.size() == 0) {
-        handleError("no selected, invalid query");
+    if (query.returnCandidates.empty()) {
+        handleError("Invalid query");
     }
 
     for (const auto& requested : query.returnCandidates) {
+        if (requested.first == INVALID_RETURN_TYPE) {
+            handleError("invalid return type");
+            break;
+        }
+
+        if (requested.first == BOOLEAN) {
+            if (query.returnCandidates.size() != 1) {
+                handleError("BOOLEAN as return value should not appear in a tuple");
+                break;
+            }
+            continue;
+        }
+
         initializeIfSynonym(pkb, requested.second);
     }
 
@@ -43,25 +56,25 @@ std::vector<std::string> SingleQueryEvaluator::evaluateQuery(const backend::PKB*
 
     // evaluate clauses
     for (const auto& group : clauses) {
-        if (hasClauseFailed) {
+        if (failed) {
             break;
         }
         ResultTable stGroupRT;
         for (const auto& subgroup : group) {
-            if (hasClauseFailed) {
+            if (failed) {
                 break;
             }
             ResultTable subGroupRT;
             for (const auto& clause : subgroup) {
-                if (hasClauseFailed) {
+                if (failed) {
                     break;
                 }
-                hasClauseFailed = hasClauseFailed || !(evaluateClause(pkb, clause, subGroupRT));
+                failed = failed || !(evaluateClause(pkb, clause, subGroupRT));
             }
-            hasClauseFailed = hasClauseFailed || !stGroupRT.mergeTable(std::move(subGroupRT));
+            failed = failed || !stGroupRT.mergeTable(std::move(subGroupRT));
             updateSynonymsWithResultTable(stGroupRT);
         }
-        hasClauseFailed = hasClauseFailed || !resultTable.mergeTable(std::move(stGroupRT));
+        failed = failed || !resultTable.mergeTable(std::move(stGroupRT));
         updateSynonymsWithResultTable(resultTable);
     }
 
@@ -74,11 +87,20 @@ std::vector<std::string> SingleQueryEvaluator::evaluateQuery(const backend::PKB*
  * convert evaluation result to a string
  */
 std::vector<std::string> SingleQueryEvaluator::produceResult(const backend::PKB* pkb) {
-    // evaluate attribute reference
-    if (hasClauseFailed) {
+    if (query.returnCandidates.empty()) {
         return std::vector<std::string>();
     }
 
+    if (query.returnCandidates.at(0).first == BOOLEAN) {
+        const std::string result = (failed) ? "FALSE" : "TRUE";
+        return { result };
+    }
+
+    if (failed) {
+        return std::vector<std::string>();
+    }
+
+    // evaluate attribute reference
     std::vector<std::string> synNames;
     for (const auto& returnSyn : query.returnCandidates) {
         AttrConversion convertType = INVALID_CONVERSION;
@@ -92,7 +114,7 @@ std::vector<std::string> SingleQueryEvaluator::produceResult(const backend::PKB*
             // invalid return type, e.g. stmt s; Select s.varName
             // since only variable, read statement, print statement have .varName
             // a synonym declared as statement type does not have 'varName' attribute
-            handleError("The return type does not match declaration");
+            handleError("invalid return type");
             return std::vector<std::string>();
         }
 
@@ -670,7 +692,6 @@ std::vector<std::vector<CLAUSE_LIST>> SingleQueryEvaluator::getClausesSortedAndG
     for (const auto& clause : clauses) {
         if (!validateClause(clause)) {
             handleError("the clause is invalid");
-            hasClauseFailed = true;
             return {};
         }
     }
@@ -713,10 +734,11 @@ void SingleQueryEvaluator::updateSynonymsWithResultTable(ResultTable& table) {
 // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/281)
 // implement error handling other than logging
 /**
- * handle semantic error, exit evaluation properly
+ * handle exception or error
  */
 void SingleQueryEvaluator::handleError(std::string const& msg) {
     logLine(msg);
+    failed = true;
 }
 
 /**
