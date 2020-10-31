@@ -330,6 +330,40 @@ TEST_CASE("Test assign a; while w; Select a such that Parent (w, _)") {
     REQUIRE(expectedQuery == actualQuery);
 }
 
+// Test Affects
+
+TEST_CASE("Test assign a; while w; Select a such that Affects* (w, a)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that Affects* (w, a)");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::AFFECTST, { qpbackend::STMT_SYNONYM, "w" }, { qpbackend::STMT_SYNONYM, "a" } } },
+        {}
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test assign a; while w; Select a such that Affects (w, _)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that Affects (w, _)");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::AFFECTS, { qpbackend::STMT_SYNONYM, "w" }, { qpbackend::WILDCARD, "_" } } },
+        {}
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
 // Test Uses
 
 // Test UsesP  ... ‘(’ entRef ‘,’ entRef ‘)’
