@@ -111,7 +111,9 @@ SRT_LOOKUP_TABLE generateSrtTable() {
           { { STMT_SYNONYM,
               { { VAR_SYNONYM, ASSIGN_PATTERN_WILDCARD_SRT },
                 { NAME_ENTITY, ASSIGN_PATTERN_WILDCARD_SRT },
-                { WILDCARD, ASSIGN_PATTERN_WILDCARD_SRT } } } } }
+                { WILDCARD, ASSIGN_PATTERN_WILDCARD_SRT } } } } },
+        { WHILE_PATTERN,
+          { { STMT_SYNONYM, { { VAR_SYNONYM, WHILE_PATTERN_SRT }, { NAME_ENTITY, WHILE_PATTERN_SRT }, { WILDCARD, WHILE_PATTERN_SRT } } } } }
     };
 
     return srt_table;

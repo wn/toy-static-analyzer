@@ -562,6 +562,11 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelationOrPattern(co
         result = castToStrVector<>(stmts);
         break;
     }
+    case WHILE_PATTERN_SRT: {
+        stmts = pkb->getAllWhileStatementsThatMatch(arg, "", true);
+        result = castToStrVector<>(stmts);
+        break;
+    }
     default:
         handleError("unknown sub-relation type");
     }
@@ -643,6 +648,11 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelationWildcard(con
     }
     case ASSIGN_PATTERN_WILDCARD_SRT: {
         stmts = pkb->getAllAssignmentStatementsThatMatch("_", "", true);
+        result = castToStrVector<>(stmts);
+        break;
+    }
+    case WHILE_PATTERN_SRT: {
+        stmts = pkb->getAllWhileStatementsThatMatch("_", "", true);
         result = castToStrVector<>(stmts);
         break;
     }

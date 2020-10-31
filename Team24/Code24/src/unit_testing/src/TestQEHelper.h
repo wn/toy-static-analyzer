@@ -21,8 +21,9 @@ class PKBMock : public backend::PKB {
     // code 0: https://tinyurl.com/y32cfm6c -- for Follows & Follows*
     // code 1: nested structure {1, {{2, {3}}, {4, {5, 6}}}} -- for Parent & Parent*
     // code 2: VP5 in https://tinyurl.com/y2w76kw5 -- for Uses & Modifies & Next/Next*, Pattern
-    // code 3: code 4 in https://tinyurl.com/y2heef28 -- for isRead/Print/Call/While/IfElse/Assign
-    // code 4: VP6 in https://tinyurl.com/y2w76kw5 -- for Calls/Calls*
+    // Assign code 3: code 4 in https://tinyurl.com/y2heef28 -- for
+    // isRead/Print/Call/While/IfElse/Assign code 4: VP6 in https://tinyurl.com/y2w76kw5 -- for
+    // Calls/Calls* code 5: VP8 in https://tinyurl.com/y2w76kw5 -- for while pattern
     int test_idx;
 
     bool isRead(STATEMENT_NUMBER s) const override;
