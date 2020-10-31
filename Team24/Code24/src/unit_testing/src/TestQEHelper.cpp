@@ -99,6 +99,9 @@ const CONSTANT_NAME_SET& PKBMock::getAllConstants() const {
     case 0:
         constants = { "0", "1" };
         break;
+    case 2:
+        constants = { "1", "2", "3" };
+        break;
     case 4:
         constants = { "1" };
         break;

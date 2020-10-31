@@ -1403,6 +1403,17 @@ TEST_CASE("Test getting tuples as return values") {
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query2),
                                        { "random 4 5 n", "random 7 9 a", "random 8 9 a" }));
 
+    // duplicate synonyms
+    Query query4 = { { { "c", CONSTANT } }, { { CONSTANT_VALUE, "c" }, { CONSTANT_VALUE, "c" } }, {}, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query4), { "1 1", "2 2", "3 3" }));
+    // duplicate synonyms
+    Query query5 = { { { "c", CONSTANT }, { "c1", CONSTANT } },
+                     { { CONSTANT_VALUE, "c" }, { CONSTANT_VALUE, "c1" } },
+                     {},
+                     {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query5), { "1 1", "1 2", "1 3", "2 1", "2 2",
+                                                                   "2 3", "3 1", "3 2", "3 3" }));
+
     // synonym and its attributes
     PKBMock pkb2(3);
     queryevaluator::QueryEvaluator qe2(&pkb2);

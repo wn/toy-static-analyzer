@@ -17,13 +17,13 @@ class PKBMock : public backend::PKB {
     explicit PKBMock(int idx) : test_idx(idx) {
     }
 
-    // the index of the source code used for testing
-    // code 0: https://tinyurl.com/y32cfm6c -- for Follows & Follows*
-    // code 1: nested structure {1, {{2, {3}}, {4, {5, 6}}}} -- for Parent & Parent*
-    // code 2: VP5 in https://tinyurl.com/y2w76kw5 -- for Uses & Modifies & Next/Next*, Pattern
-    // Assign code 3: code 4 in https://tinyurl.com/y2heef28 -- for
-    // isRead/Print/Call/While/IfElse/Assign code 4: VP6 in https://tinyurl.com/y2w76kw5 -- for
-    // Calls/Calls* code 5: VP8 in https://tinyurl.com/y2w76kw5 -- for while pattern
+    // the index of the source code used for testing.
+    // code 0: https://tinyurl.com/y32cfm6c -- for Follows & Follows*.
+    // code 1: nested structure {1, {{2, {3}}, {4, {5, 6}}}} -- for Parent & Parent*.
+    // code 2: VP5 in https://tinyurl.com/y2w76kw5 -- for Uses & Modifies & Next/Next* & Pattern &
+    // Assign. code 3: code 4 in https://tinyurl.com/y2heef28 -- stmt type check.
+    // code 4: VP6 in https://tinyurl.com/y2w76kw5 -- for Calls/Calls*.
+    // code 5: VP8 in https://tinyurl.com/y2w76kw5 -- for while pattern.
     int test_idx;
 
     bool isRead(STATEMENT_NUMBER s) const override;
