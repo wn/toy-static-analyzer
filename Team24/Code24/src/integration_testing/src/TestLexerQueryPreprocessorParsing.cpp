@@ -124,6 +124,58 @@ TEST_CASE("Test selects clause BOOLEAN return type with trailing whitespace") {
     REQUIRE(expectedQuery == actualQuery);
 }
 
+// select-cl : declaration ‘Select’ TUPLE
+
+TEST_CASE("Test selects clause TUPLE return type singular with <>") {
+    std::stringstream queryString = std::stringstream("variable a; Select <a>");
+    qpbackend::Query expectedQuery = qpbackend::Query(
+    {
+    { "a", qpbackend::EntityType::VARIABLE },
+    },
+    {
+    { qpbackend::ReturnType::VAR_VAR_NAME, "a" },
+    },
+    {}, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test selects clause TUPLE return type multiple") {
+    std::stringstream queryString = std::stringstream("variable a,b,c; Select <a ,  b  , c>");
+    qpbackend::Query expectedQuery = qpbackend::Query({ { "a", qpbackend::EntityType::VARIABLE },
+                                                        { "b", qpbackend::EntityType::VARIABLE },
+                                                        { "c", qpbackend::EntityType::VARIABLE } },
+                                                      { { qpbackend::ReturnType::VAR_VAR_NAME, "a" },
+                                                        { qpbackend::ReturnType::VAR_VAR_NAME, "b" },
+                                                        { qpbackend::ReturnType::VAR_VAR_NAME, "c" } },
+                                                      {}, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test selects clause TUPLE return type multiple duplicates") {
+    std::stringstream queryString = std::stringstream("variable a; Select <a ,  a  , a>");
+    qpbackend::Query expectedQuery = qpbackend::Query(
+    {
+    { "a", qpbackend::EntityType::VARIABLE },
+    },
+    { { qpbackend::ReturnType::VAR_VAR_NAME, "a" },
+      { qpbackend::ReturnType::VAR_VAR_NAME, "a" },
+      { qpbackend::ReturnType::VAR_VAR_NAME, "a" } },
+    {}, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
 // select-cl : declaration ‘Select’ synonym suchthat-cl
 
 // General grammar tests
@@ -1233,6 +1285,18 @@ TEST_CASE("Test parsing invalid variable name (Integer)") {
 
 TEST_CASE("Test parsing invalid variable name (Expresion)") {
     requireParsingInvalidQPLQueryToReturnEmptyQuery(R"(stmt "x"; Select "x")");
+}
+
+
+// Test syntax error (TUPLE)
+
+TEST_CASE("Test selects TUPLE missing comma") {
+    requireParsingInvalidQPLQueryToReturnEmptyQuery("assign a; Select <a a>");
+}
+
+TEST_CASE("Test selects TUPLE missing angular brackets") {
+    requireParsingInvalidQPLQueryToReturnEmptyQuery("assign a,b; Select a, b>");
+    requireParsingInvalidQPLQueryToReturnEmptyQuery("assign a,b; Select <a, b");
 }
 
 // Test syntax error detection (suchthat-cl)

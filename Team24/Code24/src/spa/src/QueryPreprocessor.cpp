@@ -37,7 +37,7 @@ bool isValidDeclarationDelimiter(const TOKEN& token);
 // Declaration for result clause
 STATESTATUSPAIR parseResultClause(State state);
 STATESTATUSPAIR parseTuple(State state);
-void parseElem(State state);
+STATESTATUSPAIR parseElem(State state);
 void parseAttrRef(State state);
 void parseAttrName(State state);
 // Declaration for 'filtering' clauses
@@ -447,8 +447,48 @@ STATESTATUSPAIR parseResultClause(State state) {
  * tuple: elem | ‘<’ elem ( ‘,’ elem )* ‘>’
  */
 STATESTATUSPAIR parseTuple(State state) {
+    bool isValidState;
+    State backupState = state;
+
+    std::tie(state, isValidState) = parseElem(state);
+    if (isValidState) {
+        return { state, isValidState };
+    }
+
+    // ‘<’ elem ( ‘,’ elem )* ‘>’
+    state = backupState;
+    TOKEN l_arrow = state.popUntilNonWhitespaceToken();
+    if (l_arrow.type != backend::lexer::LT) {
+        return { state, false };
+    }
+    std::tie(state, isValidState) = parseElem(state);
+    if (!isValidState) {
+        return { state, false };
+    }
+    while (isValidState) {
+        backupState = state;
+        TOKEN comma = state.popUntilNonWhitespaceToken();
+        if (comma.type != backend::lexer::COMMA) {
+            break;
+        }
+        std::tie(state, isValidState) = parseElem(state);
+    }
+    state = backupState;
+    TOKEN r_arrow = state.popUntilNonWhitespaceToken();
+    if (r_arrow.type != backend::lexer::GT) {
+        return { state, false };
+    }
+
+    return { state, true };
+}
+
+/**
+ * elem : synonym | attrRef
+ * Implemented as `elem: attrRef | synonym` which is easier and still correct.
+ */
+STATESTATUSPAIR parseElem(State state) {
+    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/338): Parse attrRef before synonym
     try {
-        // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/335): Parse multiple synonyms.
         const TOKEN& synonymToken = state.popUntilNonWhitespaceToken();
         state.addSynonymToReturn(synonymToken);
         logLine(kQppLogInfoPrefix + "parseTuple: parsed query: " + state.getQuery().toString());
@@ -457,12 +497,6 @@ STATESTATUSPAIR parseTuple(State state) {
         logLine(e.what());
         return { state, false };
     }
-}
-
-/**
- * elem : synonym | attrRef
- */
-void parseElem(State state) {
 }
 
 /**
