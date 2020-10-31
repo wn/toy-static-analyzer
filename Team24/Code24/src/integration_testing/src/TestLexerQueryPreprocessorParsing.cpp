@@ -400,6 +400,24 @@ TEST_CASE("Test assign a; while w; Select a such that Uses(w, _)") {
     REQUIRE(expectedQuery == actualQuery);
 }
 
+// This semantic error should be detected in QE
+TEST_CASE("Test assign a; while w; Select a such that Uses(_, w)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that Uses(_, w)");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::USES, { qpbackend::WILDCARD, "_" }, { qpbackend::STMT_SYNONYM, "w" } } },
+        {}
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+
 TEST_CASE("Test assign a; while w; Select a such that Uses(\"ident\", _)") {
     std::stringstream queryString =
     std::stringstream("assign a; while w; Select a such that Uses(\"ident\", _)");
@@ -508,6 +526,23 @@ TEST_CASE("Test assign a; while w; Select a such that Modifies(w, _)") {
         { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
         { "a" },
         { { qpbackend::ClauseType::MODIFIES, { qpbackend::STMT_SYNONYM, "w" }, { qpbackend::WILDCARD, "_" } } },
+        {}
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+// This semantic error should be handled in QE
+TEST_CASE("Test assign a; while w; Select a such that Modifies(_, w)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that Modifies(_, w)");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::MODIFIES, { qpbackend::WILDCARD, "_" }, { qpbackend::STMT_SYNONYM, "w" } } },
         {}
     };
 
@@ -1222,14 +1257,6 @@ TEST_CASE("Test selected synonyms missing failure") {
 
 TEST_CASE("Test selected synonyms missing due to no declaration failure") {
     requireParsingInvalidQPLQueryToReturnEmptyQuery("Select v");
-}
-
-TEST_CASE("Test Uses first argument '_' failure") {
-    requireParsingInvalidQPLQueryToReturnEmptyQuery("variable v; Select v such that Uses(_,v)");
-}
-
-TEST_CASE("Test Modifies first argument '_' failure") {
-    requireParsingInvalidQPLQueryToReturnEmptyQuery("variable v; Select v such that Modifies(_,v)");
 }
 
 TEST_CASE("Test undeclared synonym with BOOLEAN synonym declaration") {

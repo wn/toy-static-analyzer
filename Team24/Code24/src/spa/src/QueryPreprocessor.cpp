@@ -738,11 +738,6 @@ STATESTATUSPAIR parseRelationStmtEntOrEntEnt(State state, qpbackend::ClauseType 
                 backend::lexer::prettyPrintType(stmtOrEntToken.type));
         return STATESTATUSPAIR(state, false);
     }
-    if (stmtOrEntArg.first == qpbackend::WILDCARD) {
-        logLine(kQppLogWarnPrefix + "parseRelationStmtEntOrEntEnt: Semantically invalid to have a"
-                                    " UNDERSCORE('_') as USES/MODIFIES first argument ");
-        return STATESTATUSPAIR(state, false);
-    }
 
     TOKEN commaToken = state.popUntilNonWhitespaceToken();
     if (commaToken.type != backend::lexer::COMMA || !state.hasTokensLeftToParse()) {
