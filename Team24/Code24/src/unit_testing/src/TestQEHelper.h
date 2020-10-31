@@ -20,8 +20,8 @@ class PKBMock : public backend::PKB {
     // the index of the source code used for testing.
     // code 0: https://tinyurl.com/y32cfm6c -- for Follows & Follows*.
     // code 1: nested structure {1, {{2, {3}}, {4, {5, 6}}}} -- for Parent & Parent*.
-    // code 2: VP5 in https://tinyurl.com/y2w76kw5 -- for Uses & Modifies & Next/Next* & Pattern.
-    // code 3: code 4 in https://tinyurl.com/y2heef28 -- stmt type check.
+    // code 2: VP5 in https://tinyurl.com/y2w76kw5 -- for Uses & Modifies & Next/Next* & Pattern
+    // code 3: code 4 in https://tinyurl.com/y2heef28 -- stmt type check with #10 -> "count = 10"
     // code 4: VP6 in https://tinyurl.com/y2w76kw5 -- for Calls/Calls*.
     // code 5: VP8 in https://tinyurl.com/y2w76kw5 -- for while pattern.
     // code 6: VP7 in https://tinyurl.com/y2w76kw5 -- for if pattern.

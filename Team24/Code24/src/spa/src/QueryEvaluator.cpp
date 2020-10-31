@@ -528,6 +528,26 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelationOrPattern(co
         result = castToStrVector<>(stmts);
         break;
     }
+    case PREAFFECTS: {
+        auto lines = pkb->getStatementsAffectedBy(std::stoi(arg), false);
+        result = castToStrVector<>(lines);
+        break;
+    }
+    case POSTAFFECTS: {
+        auto lines = pkb->getStatementsThatAffect(std::stoi(arg), false);
+        result = castToStrVector<>(lines);
+        break;
+    }
+    case PREAFFECTST: {
+        auto lines = pkb->getStatementsAffectedBy(std::stoi(arg), true);
+        result = castToStrVector<>(lines);
+        break;
+    }
+    case POSTAFFECTST: {
+        auto lines = pkb->getStatementsThatAffect(std::stoi(arg), true);
+        result = castToStrVector<>(lines);
+        break;
+    }
     case PRECALLS: {
         procs = pkb->getProceduresCalledBy(arg, false);
         result = std::vector<PROCEDURE_NAME>(procs.begin(), procs.end());
@@ -634,6 +654,14 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelationWildcard(con
         stmts = pkb->getAllStatementsWithPrev();
         result = castToStrVector<>(stmts);
         break;
+    case PREAFFECTS_WILD:
+        stmts = pkb->getAllStatementsThatAffect();
+        result = castToStrVector<>(stmts);
+        break;
+    case POSTAFFECTS_WILD:
+        stmts = pkb->getAllStatementsThatAreAffected();
+        result = castToStrVector<>(stmts);
+        break;
     case PRECALL_WILD:
         procs = pkb->getAllProceduresThatCallSomeProcedure();
         result = std::vector<PROCEDURE_NAME>(procs.begin(), procs.end());
@@ -737,8 +765,6 @@ bool SingleQueryEvaluator::validateClause(const CLAUSE& clause) {
         (void)oor;
         return false;
     }
-
-    // check argument type (e.g. for Affects)
 
     return true;
 }

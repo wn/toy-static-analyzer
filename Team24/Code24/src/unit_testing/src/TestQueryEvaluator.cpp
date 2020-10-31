@@ -1395,6 +1395,118 @@ TEST_CASE("Test evaluation of Calls or Calls* with invalid arguments") {
     REQUIRE(qe.evaluateQuery(query_num).empty());
 }
 
+TEST_CASE("Test evaluation of Affects or Affects* between synonyms") {
+    PKBMock pkb(3);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryPre = { { { "a1", ASSIGN }, { "a2", ASSIGN } },
+                       { "a1" },
+                       { { AFFECTS, { STMT_SYNONYM, "a1" }, { STMT_SYNONYM, "a2" } } },
+                       {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre),
+                                       { "10", "11", "12", "15", "16", "17", "21", "22" }));
+
+    Query queryPost = { { { "a1", ASSIGN }, { "a2", ASSIGN } },
+                        { "a2" },
+                        { { AFFECTST, { STMT_SYNONYM, "a1" }, { STMT_SYNONYM, "a2" } } },
+                        {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), { "15", "16", "17", "21", "22", "23" }));
+
+    Query querySelf = {
+        { { "a", ASSIGN } }, { "a" }, { { AFFECTST, { STMT_SYNONYM, "a" }, { STMT_SYNONYM, "a" } } }, {}
+    };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(querySelf), { "15", "16", "17" }));
+}
+
+TEST_CASE("Test evaluation of Affects or Affects* between entity and synonym") {
+    PKBMock pkb(3);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryPre = {
+        { { "a", ASSIGN } }, { "a" }, { { AFFECTS, { NUM_ENTITY, "15" }, { STMT_SYNONYM, "a" } } }, {}
+    };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre), { "15", "21", "22" }));
+
+    Query queryPost = {
+        { { "a", ASSIGN } }, { "a" }, { { AFFECTST, { STMT_SYNONYM, "a" }, { NUM_ENTITY, "17" } } }, {}
+    };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), { "12", "17" }));
+}
+
+TEST_CASE("Test evaluation of Affects or Affects* between entities") {
+    PKBMock pkb(3);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryFalse = {
+        { { "p", PROCEDURE } }, { "p" }, { { AFFECTS, { NUM_ENTITY, "10" }, { NUM_ENTITY, "23" } } }, {}
+    };
+    REQUIRE(qe.evaluateQuery(queryFalse).empty());
+
+    Query queryTrue = {
+        { { "p", PROCEDURE } }, { "p" }, { { AFFECTST, { NUM_ENTITY, "10" }, { NUM_ENTITY, "23" } } }, {}
+    };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryTrue),
+                                       { "main", "readPoint", "printResults", "computeCentroid" }));
+}
+
+TEST_CASE("Test evaluation of Affects or Affects* between synonym and wildcard") {
+    PKBMock pkb(3);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryPre = { { { "a", ASSIGN } }, { "a" }, { { AFFECTS, { STMT_SYNONYM, "a" }, { WILDCARD, "_" } } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre),
+                                       { "10", "11", "12", "15", "16", "17", "21", "22" }));
+
+    Query queryPost = {
+        { { "a", ASSIGN } }, { "a" }, { { AFFECTST, { WILDCARD, "_" }, { STMT_SYNONYM, "a" } } }, {}
+    };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), { "15", "16", "17", "21", "22", "23" }));
+}
+
+TEST_CASE("Test evaluation of Affects/Affects* between entity and wildcard") {
+    PKBMock pkb(3);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryTrue = {
+        { { "p", PROCEDURE } }, { "p" }, { { AFFECTS, { NUM_ENTITY, "22" }, { WILDCARD, "_" } } }, {}
+    };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryTrue),
+                                       { "main", "readPoint", "printResults", "computeCentroid" }));
+
+    Query queryFalse = {
+        { { "p", PROCEDURE } }, { "p" }, { { AFFECTST, { WILDCARD, "_" }, { NUM_ENTITY, "10" } } }, {}
+    };
+    REQUIRE(qe.evaluateQuery(queryFalse).empty());
+}
+
+TEST_CASE("Test evaluation of Affects or Affects*(_, _)") {
+    PKBMock pkb(3);
+    queryevaluator::QueryEvaluator qe(&pkb);
+    Query query = { { { "p", PROCEDURE } }, { "p" }, { { AFFECTS, { WILDCARD, "_" }, { WILDCARD, "_" } } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query),
+                                       { "main", "readPoint", "printResults", "computeCentroid" }));
+}
+
+TEST_CASE("Test evaluation of Affects or Affects* with invalid arguments") {
+    PKBMock pkb(3);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    // stmt is a valid argument
+    Query query1 = { { { "s", STMT } }, { "s" }, { { AFFECTS, { NUM_ENTITY, "15" }, { STMT_SYNONYM, "s" } } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query1), { "15", "21", "22" }));
+
+    // constant is an invalid argument
+    Query query2 = {
+        { { "c", CONSTANT } }, { "c" }, { { AFFECTST, { CONST_SYNONYM, "c" }, { NUM_ENTITY, "23" } } }, {}
+    };
+
+    // name entity is an invalid argument
+    Query query3 = {
+        { { "a", ASSIGN } }, { "a" }, { { AFFECTST, { STMT_SYNONYM, "a" }, { NAME_ENTITY, "23" } } }, {}
+    };
+    REQUIRE(qe.evaluateQuery(query3).empty());
+}
+
 TEST_CASE("Test getting attributes") {
     PKBMock pkb(3);
     queryevaluator::QueryEvaluator qe(&pkb);

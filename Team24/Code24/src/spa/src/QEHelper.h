@@ -40,6 +40,12 @@ enum SubRelationType {
     POSTNEXTT, // given s, get all s' s.t. Next*(s', s)
     PRENEXT_WILD, // get all s s.t. Next*(s, _) exist
     POSTNEXT_WILD, // get all s s.t. Next*(_, s) exist
+    PREAFFECTS, // given s, get all s' s.t. Affects(s, s')
+    POSTAFFECTS, // given s, get all s' s.t. Affects(s', s)
+    PREAFFECTST, // given s, get all s' s.t. Affects*(s, s')
+    POSTAFFECTST, // given s, get all s' s.t. Affects*(s', s)
+    PREAFFECTS_WILD, // get all s s.t. Affects*(s, _) exist
+    POSTAFFECTS_WILD, // get all s s.t. Affects*(_, s) exist
     PRECALLS, // given p, get all p' s.t. Calls(p, p')
     POSTCALLS, // given p, get all p' s.t. Calls(p', p)
     PRECALLST, // given p, get all p' s.t. Calls*(p, p')
