@@ -46,6 +46,9 @@ const RETURN_CANDIDATE_LIST convertToReturnValues(const std::vector<std::string>
         case qpbackend::PROCEDURE:
             returnType = qpbackend::PROC_PROC_NAME;
             break;
+        case INVALID_ENTITY_TYPE:
+            returnType = qpbackend::INVALID_RETURN_TYPE;
+            break;
         }
 
         returnCandidates.emplace_back(returnType, nameValue);
