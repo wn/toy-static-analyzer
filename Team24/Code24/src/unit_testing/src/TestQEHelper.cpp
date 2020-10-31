@@ -47,6 +47,9 @@ const STATEMENT_NUMBER_SET& PKBMock::getAllStatements() const {
         break;
     case 5:
         statements = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+        break;
+    case 6:
+        statements = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
     }
     return statements;
 }
@@ -68,6 +71,9 @@ const VARIABLE_NAME_LIST& PKBMock::getAllVariables() const {
         break;
     case 5:
         variables = { "x", "y", "count" };
+        break;
+    case 6:
+        variables = { "x", "y", "z", "count" };
     }
     return variables;
 }
@@ -89,6 +95,9 @@ const PROCEDURE_NAME_LIST& PKBMock::getAllProcedures() const {
         break;
     case 5:
         procedures = { "main" };
+        break;
+    case 6:
+        procedures = { "main" };
     }
     return procedures;
 }
@@ -107,6 +116,9 @@ const CONSTANT_NAME_SET& PKBMock::getAllConstants() const {
         break;
     case 5:
         constants = { "0", "1", "2", "3", "4", "5" };
+        break;
+    case 6:
+        constants = { "0", "1", "5", "10" };
     }
     return constants;
 }
@@ -1201,6 +1213,15 @@ bool PKBMock::isIfElse(STATEMENT_NUMBER s) const {
             return true;
         }
     }
+    if (test_idx == 6) {
+        switch (s) {
+        case 1:
+        case 4:
+        case 7:
+        case 10:
+            return true;
+        }
+    }
     return false;
 }
 bool PKBMock::isAssign(STATEMENT_NUMBER s) const {
@@ -1248,6 +1269,17 @@ bool PKBMock::isAssign(STATEMENT_NUMBER s) const {
         case 2:
         case 4:
         case 6:
+        case 9:
+            return true;
+        }
+    }
+    if (test_idx == 6) {
+        switch (s) {
+        case 2:
+        case 3:
+        case 5:
+        case 6:
+        case 8:
         case 9:
             return true;
         }
@@ -1447,7 +1479,24 @@ STATEMENT_NUMBER_SET PKBMock::getAllIfElseStatementsThatMatch(const VARIABLE_NAM
                                                               bool ifPatternIsSubExpr,
                                                               const std::string& elsePattern,
                                                               bool elsePatternIsSubExpr) const {
-    return STATEMENT_NUMBER_SET();
+    STATEMENT_NUMBER_SET result;
+    if (test_idx == 6) {
+        if (ifPattern == "" && elsePattern == "" && ifPatternIsSubExpr && elsePatternIsSubExpr) {
+            if (variable == "x") {
+                result = { 1, 4 };
+            }
+            if (variable == "y") {
+                result = { 4, 7 };
+            }
+            if (variable == "count") {
+                result = { 10 };
+            }
+            if (variable == "_") {
+                result = { 1, 4, 7, 10 };
+            }
+        }
+    }
+    return result;
 }
 
 const STATEMENT_NUMBER_SET& PKBMock::getAllStatementsWithNext() const {

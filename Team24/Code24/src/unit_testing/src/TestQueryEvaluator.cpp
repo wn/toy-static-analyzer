@@ -985,6 +985,38 @@ TEST_CASE("Test invalid pattern") {
     REQUIRE(qe.evaluateQuery(query3).empty());
 }
 
+TEST_CASE("Test if pattern") {
+    PKBMock pkb(6);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    // valid while pattern
+    Query query1 = { { { "ifs", IF }, { "v", VARIABLE } },
+                     { "v" },
+                     {},
+                     { { IF_PATTERN, { STMT_SYNONYM, "ifs" }, { VAR_SYNONYM, "v" }, "_" } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query1), { "x", "y", "count" }));
+
+    Query query2 = { { { "ifs", IF } },
+                     { "ifs" },
+                     {},
+                     { { IF_PATTERN, { STMT_SYNONYM, "ifs" }, { NAME_ENTITY, "x" }, "_" },
+                       { IF_PATTERN, { STMT_SYNONYM, "ifs" }, { NAME_ENTITY, "y" }, "_" } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query2), { "4" }));
+
+    Query query3 = {
+        { { "ifs", IF } }, { "ifs" }, {}, { { IF_PATTERN, { STMT_SYNONYM, "ifs" }, { WILDCARD, "_" }, "_" } }
+    };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query3), { "1", "4", "7", "10" }));
+
+
+    // invalid pattern
+    Query query4 = { { { "ifs", IF } },
+                     { "ifs" },
+                     {},
+                     { { IF_PATTERN, { STMT_SYNONYM, "ifs" }, { INVALID_ARG, "_" }, "_" } } };
+    REQUIRE(qe.evaluateQuery(query4).empty());
+}
+
 TEST_CASE("Test while pattern") {
     PKBMock pkb(5);
     queryevaluator::QueryEvaluator qe(&pkb);

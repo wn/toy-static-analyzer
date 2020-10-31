@@ -114,6 +114,7 @@ std::vector<std::string> SingleQueryEvaluator::produceResult(const backend::PKB*
             // invalid return type, e.g. stmt s; Select s.varName
             // since only variable, read statement, print statement have .varName
             // a synonym declared as statement type does not have 'varName' attribute
+            (void)oor;
             handleError("invalid return type");
             return std::vector<std::string>();
         }
@@ -562,6 +563,11 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelationOrPattern(co
         result = castToStrVector<>(stmts);
         break;
     }
+    case IF_PATTERN_SRT: {
+        stmts = pkb->getAllIfElseStatementsThatMatch(arg, "", true, "", true);
+        result = castToStrVector<>(stmts);
+        break;
+    }
     case WHILE_PATTERN_SRT: {
         stmts = pkb->getAllWhileStatementsThatMatch(arg, "", true);
         result = castToStrVector<>(stmts);
@@ -651,6 +657,11 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelationWildcard(con
         result = castToStrVector<>(stmts);
         break;
     }
+    case IF_PATTERN_SRT: {
+        stmts = pkb->getAllIfElseStatementsThatMatch("_", "", true, "", true);
+        result = castToStrVector<>(stmts);
+        break;
+    }
     case WHILE_PATTERN_SRT: {
         stmts = pkb->getAllWhileStatementsThatMatch("_", "", true);
         result = castToStrVector<>(stmts);
@@ -721,8 +732,9 @@ bool SingleQueryEvaluator::validateClause(const CLAUSE& clause) {
 
     // check if found in srt table
     try {
-        srt_table.at(clauseType).at(argType1).at(argType2);
+        (void)srt_table.at(clauseType).at(argType1).at(argType2);
     } catch (const std::out_of_range& oor) {
+        (void)oor;
         return false;
     }
 
