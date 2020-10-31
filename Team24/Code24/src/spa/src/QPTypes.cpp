@@ -95,6 +95,12 @@ std::string prettyPrintArgType(ArgType argType) {
         return "NUM_ENTITY";
     case WILDCARD:
         return "WILDCARD";
+    case CALL_TO_PROC_SYNONYM:
+        return "CALL_TO_PROC_SYNONYM";
+    case READ_TO_VAR_SYNONYM:
+        return "READ_TO_VAR_SYNONYM";
+    case PRINT_TO_VAR_SYNONYM:
+        return "PRINT_TO_VAR_SYNONYM";
     case INVALID_ARG:
         return "INVALID_ARG";
     }
@@ -108,12 +114,16 @@ std::string prettyPrintArg(const ARG& arg) {
 
 ClauseArgsType getClauseArgsType(ArgType arg_type_1, ArgType arg_type_2) {
     if (arg_type_1 == STMT_SYNONYM || arg_type_1 == VAR_SYNONYM || arg_type_1 == PROC_SYNONYM ||
-        arg_type_1 == CONST_SYNONYM) {
+        arg_type_1 == CONST_SYNONYM || arg_type_1 == CALL_TO_PROC_SYNONYM ||
+        arg_type_1 == READ_TO_VAR_SYNONYM || arg_type_1 == PRINT_TO_VAR_SYNONYM) {
         switch (arg_type_2) {
         case STMT_SYNONYM:
         case VAR_SYNONYM:
         case PROC_SYNONYM:
         case CONST_SYNONYM:
+        case CALL_TO_PROC_SYNONYM:
+        case READ_TO_VAR_SYNONYM:
+        case PRINT_TO_VAR_SYNONYM:
             return SynonymSynonym;
         case NUM_ENTITY:
         case NAME_ENTITY:
@@ -129,6 +139,9 @@ ClauseArgsType getClauseArgsType(ArgType arg_type_1, ArgType arg_type_2) {
         case VAR_SYNONYM:
         case PROC_SYNONYM:
         case CONST_SYNONYM:
+        case CALL_TO_PROC_SYNONYM:
+        case READ_TO_VAR_SYNONYM:
+        case PRINT_TO_VAR_SYNONYM:
             return EntitySynonym;
         case NUM_ENTITY:
         case NAME_ENTITY:

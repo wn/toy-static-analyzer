@@ -84,6 +84,9 @@ enum ArgType {
     NAME_ENTITY, // name of variable or procedure, e.g. "\"centroidX\"" "\"main\""
     NUM_ENTITY, // constant number or statement number of line number, e.g. "42"
     WILDCARD, // placeholder sign, e.g. "_"
+    READ_TO_VAR_SYNONYM, // the .varName attribute of a read synonym
+    PRINT_TO_VAR_SYNONYM, // the .varName attribute of a print synonym
+    CALL_TO_PROC_SYNONYM, // the .procName attribute of a call synonym
     INVALID_ARG // invalid argument, not accepted for evaluation
 };
 
