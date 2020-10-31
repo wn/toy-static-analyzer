@@ -5,10 +5,12 @@
 #include "QPTypes.h"
 #include "Query.h"
 
+#include <algorithm> // std::find_if
 #include <sstream>
 #include <tuple>
 #include <utility>
 #include <vector>
+
 
 // Constants
 const std::string kQppErrorPrefix = "Log[Error-QueryPreprocessor]: ";
@@ -111,10 +113,20 @@ class State {
         logLine(s.str());
     }
 
+
   public:
     State() = default;
     explicit State(const TOKENS& tokens) {
         this->tokens = tokens;
+    }
+
+    // Query struct computed properties
+
+    bool hasInvalidQueryDeclarationMap() {
+        return std::find_if(query.declarationMap.begin(), query.declarationMap.end(),
+                            [](const std::pair<std::string, qpbackend::EntityType>& e) {
+                                return e.second == qpbackend::INVALID_ENTITY_TYPE;
+                            }) != query.declarationMap.end();
     }
 
     // Copy getter(s)
@@ -183,10 +195,9 @@ class State {
         auto iterator = query.declarationMap.find(synonymString);
         if (iterator == query.declarationMap.end()) {
             logLine(kQppErrorPrefix + "getArgFromSynonymString: declarationMap does not contain synonym: " + synonymString);
-            return qpbackend::ARG(qpbackend::ArgType::INVALID_ARG, "");
+            return qpbackend::ARG(qpbackend::ArgType::INVALID_ARG, synonymString);
         }
         qpbackend::EntityType entityType = iterator->second;
-        qpbackend::ArgType argType = qpbackend::INVALID_ARG;
         switch (entityType) {
         case qpbackend::IF:
         case qpbackend::ASSIGN:
@@ -206,6 +217,8 @@ class State {
         case qpbackend::PROCEDURE: {
             return { qpbackend::PROC_SYNONYM, synonymString };
         }
+        case qpbackend::INVALID_ENTITY_TYPE:
+            return { qpbackend::INVALID_ARG, synonymString };
         }
     }
 
@@ -215,6 +228,7 @@ class State {
     void addSynonymToQueryDeclarationMap(qpbackend::EntityType entityType, const TOKEN& token) {
         throwIfTokenDoesNotHaveExpectedTokenType(backend::lexer::TokenType::NAME, token);
         if (query.declarationMap.find(token.nameValue) != query.declarationMap.end()) {
+            query.declarationMap[token.nameValue] = qpbackend::INVALID_ENTITY_TYPE;
             throw std::runtime_error(kQppErrorPrefix + "State::addSynonymToQueryDeclarationMap: Synonym " +
                                      token.nameValue + " has already been declared.");
         }
@@ -261,6 +275,9 @@ class State {
         case qpbackend::PROCEDURE:
             returnType = qpbackend::PROC_PROC_NAME;
             break;
+        case qpbackend::INVALID_ENTITY_TYPE:
+            returnType = qpbackend::INVALID_RETURN_TYPE;
+            break;
         }
 
         query.returnCandidates.emplace_back(returnType, token.nameValue);
@@ -270,6 +287,21 @@ class State {
         query.suchThatClauses.emplace_back(relationType, arg1, arg2);
     }
 
+    void addAssignPatternClause(qpbackend::ClauseType patternType,
+                                const qpbackend::ARG& assignmentSynonym,
+                                const qpbackend::ARG& variableName,
+                                const std::string& expressionSpec) {
+        // Validate assignmentSynonym
+        qpbackend::ARG synToAdd = assignmentSynonym;
+        if (query.declarationMap.find(assignmentSynonym.second) == query.declarationMap.end() ||
+            query.declarationMap.at(assignmentSynonym.second) != qpbackend::ASSIGN) {
+            synToAdd = { qpbackend::INVALID_ARG, assignmentSynonym.second };
+        }
+
+        addPatternClause(patternType, synToAdd, variableName, expressionSpec);
+    }
+
+
     void addPatternClause(qpbackend::ClauseType patternType,
                           const qpbackend::ARG& assignmentSynonym,
                           const qpbackend::ARG& variableName,
@@ -277,11 +309,12 @@ class State {
         query.patternClauses.emplace_back(patternType, assignmentSynonym, variableName, expressionSpec);
     }
 
+
     void setReturnValueToBoolean() {
-        // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/335): If declaration map is invalid,
-        //  set an invalid boolean.
         query.returnCandidates = { { qpbackend::ReturnType::BOOLEAN, "BOOLEAN" } };
     }
+
+
 }; // namespace querypreprocessor
 
 // Parser / Business logic methods
@@ -290,6 +323,7 @@ class State {
  * select-cl : declaration* ‘Select’ synonym ([ suchthat-cl ] | [ pattern-cl ])*
  */
 State parseSelect(State state) {
+    // If parseDeclaration fails due to re-declaration, an error should be thrown.
     state = parseDeclarations(state);
     logLine(kQppLogInfoPrefix + "parseSelect: Query state after parsing declaration*" +
             state.getQuery().toString());
@@ -307,7 +341,12 @@ State parseSelect(State state) {
 
     bool isQueryValid;
     std::tie(state, isQueryValid) = parseResultClause(state);
-    if (!isQueryValid) {
+    // Sanity semantic check for invalid declaration map.
+    if (state.hasInvalidQueryDeclarationMap() || !isQueryValid) {
+        // Received instructions from TA team to redefine handling redeclaration semantic error.
+        // Instead of writing False to the results, nothing will be written.
+        // Effectively `assign a, a; Select BOOLEAN` should result in '' being projected to the
+        // autotester.
         return {};
     }
     return parseFilteringClauses(state);
@@ -774,7 +813,7 @@ STATE_ARG_RESULT_STATUS_TRIPLE parseEntRef(State state) {
     switch (firstToken.type) {
     case backend::lexer::NAME: {
         qpbackend::ARG arg = state.getArgFromSynonymString(firstToken.nameValue);
-        return STATE_ARG_RESULT_STATUS_TRIPLE(state, arg, arg.first != qpbackend::INVALID_ARG);
+        return STATE_ARG_RESULT_STATUS_TRIPLE(state, arg, true);
     }
     case backend::lexer::UNDERSCORE: {
         return STATE_ARG_RESULT_STATUS_TRIPLE(state, qpbackend::ARG(qpbackend::ArgType::WILDCARD, "_"), true);
@@ -853,7 +892,7 @@ STATESTATUSPAIR parseSinglePatternClause(State state) {
 
     TOKEN synAssignToken = state.popUntilNonWhitespaceToken();
     state.popIfCurrentTokenIsWhitespaceToken();
-    if (!isSynAssignToken(synAssignToken, state) || !state.hasTokensLeftToParse()) {
+    if (synAssignToken.type != backend::lexer::NAME || !state.hasTokensLeftToParse()) {
         return STATESTATUSPAIR(state, false);
     }
 
@@ -879,9 +918,9 @@ STATESTATUSPAIR parseSinglePatternClause(State state) {
     }
 
     // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/272):
-    // Modify State::addPatternClause to take in an ARG rather than value strings.
-    state.addPatternClause(clauseType, state.getArgFromSynonymString(synAssignToken.nameValue),
-                           entRefArg, expressionSpec);
+    // Modify State::addAssignPatternClause to take in an ARG rather than value strings.
+    state.addAssignPatternClause(clauseType, state.getArgFromSynonymString(synAssignToken.nameValue),
+                                 entRefArg, expressionSpec);
     state.popIfCurrentTokenIsWhitespaceToken();
     logLine(kQppLogInfoPrefix + "parseSinglePatternClause: Success End");
     return STATESTATUSPAIR(state, true);

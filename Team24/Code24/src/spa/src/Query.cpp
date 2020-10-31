@@ -12,11 +12,17 @@
 namespace qpbackend {
 
 const std::map<std::string, EntityType> kEntityStringToTypeMap = {
-    { "stmt", EntityType::STMT },         { "read", EntityType::READ },
-    { "print", EntityType::PRINT },       { "call", EntityType::CALL },
-    { "while", EntityType::WHILE },       { "if", EntityType::IF },
-    { "assign", EntityType::ASSIGN },     { "variable", EntityType::VARIABLE },
-    { "constant", EntityType::CONSTANT }, { "procedure", EntityType::PROCEDURE },
+    { "stmt", EntityType::STMT },
+    { "read", EntityType::READ },
+    { "print", EntityType::PRINT },
+    { "call", EntityType::CALL },
+    { "while", EntityType::WHILE },
+    { "if", EntityType::IF },
+    { "assign", EntityType::ASSIGN },
+    { "variable", EntityType::VARIABLE },
+    { "constant", EntityType::CONSTANT },
+    { "procedure", EntityType::PROCEDURE },
+    { "INVALID ENTITY TYPE", EntityType::INVALID_ENTITY_TYPE },
 };
 
 const std::vector<std::pair<std::string, ClauseType>> kRelationClauseStringClauseTypePairs = {
@@ -101,9 +107,9 @@ std::string Query::toString() const {
         stringstream << "{" << kv.first << ", " << stringFromEntityType(kv.second) << "} ";
     }
 
-    stringstream << "\nSynonyms to return:";
+    stringstream << "\nReturn candidates to return:";
     for (const auto& returnCandidate : returnCandidates) {
-        stringstream << returnCandidate.second + " ";
+        stringstream << prettyReturnCandidate(returnCandidate) + " ";
     }
 
     stringstream << "\nSuch that clauses: ";
@@ -113,7 +119,7 @@ std::string Query::toString() const {
     for (const RELATIONTUPLE& suchThatClause : suchThatClauses) {
         std::tie(relationType, arg1, arg2) = suchThatClause;
         stringstream << "{" << stringFromRelationType(relationType) << ", " << prettyPrintArg(arg1)
-                     << ", " << prettyPrintArg(arg1) << "} ";
+                     << ", " << prettyPrintArg(arg2) << "} ";
     }
 
     stringstream << "\nPattern clauses: ";

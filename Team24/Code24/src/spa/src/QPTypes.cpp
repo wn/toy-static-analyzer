@@ -5,6 +5,80 @@
 #include <string>
 
 namespace qpbackend {
+std::string prettyReturnCandidate(const RETURN_CANDIDATE& returnCandidate) {
+    std::string prettyString = "< ";
+    switch (returnCandidate.first) {
+    case PROC_PROC_NAME: {
+        prettyString += "PROC_PROC_NAME";
+        break;
+    }
+    case CALL_PROC_NAME: {
+        prettyString += "CALL_PROC_NAME";
+        break;
+    }
+    case VAR_VAR_NAME: {
+        prettyString += "VAR_VAR_NAME";
+        break;
+    }
+    case READ_VAR_NAME: {
+        prettyString += "READ_VAR_NAME";
+        break;
+    }
+    case PRINT_VAR_NAME: {
+        prettyString += "PRINT_VAR_NAME";
+        break;
+    }
+    case CONSTANT_VALUE: {
+        prettyString += "CONSTANT_VALUE";
+        break;
+    }
+    case STMT_STMT_NO: {
+        prettyString += "STMT_STMT_NO";
+        break;
+    }
+    case READ_STMT_NO: {
+        prettyString += "READ_STMT_NO";
+        break;
+    }
+    case PRINT_STMT_NO: {
+        prettyString += "PRINT_STMT_NO";
+        break;
+    }
+    case CALL_STMT_NO: {
+        prettyString += "CALL_STMT_NO";
+        break;
+    }
+    case WHILE_STMT_NO: {
+        prettyString += "WHILE_STMT_NO";
+        break;
+    }
+    case IF_STMT_NO: {
+        prettyString += "IF_STMT_NO";
+        break;
+    }
+    case ASSIGN_STMT_NO: {
+        prettyString += "ASSIGN_STMT_NO";
+        break;
+    }
+    case PROG_LINE: {
+        prettyString += "PROG_LINE";
+        break;
+    }
+    case BOOLEAN: {
+        prettyString += "BOOLEAN";
+        break;
+    }
+    case INVALID_RETURN_TYPE: {
+        prettyString += "INVALID_RETURN_TYPE";
+        break;
+    }
+    }
+    prettyString += ", ";
+    prettyString += returnCandidate.second;
+    prettyString += " >";
+    return prettyString;
+}
+
 std::string prettyPrintArgType(ArgType argType) {
     switch (argType) {
     case STMT_SYNONYM:

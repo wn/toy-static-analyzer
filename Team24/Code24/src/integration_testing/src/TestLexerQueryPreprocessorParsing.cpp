@@ -20,7 +20,6 @@ void requireParsingInvalidQPLQueryToReturnEmptyQuery(const std::string& s) {
     REQUIRE(qpbackend::Query() == querypreprocessor::parseTokens(lexerTokens));
 }
 
-
 // select-cl : declaration ‘Select’ synonym
 
 TEST_CASE("Test selects clause without pattern or such that clause") {
@@ -755,6 +754,32 @@ TEST_CASE("Test basic pattern clause") {
     REQUIRE(expectedQuery == actualQuery);
 }
 
+TEST_CASE("Test pattern non syn-assign used as syn-assign success (Leave this to QE to handle)") {
+    std::stringstream queryString =
+    std::stringstream("variable a; while w; Select a pattern a (w, _)");
+    qpbackend::Query expectedQuery = qpbackend::Query(
+    { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::VARIABLE } }, { "a" }, {},
+    { { qpbackend::ASSIGN_PATTERN_WILDCARD, { qpbackend::INVALID_ARG, "a" }, { qpbackend::STMT_SYNONYM, "w" }, "_" } });
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test pattern non variable used as variable success (Leave this to QE to handle)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a pattern a (w, _)");
+    qpbackend::Query expectedQuery = qpbackend::Query(
+    { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } }, { "a" }, {},
+    { { qpbackend::ASSIGN_PATTERN_WILDCARD, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::STMT_SYNONYM, "w" }, "_" } });
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
 // Note that QPP now validates to see if synonyms are declared before hand.
 TEST_CASE("Test basic pattern synonym clause") {
     std::stringstream queryString =
@@ -1121,10 +1146,6 @@ TEST_CASE("Test Modifies first argument '_' failure") {
     requireParsingInvalidQPLQueryToReturnEmptyQuery("variable v; Select v such that Modifies(_,v)");
 }
 
-TEST_CASE("Test non syn-assign used as syn-assign failure") {
-    requireParsingInvalidQPLQueryToReturnEmptyQuery("variable v; Select v pattern v (_,_)");
-}
-
 TEST_CASE("Test undeclared synonym with BOOLEAN synonym declaration") {
     requireParsingInvalidQPLQueryToReturnEmptyQuery("variable BOOLEAN; Select BOOLEAN, v");
     requireParsingInvalidQPLQueryToReturnEmptyQuery("variable BOOLEAN; Select v, BOOLEAN");
@@ -1133,6 +1154,50 @@ TEST_CASE("Test undeclared synonym with BOOLEAN synonym declaration") {
 TEST_CASE("Test undeclared synonym without declaration statement") {
     requireParsingInvalidQPLQueryToReturnEmptyQuery("Select v");
 }
+
+// Test select BOOLEAN Redeclaration error
+
+TEST_CASE("Test selects clause BOOLEAN synonym redeclaration") {
+    requireParsingInvalidQPLQueryToReturnEmptyQuery("variable v,v; Select BOOLEAN");
+}
+
+TEST_CASE("Test selects clause BOOLEAN synonym named BOOLEAN redeclaration") {
+    requireParsingInvalidQPLQueryToReturnEmptyQuery("assign BOOLEAN,BOOLEAN; Select BOOLEAN");
+    requireParsingInvalidQPLQueryToReturnEmptyQuery("assign v,v,BOOLEAN; Select BOOLEAN");
+}
+
+TEST_CASE("Test selects clause BOOLEAN synonym named lowercasee boolean redeclaration") {
+    requireParsingInvalidQPLQueryToReturnEmptyQuery("assign boolean, boolean; Select BOOLEAN");
+}
+
+// Test select BOOLEAN undeclared synonym error
+
+TEST_CASE("Test selects clause BOOLEAN uses undeclared synonym such that") {
+    std::stringstream queryString =
+    std::stringstream("procedure v; Select BOOLEAN such that Uses(v,s)");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "v", qpbackend::EntityType::PROCEDURE } }, { { qpbackend::BOOLEAN, "BOOLEAN" } },
+                     { { qpbackend::USES, { qpbackend::PROC_SYNONYM, "v" }, { qpbackend::INVALID_ARG, "s" } } },
+                     {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test selects clause BOOLEAN uses undeclared synonym pattern") {
+    std::stringstream queryString = std::stringstream("assign a; Select BOOLEAN pattern a (s, _)");
+    qpbackend::Query expectedQuery = qpbackend::Query(
+    { { "a", qpbackend::EntityType::ASSIGN } }, { { qpbackend::BOOLEAN, "BOOLEAN" } }, {},
+    { { qpbackend::ASSIGN_PATTERN_WILDCARD, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::INVALID_ARG, "s" }, "_" } });
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
 
 // Test syntax error detection
 

@@ -10,7 +10,19 @@
 
 namespace qpbackend {
 
-enum EntityType { STMT, READ, PRINT, CALL, WHILE, IF, ASSIGN, VARIABLE, CONSTANT, PROCEDURE };
+enum EntityType {
+    STMT,
+    READ,
+    PRINT,
+    CALL,
+    WHILE,
+    IF,
+    ASSIGN,
+    VARIABLE,
+    CONSTANT,
+    PROCEDURE,
+    INVALID_ENTITY_TYPE
+};
 
 enum ClauseType {
     // Relation Types
@@ -101,6 +113,8 @@ typedef std::pair<ReturnType, std::string /*synonymName*/> RETURN_CANDIDATE;
 typedef std::vector<RETURN_CANDIDATE> RETURN_CANDIDATE_LIST;
 // Legacy typedefs
 typedef std::tuple<std::string /* pattern synonym */, std::string /* var */, std::string /* expression spec */> LEGACY_PATTERN_TUPLE;
+
+std::string prettyReturnCandidate(const RETURN_CANDIDATE& returnCandidate);
 
 std::string prettyPrintArg(const ARG& arg);
 std::string prettyPrintArgType(ArgType argType);
