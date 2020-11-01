@@ -1,0 +1,90 @@
+1 - (Valid Query) ModifiesS between Synonym and IDENT
+stmt s;
+Select s such that Modifies(s, "count")
+2, 7, 9, 11
+5000
+2 - (Valid Query) ModifiesP between Synonym and IDENT
+procedure p;
+Select p such that Modifies(p, "x")
+main, Second
+5000
+3 - (Valid Query) ModifiesS between Synonym (if) and Synonym
+if ifs; variable v;
+Select v such that Modifies(ifs, v)
+b, d, e
+5000
+4 - (Valid Query) ModifiesS between Synonym (while) and Synonym
+while w; variable v;
+Select v such that Modifies(w, v)
+k, count, a, y, x, b, d, e
+5000
+5 - (Valid Query) ModifiesS between Synonym (read) and Synonym
+read r; variable v;
+Select v such that Modifies(r, v)
+k
+5000
+6 - (Valid Query) ModifiesS between Synonym (call) and Synonym
+call c; variable v;
+Select v such that Modifies(c, v)
+count, x, k, y, F, N, dummy, b, d, e, a
+5000
+7 - (Valid Query) ModifiesS between Synonym and Wildcard
+read r;
+Select r such that Modifies(r, _)
+10
+5000
+8 - (Valid Query) ModifiesS between Integer and Synonym
+variable v;
+Select v such that Modifies(12, v)
+a
+5000
+9 - (Valid Query) ModifiesS between Integer and Synonym
+variable v;
+Select v such that Modifies(10, v)
+k
+5000
+10 - (Valid Query) ModifiesS between Integer and Synonym
+variable v;
+Select v such that Modifies(2, v)
+count, x, k, a, y, F, b, d, e, dummy, N
+5000
+11 - (Valid Query) ModifiesS between Integer and Synonym
+variable v, v2, v3;
+Select v3 such that Modifies(2, v)
+coco, dummy, N, F, count, x, a, y, b, d, e, c, f, k
+5000
+12 - (Valid Query) ModifiesS between Integer and Wildcard
+call c;
+Select c such that Modifies(13, _)
+2, 8
+5000
+13 - (Valid Query) ModifiesS between Integer and IDENT
+call c;
+Select c such that Modifies(13, "y")
+2, 8
+5000
+14 - (Valid Query) ModifiesP between IDENT and Synonym
+variable v; while w; if ifs;
+Select v such that Modifies("Second", v)
+count, k, a, x, b, d, e, y, N, F, dummy
+5000
+15 - (Valid Query) ModifiesP between IDENT and Wildcard
+read r;
+Select r such that Modifies("main", _)
+10
+5000
+16 - (Valid Query) ModifiesP between IDENT and IDENT
+read r;
+Select r such that Modifies("First", "N")
+10
+5000
+17 - (Valid Query) Synonym name same as Modifies relation
+stmt Modifies; variable v;
+Select Modifies such that Modifies(Modifies, v)
+1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
+5000
+18 - (Valid Query) Synonym name same as design entity
+stmt stmt; variable variable;
+Select stmt such that Modifies(stmt, variable)
+1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18
+5000

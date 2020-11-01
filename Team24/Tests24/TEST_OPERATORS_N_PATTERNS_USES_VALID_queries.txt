@@ -1,0 +1,85 @@
+1 - (Valid Query) UsesS, Synonym and IDENT
+stmt s;
+Select s such that Uses(s, "count")
+2, 9, 11, 15
+5000
+2 - (Valid Query) UsesS, Synonym and IDENT
+if ifs;
+Select ifs such that Uses(ifs, "count")
+15
+5000
+3 - (Valid Query) UsesS, Synonym and IDENT
+call c;
+Select c such that Uses(c, "F")
+2, 8
+5000
+4 - (Valid Query) UsesS, Synonym and IDENT
+print pn;
+Select pn such that Uses(pn, "F")
+6
+5000
+5 - (Valid Query) UsesS, Synonym and IDENT
+stmt s;
+Select s such that Uses(s, "dummy")
+2, 3, 5, 8
+5000
+6 - (Valid Query) UsesS, Synonym and IDENT
+while w;
+Select w such that Uses(w, "count")
+9
+5000
+7 - (Valid Query) UsesS, Synonym and IDENT
+assign a;
+Select a such that Uses(a, "b")
+13, 14, 16
+5000
+8 - (Valid Query) UsesS, Synonym and Synonym
+variable v;
+Select v such that Uses(12, v)
+F, a
+5000
+9 - (Valid Query) UsesS, Synonym and Synonym
+print pn; variable v;
+Select v such that Uses(pn, v)
+F, a, x
+5000
+10 - (Valid Query) UsesS, Synonym and Synonym
+assign a; variable v;
+Select a such that Uses(a, v)
+3, 5, 11, 12, 13, 14, 16, 17, 18
+5000
+11 - (Valid Query) UsesS, Synonym and Synonym
+assign a; variable v;
+Select v such that Uses(a, v)
+dummy, N, coco, count, a, F, b, y, c, f
+5000
+12 - (Valid Query) UsesS, Synonym and Wildcard
+stmt s;
+Select s such that Uses(s, _)
+2, 3, 5, 6, 8, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+5000
+13 - (Valid Query) UsesS, Integer and Synonym
+variable v; 
+Select v such that Uses(9, v)
+x, count, a, F, b, coco, y, c, f
+5000
+14 - (Valid Query) UsesS, Integer and Wildcard
+read r;
+Select r such that Uses(12, _)
+10
+5000
+15 - (Valid Query) UsesP, Synonym and IDENT
+procedure p;
+Select p such that Uses(p, "dummy")
+main, Second, First
+5000
+16 - (Valid Query) UsesP, IDENT and IDENT
+stmt s;
+Select s such that Uses("main", "coco")
+1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+5000
+17 - (Valid Query) UsesP, Synonym and Wildcard
+procedure p;
+Select p such that Uses(p, _)
+main, First, Second
+5000

@@ -1,0 +1,30 @@
+procedure main {
+  coco = 5;
+  call Second;
+}
+procedure First {
+    dummy = dummy + 1;
+    N = 17; 
+    F = N % dummy + (coco - dummy) * (1);
+    print F; 
+}
+
+procedure Second {
+    count = 10; 
+    call First;
+    while ((x > 0) && (count != 0)) {
+	read k;
+        count = count - 1;
+        a = (a - 1) * 5 / (2 * F);
+        y = (F / 2 + (a + b) * coco) * 1;
+        x = y * y - b * y * (y + b);
+        if (count % 2 == 0) then { 
+            b = b + 1 / 2; 
+            d = c + 1;
+        } else {
+            e = f + 2;
+	    print a;
+        }
+        print x; 
+    }
+}

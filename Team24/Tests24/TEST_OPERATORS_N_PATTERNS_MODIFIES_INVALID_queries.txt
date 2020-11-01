@@ -1,0 +1,45 @@
+1 - (Invalid Query) Print Stmt Modifies Variable
+variable v; print pn;
+Select v such that Modifies(pn, v)
+none
+5000
+2 - (Invalid Query) Invalid Design Entity Order
+variable v; stmt s;
+Select s such that Modifies(v, s)
+none
+5000
+3 - (Invalid Query) Invalid Design Entity in 2nd Arg
+assign a; stmt s;
+Select s such that Modifies(s, a)
+none
+5000
+4 - (Invalid Query) ModifiesS Invalid Design Entity in 2nd Arg
+stmt s;
+Select s such that Modifies(s, 10)
+none
+5000
+5 - (Invalid Query) Modifies with Wildcard and Synonym
+variable v;
+Select v such that Modifies(_, v)
+none
+5000
+6 - (Invalid Query) Modifies with Wildcard and Wildcard
+stmt s;
+Select s such that Modifies(_, _)
+none
+5000
+7 - (Invalid Query) Modifies with Wildcard and IDENT
+variable v; call c;
+Select c such that Modifies(_, "f")
+none
+5000
+8 - (Invalid Query) ModifiesP but with Variable IDENT
+stmt s; variable v;
+Select s such that Modifies("dummy", v)
+none
+5000
+9 - (Invalid Query) Uniqueness of declared synonyms
+stmt stmt; variable stmt;
+Select stmt such that Modifies(stmt, stmt)
+none
+5000

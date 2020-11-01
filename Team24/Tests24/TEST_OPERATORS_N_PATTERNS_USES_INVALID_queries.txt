@@ -1,0 +1,70 @@
+1 - (Invalid Query) UsesS or UsesP Wildcard and Wildcard
+stmt s;
+Select s such that Uses(_, _)
+none
+5000
+2 - (Invalid Query) UsesS or UsesP Wildcard and Synonym
+stmt s; variable v;
+Select s such that Uses(_, v)
+none
+5000
+3 - (Invalid Query) UsesS or UsesP Wildcard and IDENT
+stmt s; variable v;
+Select s such that Uses(_, "coco")
+none
+5000
+4 - (Invalid Query) Uses with Incorrect Design Entity
+stmt s; variable v, v1;
+Select s such that Uses(v, v1)
+none
+5000
+5 - (Invalid Query) Uses with Incorrect Design Entity
+constant c; variable v;
+Select c such that Uses(c, v)
+none
+5000
+6 - (Invalid Query) UsesS with Synonym and Integer
+stmt s;
+Select s such that Uses(s, 12)
+none
+5000
+7 - (Invalid Query) UsesS with Integer and Integer
+stmt s;
+Select s such that Uses(12, 16)
+none
+5000
+8 - (Invalid Query) Invalid Uses Design Entity Type
+stmt s;
+Select s such that Uses(1, s)
+none
+5000
+9 - (Invalid Query) Invalid Uses Design Entity Type
+procedure p;
+Select p such that Uses(1, p)
+none
+5000
+10 - (Invalid Query) Missing Synonym
+variable v; stmt s;
+Select such that Uses(1, v)
+none
+5000
+11 - (Invalid Query) Wrong Order of Select Clause
+stmt s;
+such that Uses(s, "x") Select s
+none
+5000
+12 - (Invalid Query) Missing Design Abstraction
+variable v;
+Select v such that
+none
+5000
+13 - (Invalid Query) Select clause not spelt properly
+stmt s; variable v;
+select s such that (s, v)
+none
+5000
+14 - (Invalid Query) Two synonyms with same name
+stmt s; variable s;
+select s such that Uses(s, v)
+none
+5000

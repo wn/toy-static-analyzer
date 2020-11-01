@@ -1,0 +1,50 @@
+1 - Select statements
+stmt s;
+Select s
+1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20
+5000
+2 - Select variable names
+variable v;
+Select v
+coco, dummy, N, F, count, x, a, y, b, c, d, e, f, k
+5000
+3 - Select procedure names
+procedure p;
+Select p
+main, First, Second
+5000
+4 - Select read statements
+read r;
+Select r
+10
+5000
+5 - Select print statements
+print pn;
+Select pn
+6, 19, 20
+5000
+6 - Select assign statements
+assign a;
+Select a
+1, 3, 4, 5, 7, 11, 12, 13, 14, 16, 17, 18
+5000
+7 - Select call statements
+call c;
+Select c
+2, 8
+5000
+8 - Select while statements
+while w;
+Select w
+9
+5000
+9 - Select if statements
+if ifs;
+Select ifs
+15
+5000
+10 - Select constant values
+constant c;
+Select c
+0, 1, 2, 5, 10, 17
+5000

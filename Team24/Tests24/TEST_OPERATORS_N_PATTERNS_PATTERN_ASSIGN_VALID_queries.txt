@@ -1,0 +1,140 @@
+1 - (Valid Query) Synonym and Exact Match Pattern
+assign a; variable v;
+Select v pattern a(v, "c+1")
+d
+5000
+2 - (Valid Query) IDENT and Exact Match Pattern
+assign a;
+Select a pattern a("a", "(a - 1) * 5 / (2 * F)")
+12
+5000
+3 - (Valid Query) Wildcard and Exact Match Pattern
+assign a;
+Select a pattern a(_, "(a - 1) * 5 / (2 * F)")
+12
+5000
+4 - (Valid Query) Synonym and Subexpression Match Pattern
+assign a; variable v;
+Select a pattern a(v, _"1"_)
+3, 5, 11, 12, 13, 16, 17
+5000
+5 - (Valid Query) IDENT and Subexpression Match Pattern
+assign a; variable v;
+Select a pattern a(v, _"dummy"_)
+3, 5
+5000
+6 - (Valid Query) Wildcard and Subexpression Match Pattern
+assign a;
+Select a pattern a(_, _"y * (y + b)"_)
+none
+5000
+7 - (Valid Query) Wildcard and Subexpression Match Pattern
+assign a;
+Select a pattern a(_, _"b * y * (y + b)"_)
+14
+5000
+8 - (Valid Query) Wildcard and Subexpression Match Pattern
+assign a;
+Select a pattern a(_, _"y * y - b"_)
+none
+5000
+9 - (Valid Query) Wildcard and Subexpression Match Pattern
+assign newa;
+Select newa pattern newa(_, _"a+b"_)
+13
+5000
+10 - (Valid Query) Wildcard and Subexpression Match Pattern
+assign a;
+Select a pattern a(_, _"(a+b)"_)
+13
+5000
+11 - (Valid Query) IDENT and Subexpression Match Pattern
+assign a;
+Select a pattern a("b", _"1"_)
+16
+5000
+12 - (Valid Query) Synonym and Wildcard Pattern
+assign a; variable v;
+Select v pattern a(v, _)
+coco, dummy, N, F, count, a, y, x, b, d, e
+5000
+13 - (Valid Query) IDENT and Wildcard Pattern
+assign a;
+Select a pattern a("count", _)
+7, 11
+5000
+14 - (Valid Query) Wildcard and Wildcard Pattern
+assign a;
+Select a pattern a(_, _)
+1, 3, 4, 5, 7, 11, 12, 13, 14, 16, 17, 18
+5000
+15 - (Valid Query) Pattern and Follows
+assign a; stmt s;
+Select s such that Follows(s, a) pattern a(_, _"1"_)
+4, 10, 11, 12, 16
+5000
+16 - (Valid Query) Pattern and Follows
+assign a;
+Select a pattern a("count", _) such that Follows(_, a)
+11
+5000
+17 - (Valid Query) Pattern and Follows*
+assign a; if ifs;
+Select a pattern a(_, _"b"_) such that Follows*(a, ifs)
+13, 14
+5000
+18 - (Valid Query) Pattern and Parent
+assign a; while w; variable v;
+Select a such that Parent(w, a) pattern a(v, _"1"_)
+11, 12, 13
+5000
+19 - (Valid Query) Pattern and Parent*
+assign a; stmt s;
+Select s such that Parent*(s, a) pattern a("b", _"1"_)
+9, 15
+5000
+20 - (Valid Query) Pattern and Parents*
+assign a; while w; variable v;
+Select v such that Parent*(w, a) pattern a(v, _"1"_)
+count, a, y, b, d
+5000
+21 - (Valid Query) Pattern and Uses
+assign a; variable v;
+Select a pattern a(v, _) such that Uses(a, v)
+3, 11, 12, 16
+5000
+22 - (Valid Query) Pattern and Uses
+assign a; variable v;
+Select v such that Uses("Second", v) pattern a(v, _"1"_)
+count, a, y, b, dummy, F
+5000
+23 - (Valid Query) Pattern and Uses
+assign a; stmt s; variable v;
+Select v such that Uses(s, v) pattern a(v, _"2"_)
+a, y, b
+5000
+24 - (Valid Query) Pattern and Uses
+assign a; stmt s; variable v;
+Select s such that Uses(s, v) pattern a(v, _"2"_)
+2, 9, 12, 13, 14, 15, 16, 19
+5000
+25 - (Valid Query) Pattern and Modifies
+assign a; variable v;
+Select a such that Modifies(a, v) pattern a(v, _)
+1, 3, 4, 5, 7, 11, 12, 13, 14, 16, 17, 18
+5000
+26 - (Valid Query) Pattern and Modifies
+assign a; variable v; stmt s;
+Select s such that Modifies(s, v) pattern a(v, _"1"_)
+2, 3, 5, 7, 8, 9, 11, 12, 13, 15, 16, 17
+5000
+27 - (Valid Query) Pattern and Modifies
+assign a; variable v;
+Select v pattern a(v, _"1"_) such that Modifies("First", v)
+dummy, F
+5000
+28 - (Valid Query) White Space In Subexpression Pattern Match
+assign a; variable v; stmt s;
+Select a pattern a(v, _"a                  + b"_)
+13
+5000

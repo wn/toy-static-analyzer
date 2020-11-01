@@ -1,0 +1,40 @@
+1 - (Invalid Query) Incorrect Pattern Entity
+assign a; variable v; read r;
+Select v pattern r(v, "c+1")
+none
+5000
+2 - (Invalid Query) Incorrect Pattern Entity
+assign a; variable v; stmt s;
+Select v pattern s(v, "c+1")
+none
+5000
+3 - (Invalid Query) Procedure IDENT and Exact Pattern Match
+assign a; variable v; stmt s;
+Select v pattern a("Second", "c+1")
+none
+5000
+4 - (Invalid Query) Malformed Pattern Match Syntax
+assign a; variable v; stmt s;
+Select v pattern a(v, b + 1 / 2)
+none
+5000
+5 - (Invalid Query) Malformed Pattern Match Syntax
+assign a; variable v; stmt s;
+Select v pattern a(v, __"y - b"__)
+none
+5000
+6 - (Invalid Query) Malformed Pattern Match Syntax
+assign a; variable v; stmt s;
+Select v patterna(v, _"1"_)
+none
+5000
+7 - (Invalid Query) Malformed Pattern Match Syntax
+assign a; variable v; stmt s;
+Select v pattern a(v, 'c+1')
+none
+5000
+8 - (Invalid Query) Malformed Pattern Match Syntax Wildcard
+assign a; variable v; stmt s;
+Select v pattern a(v, _"_"_)
+none
+5000
