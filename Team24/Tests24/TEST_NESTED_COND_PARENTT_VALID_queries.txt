@@ -1,0 +1,80 @@
+1 - (Valid Query) Test self relation
+stmt s;
+Select s such that Parent*(s, s)
+none
+5000
+2 - (Valid Query) Parent* between Synonym (while) and Synonym
+assign a; while w;
+Select w such that Parent*(w, a)
+8, 25, 27, 33
+5000
+3 - (Valid Query) Parent* between Synonym (while) and Synonym
+while w; call c;
+Select c such that Parent*(w, c)
+11
+5000
+4 - (Valid Query) Parent* between Synonym (if) and Synonym
+stmt s; if ifs;
+Select s such that Parent*(ifs, s)
+8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37
+5000
+5 - (Valid Query) Parent* between Synonym and Integer
+stmt s;
+Select s such that Parent*(s, 29)
+25, 26, 27
+5000
+6 - (Valid Query) Parent* between Synonym and Wildcard
+stmt s;
+Select s such that Parent*(s, _)
+7, 8, 9, 25, 26, 27, 33
+5000
+7 - (Valid Query) Parent* between Integer and Synonym
+stmt s;
+Select s such that Parent*(24, s)
+none
+5000
+8 - (Valid Query) Parent* between Integer and Synonym
+stmt s;
+Select s such that Parent*(25, s)
+26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37
+5000
+9 - (Valid Query) Parent* between Integer and Integer
+stmt s;
+Select s such that Parent*(26, 32)
+1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37
+5000
+10 - (Valid Query) Parent* between Integer and Wildcard
+call c;
+Select c such that Parent*(7, _)
+3, 4, 11
+5000
+11 - (Valid Query) Parent* between Wildcard and Synonym
+stmt s; while w; if ifs; assign a;
+Select a such that Parent*(_, a)
+10, 13, 14, 28, 30, 31, 34, 36
+5000
+12 - (Valid Query) Parent* between Wildcard and Integer
+stmt s; while w; if ifs; assign a; call c;
+Select c such that Parent*(_, 15)
+3, 4, 11
+5000
+13 - (Valid Query) Parent* between Wildcard and Wildcard
+print pn;
+Select pn such that Parent*(_, _)
+12, 15, 17, 21, 22, 23, 29, 32, 35, 37
+5000
+14 - (Valid Query) Synonym name same as design entity
+stmt stmt;
+Select stmt such that Parent*(25, stmt)
+26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37
+5000
+15 - (Valid Query) Synonym name same as Select clause
+stmt Select;
+Select Select such that Parent*(25, Select)
+26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37
+5000
+16 - (Valid Query) Synonym name same as Select clause
+stmt Select;
+Select Select such that Parent*(25, Select)
+26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37
+5000

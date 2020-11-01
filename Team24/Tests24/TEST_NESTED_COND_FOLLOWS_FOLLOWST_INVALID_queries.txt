@@ -1,0 +1,35 @@
+1 - (Invalid Query) Follows with non-stmt type
+variable v; stmt s;
+Select s such that Follows(s, v)
+none
+5000
+2 - (Invalid Query) Follows with non-stmt type
+constant c; stmt s;
+Select s such that Follows(s, c)
+none
+5000
+3 - (Invalid Query) Follows with non-stmt type
+procedure p; stmt s;
+Select s such that Follows(p, s)
+none
+5000
+4 - (Invalid Query) Follows* with non-stmt type
+stmt s; procedure p, p1;
+Select s such that Follows*(p1, p)
+none
+5000
+5 - (Invalid Query) Follows with non-stmt type
+stmt s; constant c, c1;
+Select s such that Follows(c1, c)
+none
+5000
+6 - (Invalid Query) Follows with EntRef
+stmt s;
+Select s such that Follows(s, "dummy")
+none
+5000
+7 - (Invalid Query) Additional spelling in Follows relation
+stmt s;
+Select s such that Followss(5, 6)
+none
+5000

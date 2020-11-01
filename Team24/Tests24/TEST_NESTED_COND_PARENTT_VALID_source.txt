@@ -1,0 +1,51 @@
+procedure main {
+  H2O = 0;
+  naMeWiThDiGiTS85 = 3;
+  call Dipsy; call PO;}
+
+procedure Dipsy {
+    dummy = dummy + 1;
+    x = 5;
+    if (1 != 1) then {while (x != 0) {      
+            if (dummy > 0) then {
+                x = x + dummy;
+                call lala;
+                print x;
+                dummy = dummy + x; 
+            } else {
+                x = x - 1; 
+                print x; 
+            }
+        }
+        read a;
+    } else {
+        print dummy;
+    }
+}
+
+procedure lala {
+    read special; read mango; read tree;
+    print special;
+    print 
+    mango;
+    print                   tree; 
+}
+
+procedure PO {
+    count = 11;
+    while ((!(count - dummy <= 5)) && (count != 0)) {
+        if (count >= 6) then {
+            while (!((naMeWiThDiGiTS85 > 0) || (count < 0))) {
+                naMeWiThDiGiTS85 = naMeWiThDiGiTS85 - 1;
+                print naMeWiThDiGiTS85;
+            }
+            count = count - 1;
+        } else {
+            H2O = H2O + 1;
+            print naMeWiThDiGiTS85;
+            while (H2O != 0) {
+                a = a + 1;
+                print a;
+                H2O = H2O - 1;
+                print H2O;
+            }}}}

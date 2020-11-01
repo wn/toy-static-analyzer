@@ -1,0 +1,75 @@
+1 - (Valid Query) Test Self Relation
+stmt s;
+Select s such that Follows*(s, s)
+none
+5000
+2 - (Valid Query) Follows* between Synonyms
+stmt s, s1;
+Select s such that Follows*(s, s1)
+1, 2, 3, 5, 6, 8, 10, 11, 12, 14, 18, 19, 20, 21, 22, 24, 27, 28, 31, 32, 34, 35, 36
+5000
+3 - (Valid Query) Follows* between Synonyms
+print pt; stmt s;
+Select s such that Follows*(s, pt)
+10, 11, 14, 18, 19, 20, 21, 22, 28, 31, 34, 35, 36
+5000
+4 - (Valid Query) Follows* between Synonyms
+read rd; print pt; stmt s;
+Select s such that Follows*(pt, rd)
+none
+5000
+5 - (Valid Query) Follows* between Synonyms
+while w; read r; call c;
+Select w such that Follows*(w, c)
+none
+5000
+6 - (Valid Query) Follows* between Synonym and Wildcard
+call c;
+Select c such that Follows*(c, _)
+3, 11
+5000
+7 - (Valid Query) Follows* between Synonym and Integer
+call c;
+Select c such that Follows*(c, 12)
+11
+5000
+8 - (Valid Query) Follows* between Wildcard and Synonym
+call c;
+Select c such that Follows*(_, c)
+3, 4, 11
+5000
+9 - (Valid Query) Follows* between Integer and Synonym
+print pt;
+Select pt such that Follows*(30, pt)
+none
+5000
+10 - (Valid Query) Follows* between Integer and Wildcard
+call cl; stmt s;
+Select cl such that Follows*(16, _)
+none
+5000
+11 - (Valid Query) Follows* between Wildcard and Integer
+call cl; stmt s;
+Select cl such that Follows*(_, 16)
+3, 4, 11
+5000
+12 - (Valid Query) Follows* between Integer and Integer
+call cl; stmt s;
+Select cl such that Follows*(10, 13)
+3, 4, 11
+5000
+13 - (Valid Query) Follows* between Wildcard and Wildcard
+assign a;
+Select a such that Follows*(_, _)
+1, 2, 5, 6, 10, 13, 14, 24, 28, 30, 31, 34, 36
+5000
+14 - (Valid Query) Follows* with Pattern
+assign a; if ifs; variable v;
+Select v such that Follows*(a, ifs) pattern a(v, _"1"_)
+dummy
+5000
+15 - (Valid Query) Follows* with Pattern
+assign a; call cl; variable v;
+Select v such that Follows*(a, cl) pattern a(v, _)
+H2O, naMeWiThDiGiTS85, x
+5000

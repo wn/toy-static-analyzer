@@ -1,0 +1,65 @@
+1 - (Valid Query) Follows between Synonyms
+stmt s; while w;
+Select s such that Follows(s, w)
+24, 32
+5000
+2 - (Valid Query) Follows between Synonyms
+call cl; assign a;
+Select cl such that Follows(a, cl)
+3, 11
+5000
+3 - (Valid Query) Follows between Synonym and Integer
+stmt s;
+Select s such that Follows(s, 16)
+8
+5000
+4 - (Valid Query) Follows between Integer and Synonym
+print pn;
+Select pn such that Follows(20, pn)
+21
+5000
+5 - (Valid Query) Follows between Integers
+constant c;
+Select c such that Follows(8, 16)
+0, 3, 5, 1, 11, 6
+5000
+6 - (Valid Query) Follows between Synonym and Wildcard
+read rd;
+Select rd such that Follows(rd, _)
+18, 19, 20
+5000
+7 - (Valid Query) Follows between Wildcard and Synonym
+print pn;
+Select pn such that Follows(_, pn)
+12, 15, 21, 22, 23, 29, 32, 35, 37
+5000
+8 - (Valid Query) Follows between Wildcard and Integer
+call cl; stmt s;
+Select cl such that Follows(_, 16)
+3, 4, 11
+5000
+9 - (Valid Query) Follows between Integer and Wildcard
+stmt s;
+Select s such that Follows(17, _)
+none
+5000
+10 - (Valid Query) Follows with Pattern
+assign a; while w;
+Select a such that Follows(w, a) pattern a(_, _"1"_)
+30
+5000
+11 - (Valid Query) Follows between Synonyms, Reverse Order
+print pt; call cl; assign a
+Select pt such that Follows(cl, a)
+none
+5000
+12 - (Valid Query) Follows between Integers, Reverse Order
+constant c;
+Select c such that Follows(16, 8)
+none
+5000
+13 - (Valid Query) Follows between Integers, Cross Procedure
+stmt s;
+Select s such that Follows(4, 5)
+none
+5000

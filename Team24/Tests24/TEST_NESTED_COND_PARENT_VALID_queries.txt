@@ -1,0 +1,70 @@
+1 - (Invalid Query) Test self relation
+stmt s;
+Select s such that Parent(s, s)
+none
+5000
+1 - (Valid Query) Parent between Integer and Synonym
+stmt s;
+Select s such that Parent(3, s)
+none
+5000
+2 - (Valid Query) Parent between Synonym and Integer
+stmt s;
+Select s such that Parent(s, 3)
+none
+5000
+3 - (Valid Query) Parent between Integer and Synonym
+stmt s;
+Select s such that Parent(7, s)
+8, 16, 17
+5000
+4 - (Valid Query) Parent between Integer and Synonym
+stmt s;
+Select s such that Parent(9, s)
+10, 11, 12, 13, 14, 15
+5000
+5 - (Valid Query) Parent between Synonym and Wildcard
+stmt s;
+Select s such that Parent(s, _)
+7, 8, 9, 25, 26, 27, 33
+5000
+6 - (Valid Query) Wildcard and Wildcard
+stmt s;
+Select s such that Parent(_, _)
+1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37
+5000
+7 - (Valid Query) Parent between Wildcard and Synonym
+stmt s;
+Select s such that Parent(_, s)
+8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37
+5000
+8 - (Valid Query) Parent between Wildcard and Integer
+read r;
+Select r such that Parent(_, 3)
+none
+5000
+9 - (Valid Query) Parent between Integer and Wildcard
+read r;
+Select r such that Parent(7, _)
+16, 18, 19, 20
+5000
+10 - (Valid Query) Parent between Integer and Synonym
+variable v; stmt s;
+Select v such that Parent(27, s)
+H2O, naMeWiThDiGiTS85, dummy, x, a, special, mango, tree, count 
+5000
+11 - (Valid Query) Parent between Synonym and Synonym
+assign a; while w;
+Select w such that Parent(w, a)
+27, 33
+5000
+12 - (Valid Query) Integer and Integer
+read r;
+Select r such that Parent(9, 10)
+16, 18, 19, 20
+5000
+13 - (Valid Query) Integer and Integer
+read r;
+Select r such that Parent(9, 10)
+16, 18, 19, 20
+5000

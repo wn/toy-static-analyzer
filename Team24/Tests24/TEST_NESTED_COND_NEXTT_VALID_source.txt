@@ -1,17 +1,20 @@
 procedure main {
 	read x;
 	read y;
-	if (y == 7) then {
-		while (x != 2) {
-			while (y <= x) {
-				print y;
-				while (y != 2) {
-					y = y + 1;
+	a = 1;
+	while (a < 10) {
+		if (y == 7) then {
+			while (x != 2) {
+				while (y <= x) {
+					print y;
+					while (y != 2) {
+						y = y + 1;
+					}
 				}
 			}
-		}
-	} else {
-		x = y;
+		} else {
+			x = y;
+		}		
 	}
 	call Proc1;
 }

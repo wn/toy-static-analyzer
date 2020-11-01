@@ -1,0 +1,50 @@
+1 - (Invalid Query) Parent with IDENT and Synonym
+variable v;
+Select v such that Parent("s", v)
+none
+5000
+2 - (Invalid Query) Parent with Synonym and IDENT
+stmt s;
+Select v such that Parent(s, "abc")
+none
+5000
+3 - (Invalid Query) Procedure Synonym Invalid Design Entity Type
+stmt s; procedure p, p1;
+Select s such that Parent(p1, s)
+none
+5000
+4 - (Invalid Query) Constant Synonym Invalid Design Entity Type
+stmt s; constant c, c1;
+Select s such that Parent(c1, c)
+none
+5000
+5 - (Invalid Query) Variable Synonym Invalid Design Entity Type
+stmt s; variable v;
+Select s such that Parent(s, v)
+none
+5000
+6 - (Invalid Query) Parent* with Non-Container Stmt
+assign a; read r;
+Select r such that Parent*(r, a)
+none
+5000
+7 - (Invalid Query) Parent* with Non-Container Stmt
+assign a; call c;
+Select c such that Parent*(c, a)
+none
+5000
+8 - (Invalid Query) Missing such that clause
+stmt s;
+Select s Parent*(25, s)
+none
+5000
+9 - (Invalid Query) Additional spelling in Parent relation
+stmt s;
+Select s such that Parents(9, 10)
+none
+5000
+10 - (Invalid Query) Missing syntax in declaration
+stmt s
+Select s such that Parent(w, s)
+none
+5000
