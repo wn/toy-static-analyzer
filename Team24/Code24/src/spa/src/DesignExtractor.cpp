@@ -647,7 +647,7 @@ getNextBipRelationship(const std::unordered_map<int, std::unordered_set<int>>& n
     for (auto& p : nextRelationship) {
         std::unordered_set<NextBipEdge> edges;
         for (auto& s : p.second) {
-            edges.insert(NextBipEdge(s));
+            edges.insert(NextBipEdge(p.first, s));
         }
         nextBipRelationship[p.first] = edges;
     }
@@ -675,7 +675,7 @@ getNextBipRelationship(const std::unordered_map<int, std::unordered_set<int>>& n
         getTerminatingLinesOfProcedure(procedureNode, nextRelationship, tNodeToStatementNumberOriginal);
 
         for (PROGRAM_LINE terminatingLine : terminatingLinesOfProcedure) {
-            nextBipRelationship[terminatingLine].insert(NextBipEdge(endNodeStatementNumber));
+            nextBipRelationship[terminatingLine].insert(NextBipEdge(terminatingLine, endNodeStatementNumber));
         }
     }
 
@@ -696,19 +696,36 @@ getNextBipRelationship(const std::unordered_map<int, std::unordered_set<int>>& n
         PROGRAM_LINE nextProgramLine = callStatementNextBipEdges.begin()->nextLine;
 
         // Add an outgoing edge to the called proc, with the current line number as the label
-        callStatementNextBipEdges.insert(NextBipEdge(firstStatementOfProcedure, callProgramLine));
+        callStatementNextBipEdges.insert(NextBipEdge(callProgramLine, firstStatementOfProcedure, callProgramLine));
 
         // Add a BranchBack edge from the end-node of the called procedure to the next line that
         // should be executed.
         PROGRAM_LINE calledProcedureEndNode = procedureToEndNode[calledProcedure];
-        nextBipRelationship[calledProcedureEndNode].insert(NextBipEdge(nextProgramLine, callProgramLine));
+        nextBipRelationship[calledProcedureEndNode].insert(
+        NextBipEdge(calledProcedureEndNode, nextProgramLine, callProgramLine));
 
         // Remove the original edge from the call statement line -> next line.
         // This edge was added by Next, but it should not be preserved by NextBip
-        callStatementNextBipEdges.erase(NextBipEdge(nextProgramLine));
+        callStatementNextBipEdges.erase(NextBipEdge(callProgramLine, nextProgramLine));
     }
 
     return { nextBipRelationship, std::move(createdEndNodes) };
+}
+
+std::unordered_map<PROGRAM_LINE, std::unordered_set<NextBipEdge>>
+getPreviousBipRelationship(const std::unordered_map<PROGRAM_LINE, std::unordered_set<NextBipEdge>>& nextBipRelationship) {
+    std::unordered_map<PROGRAM_LINE, std::unordered_set<NextBipEdge>> previousBipRelationship;
+    for (const auto& p : nextBipRelationship) {
+        previousBipRelationship[p.first] = {};
+    }
+    for (const auto& p : nextBipRelationship) {
+        for (const NextBipEdge& edge : p.second) {
+            PROGRAM_LINE from = edge.prevLine;
+            PROGRAM_LINE to = edge.nextLine;
+            previousBipRelationship[to].insert(edge.reversed());
+        }
+    }
+    return previousBipRelationship;
 }
 
 /**

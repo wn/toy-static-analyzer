@@ -85,13 +85,19 @@ getNextRelationship(const std::unordered_map<TNodeType, std::vector<const TNode*
 // links two procedures back and forth.
 class NextBipEdge {
   public:
-    NextBipEdge(PROGRAM_LINE nextLine, PROGRAM_LINE label = 0) : nextLine(nextLine), label(label) {
+    NextBipEdge(PROGRAM_LINE prevLine, PROGRAM_LINE nextLine, PROGRAM_LINE label = 0)
+    : prevLine(prevLine), nextLine(nextLine), label(label) {
     }
+    PROGRAM_LINE prevLine;
     PROGRAM_LINE nextLine;
     PROGRAM_LINE label;
 
     bool operator==(const NextBipEdge& other) const {
-        return nextLine == other.nextLine && label == other.label;
+        return prevLine == other.prevLine && nextLine == other.nextLine && label == other.label;
+    }
+
+    NextBipEdge reversed() const {
+        return { nextLine, prevLine, label };
     }
 };
 
@@ -105,6 +111,9 @@ std::pair<std::unordered_map<PROGRAM_LINE, std::unordered_set<NextBipEdge>>, std
 getNextBipRelationship(const std::unordered_map<int, std::unordered_set<int>>& nextRelationship,
                        const std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNode,
                        const std::unordered_map<const TNode*, int>& tNodeToStatementNumber);
+
+std::unordered_map<PROGRAM_LINE, std::unordered_set<NextBipEdge>>
+getPreviousBipRelationship(const std::unordered_map<PROGRAM_LINE, std::unordered_set<NextBipEdge>>& nextBipRelationship);
 
 /**
  * Get mapping of the possible statements that goes to a statement.
@@ -136,7 +145,7 @@ getAffectedMapping(std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> af
 namespace std {
 template <> struct ::std::hash<backend::extractor::NextBipEdge> {
     std::size_t operator()(backend::extractor::NextBipEdge const& s) const noexcept {
-        return s.nextLine ^ (s.label << 1);
+        return (s.nextLine ^ (s.prevLine << 1)) ^ (s.label << 1);
     }
 };
 } // namespace std
