@@ -1,0 +1,30 @@
+1 - (Valid Query) Return values unconstrained
+read rd; print pt; assign a; variable v;
+Select <rd, pt> such that Uses(a,v) pattern a(_,_)
+2 4, 2 5, 3 4, 3 5, 2 11, 3 11
+5000
+2 - (Valid Query) Return values constrained independently
+read rd; print pt; stmt s1,s2;
+Select <s1, rd> such that Follows(rd, pt) such that Parent(s1,s2)
+8 3, 10 3, 13 3
+5000
+3 - (Valid Query) Return values constrained independently
+stmt s; while w; call c;
+Select <s, c> such that Parent(w, c) such that Next*(s,s)
+8 9, 9 9, 10 9, 11 9, 12 9
+5000
+4 - (Valid Query) Return values constrained together directly
+assign a; variable v;
+Select <a, v> such that Modifies(a,v) pattern a(_,"a+b")
+7 b
+5000
+5 - (Valid Query) Return values constrained together indirectly
+stmt s1, s2, s3;
+Select <s1, s3> such that Parent(s1, s2) such that Next(s2,s3)
+8 10, 8 11, 8 12, 10 8
+5000
+6 - (Valid Query) Three return values, 1 constrained independently, 2 indirectly
+stmt s1, s2, s3; assign a;
+Select <s1, s3, a> such that Parent(s1, s2) such that Next(s2,s3) such that Modifies(a, "b")
+8 10 7, 8 11 7, 8 12 7, 10 8 7, 8 10 14, 8 11 14, 8 12 14, 10 8 14
+5000

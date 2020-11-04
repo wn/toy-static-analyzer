@@ -1,0 +1,27 @@
+procedure proc1 {
+	call proc2;
+	read a;
+	read b;
+	print a;
+	print b;
+	a = 1;
+	b = a + b;
+	while (a == 1) {
+		call proc2;
+		if (a > b) then {
+			print b;
+		} else {
+			call proc2;
+		}
+	}
+
+	if (a < b) then {
+		b = b + 1;
+	} else {
+		call proc2;
+	}
+}
+
+procedure proc2 {
+	a = 1;
+}
