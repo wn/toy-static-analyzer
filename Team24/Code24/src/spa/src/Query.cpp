@@ -124,14 +124,8 @@ std::string Query::toString() const {
     }
 
     stringstream << "\nPattern clauses: ";
-    ClauseType clauseType;
-    ARG clauseSynonym;
-    ARG variable;
-    std::string expressionSpec;
     for (const CLAUSE& patternClause : patternClauses) {
-        std::tie(clauseType, clauseSynonym, variable, expressionSpec) = patternClause;
-        stringstream << "{" << prettyPrintArg(clauseSynonym) << ", " << prettyPrintArg(variable)
-                     << ", " << expressionSpec << '>' << "} ";
+        stringstream << prettyPrintCLAUSE(patternClause);
     }
 
     stringstream << "\n}";

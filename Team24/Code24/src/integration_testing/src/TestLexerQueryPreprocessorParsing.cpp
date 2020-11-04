@@ -857,6 +857,49 @@ TEST_CASE("Test multiple such that clauses.") {
     REQUIRE(expectedQuery == actualQuery);
 }
 
+// Test while patterns clause
+
+TEST_CASE("Test basic while pattern clause") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select w pattern w (\"v\", _)");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "w" },
+        {},
+        { { qpbackend::WHILE_PATTERN, { qpbackend::STMT_SYNONYM, "w" }, { qpbackend::NAME_ENTITY, "v" }, "_" } }
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+
+TEST_CASE("Test while pattern clause wild cards") {
+    std::stringstream queryString = std::stringstream("while w; Select w pattern w (_, _)");
+    qpbackend::Query expectedQuery = qpbackend::Query(
+    { { "w", qpbackend::EntityType::WHILE } }, { "w" }, {},
+    { { qpbackend::WHILE_PATTERN, { qpbackend::STMT_SYNONYM, "w" }, { qpbackend::WILDCARD, "_" }, "_" } });
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test semantically invalid pattern clause syn-while (UNDERSCORE, EXPRESSION_SPEC)") {
+    std::stringstream queryString = std::stringstream("while w; Select w pattern w (_, \"a+b\")");
+    qpbackend::Query expectedQuery = qpbackend::Query(
+    { { "w", qpbackend::EntityType::WHILE } }, { "w" }, {},
+    { { qpbackend::INVALID_CLAUSE_TYPE, { qpbackend::INVALID_ARG, "w" }, { qpbackend::WILDCARD, "_" }, "a+b" } });
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
 // Test patterns clause
 
 TEST_CASE("Test basic pattern clause") {
@@ -880,7 +923,7 @@ TEST_CASE("Test pattern non syn-assign used as syn-assign success (Leave this to
     std::stringstream("variable a; while w; Select a pattern a (w, _)");
     qpbackend::Query expectedQuery = qpbackend::Query(
     { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::VARIABLE } }, { "a" }, {},
-    { { qpbackend::ASSIGN_PATTERN_WILDCARD, { qpbackend::INVALID_ARG, "a" }, { qpbackend::STMT_SYNONYM, "w" }, "_" } });
+    { { qpbackend::INVALID_CLAUSE_TYPE, { qpbackend::INVALID_ARG, "a" }, { qpbackend::STMT_SYNONYM, "w" }, "_" } });
 
     std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
