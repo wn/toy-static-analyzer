@@ -53,6 +53,7 @@ bool isStmtRefOrLineRefToken(const TOKEN& token);
 STATE_ARG_RESULT_STATUS_TRIPLE parseEntRef(State state);
 // Declarations for patten clauses
 STATESTATUSPAIR parseSinglePatternClause(State state);
+STATESTATUSPAIR parseSingleIfPatternClause(State state);
 STATE_STRING_RESULT_CLAUSE_TYPE_STATUS_QUADRUPLE parseExpressionSpec(State state, const TOKEN& synToken);
 bool isSynAssignToken(const TOKEN& token, State& state);
 
@@ -320,8 +321,12 @@ class State {
             addPatternClauseUnchecked(patternType, synonym, variableName, expressionSpec);
             return;
         }
-        case qpbackend::IF_PATTERN: // TODO
-            break;
+        case qpbackend::IF_PATTERN:
+            if (query.declarationMap.at(synonym.second) != qpbackend::IF || expressionSpec != "_") {
+                break;
+            }
+            addPatternClauseUnchecked(patternType, synonym, variableName, expressionSpec);
+            return;
         case qpbackend::WHILE_PATTERN:
             if (query.declarationMap.at(synonym.second) != qpbackend::WHILE || expressionSpec != "_") {
                 break;
@@ -342,9 +347,9 @@ class State {
         case qpbackend::AFFECTST:
         case qpbackend::WITH:
         case qpbackend::INVALID_CLAUSE_TYPE:
-            addPatternClauseUnchecked(patternType, invalidSyn, variableName, expressionSpec);
-            return;
+            break;
         }
+        addPatternClauseUnchecked(patternType, invalidSyn, variableName, expressionSpec);
     }
 
 
@@ -567,7 +572,9 @@ State parseFilteringClauses(State state) {
     State tempState = state;
     bool isParseSuchThatValid = true;
     bool isParsePatternValid = true;
-    while (state.hasTokensLeftToParse() && (isParseSuchThatValid || isParsePatternValid)) {
+    bool isParsePatternExtendedValid = true;
+    while (state.hasTokensLeftToParse() &&
+           (isParseSuchThatValid || isParsePatternValid || isParsePatternExtendedValid)) {
         std::tie(tempState, isParseSuchThatValid) = parseSingleSuchThatClause(state);
         if (isParseSuchThatValid) {
             state = tempState;
@@ -576,9 +583,14 @@ State parseFilteringClauses(State state) {
         if (isParsePatternValid) {
             state = tempState;
         }
+
+        std::tie(tempState, isParsePatternExtendedValid) = parseSingleIfPatternClause(state);
+        if (isParsePatternExtendedValid) {
+            state = tempState;
+        }
         state.popToNextNonWhitespaceToken();
     }
-    if (!isParsePatternValid && !isParseSuchThatValid) {
+    if (!isParsePatternValid && !isParseSuchThatValid && !isParsePatternExtendedValid) {
         throw std::runtime_error(kQppErrorPrefix + "parseFilteringClauses: Unable to parse such that or pattern clauses\n" +
                                  state.getQuery().toString());
     }
@@ -943,6 +955,76 @@ STATE_ARG_RESULT_STATUS_TRIPLE parseEntRef(State state) {
     }
     return STATE_ARG_RESULT_STATUS_TRIPLE(state, qpbackend::ARG(qpbackend::NAME_ENTITY, identToken.nameValue), true);
 }
+
+/**
+ * if : syn-if ‘(’ entRef ‘,’ ‘_’ ‘,’ ‘_’ ‘)’
+ * Semantic: // syn-if must be of type ‘if’
+ * @param state
+ * @return
+ */
+STATESTATUSPAIR parseSingleIfPatternClause(State state) {
+    state.popToNextNonWhitespaceToken();
+    if (!state.hasTokensLeftToParse()) return STATESTATUSPAIR(state, false);
+    // Mutable vars
+    bool isValidState;
+    qpbackend::ClauseType clauseType;
+    qpbackend::ARG entRefArg;
+    std::string expressionSpec;
+    // state is also mutable
+    logLine(kQppLogInfoPrefix + "parseSingleIfPatternClause: Begin");
+    TOKEN patternToken = state.popUntilNonWhitespaceToken();
+    state.popIfCurrentTokenIsWhitespaceToken();
+    if (patternToken.type != backend::lexer::NAME || patternToken.nameValue != kPatternKeyword ||
+        !state.hasTokensLeftToParse()) {
+        return STATESTATUSPAIR(state, false);
+    }
+
+    TOKEN synIfToken = state.popUntilNonWhitespaceToken();
+    state.popIfCurrentTokenIsWhitespaceToken();
+    if (synIfToken.type != backend::lexer::NAME || !state.hasTokensLeftToParse()) {
+        return STATESTATUSPAIR(state, false);
+    }
+
+    TOKEN lParenToken = state.popUntilNonWhitespaceToken();
+    if (lParenToken.type != backend::lexer::LPAREN || !state.hasTokensLeftToParse()) {
+        return STATESTATUSPAIR(state, false);
+    }
+
+    std::tie(state, entRefArg, isValidState) = parseEntRef(state);
+    if (!isValidState) return STATESTATUSPAIR(state, false);
+
+    TOKEN firstCommaToken = state.popUntilNonWhitespaceToken();
+    if (firstCommaToken.type != backend::lexer::COMMA || !state.hasTokensLeftToParse()) {
+        return STATESTATUSPAIR(state, false);
+    }
+
+    TOKEN firstUnderscoreToken = state.popUntilNonWhitespaceToken();
+    if (firstUnderscoreToken.type != backend::lexer::UNDERSCORE || !state.hasTokensLeftToParse()) {
+        return STATESTATUSPAIR(state, false);
+    }
+
+    TOKEN secondCommaToken = state.popUntilNonWhitespaceToken();
+    if (secondCommaToken.type != backend::lexer::COMMA || !state.hasTokensLeftToParse()) {
+        return STATESTATUSPAIR(state, false);
+    }
+
+    TOKEN secondUnderscoreToken = state.popUntilNonWhitespaceToken();
+    if (secondUnderscoreToken.type != backend::lexer::UNDERSCORE || !state.hasTokensLeftToParse()) {
+        return STATESTATUSPAIR(state, false);
+    }
+
+    TOKEN rParenToken = state.popUntilNonWhitespaceToken();
+    if (rParenToken.type != backend::lexer::RPAREN) {
+        return STATESTATUSPAIR(state, false);
+    }
+
+    state.addPatternClause(qpbackend::IF_PATTERN,
+                           state.getArgFromSynonymString(synIfToken.nameValue), entRefArg, "_");
+    state.popIfCurrentTokenIsWhitespaceToken();
+    logLine(kQppLogInfoPrefix + "parseSinglePatternIfClause: Success End");
+    return STATESTATUSPAIR(state, true);
+}
+
 
 /**
  * pattern-cl : ‘pattern’ (assign | while)

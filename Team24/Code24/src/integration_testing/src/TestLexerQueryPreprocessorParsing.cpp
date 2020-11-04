@@ -857,6 +857,51 @@ TEST_CASE("Test multiple such that clauses.") {
     REQUIRE(expectedQuery == actualQuery);
 }
 
+// Test if patterns clause
+
+TEST_CASE("Test basic if pattern clause") {
+    std::stringstream queryString =
+    std::stringstream("assign a; if ifs; Select ifs pattern ifs (\"v\", _, _)");
+    qpbackend::Query expectedQuery = {
+        { { "ifs", qpbackend::EntityType::IF }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "ifs" },
+        {},
+        { { qpbackend::IF_PATTERN, { qpbackend::STMT_SYNONYM, "ifs" }, { qpbackend::NAME_ENTITY, "v" }, "_" } }
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+
+TEST_CASE("Test if pattern clause wild cards") {
+    std::stringstream queryString = std::stringstream("if ifs; Select ifs pattern ifs (_, _, _)");
+    qpbackend::Query expectedQuery = qpbackend::Query(
+    { { "ifs", qpbackend::EntityType::IF } }, { "ifs" }, {},
+    { { qpbackend::IF_PATTERN, { qpbackend::STMT_SYNONYM, "ifs" }, { qpbackend::WILDCARD, "_" }, "_" } });
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test semantically invalid if pattern clause syn-if (UNDERSCORE, UNDERSCORE, "
+          "UNDERSCORE)") {
+    std::stringstream queryString = std::stringstream("while w; Select w pattern w (_, _, _)");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "w", qpbackend::EntityType::WHILE } }, { "w" }, {},
+                     { { qpbackend::IF_PATTERN, { qpbackend::INVALID_ARG, "w" }, { qpbackend::WILDCARD, "_" }, "_" } });
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+
 // Test while patterns clause
 
 TEST_CASE("Test basic while pattern clause") {
@@ -888,6 +933,8 @@ TEST_CASE("Test while pattern clause wild cards") {
     REQUIRE(expectedQuery == actualQuery);
 }
 
+// Semantically invalid because SYNONYM (UNDERSCORE, EXPRESSION_SPEC) is the underlying syntactic
+// rule.
 TEST_CASE("Test semantically invalid pattern clause syn-while (UNDERSCORE, EXPRESSION_SPEC)") {
     std::stringstream queryString = std::stringstream("while w; Select w pattern w (_, \"a+b\")");
     qpbackend::Query expectedQuery = qpbackend::Query(
@@ -1081,6 +1128,25 @@ TEST_CASE("Test multiple pattern clause") {
     { { "a", qpbackend::EntityType::ASSIGN } }, { "a" }, {},
     { { qpbackend::ASSIGN_PATTERN_SUB_EXPR, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::WILDCARD, "_" }, "x+s+Follows*38" },
       { qpbackend::ASSIGN_PATTERN_SUB_EXPR, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::WILDCARD, "_" }, "x+s+Follows*38" },
+      { qpbackend::ASSIGN_PATTERN_SUB_EXPR, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::WILDCARD, "_" }, "x+s+Follows*38" } });
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test multiple pattern clause types") {
+    std::stringstream queryString = std::stringstream(
+    "assign a; while w; if ifs; Select a pattern a (_, _\"x+s+Follows*38\"_) pattern w (_, "
+    "_) pattern ifs (_, _, _) pattern w (_, _) pattern a (_, _\"x+s+Follows*38\"_)     ");
+    qpbackend::Query expectedQuery = qpbackend::Query(
+    { { "a", qpbackend::EntityType::ASSIGN }, { "w", qpbackend::EntityType::WHILE }, { "ifs", qpbackend::EntityType::IF } },
+    { "a" }, {},
+    { { qpbackend::ASSIGN_PATTERN_SUB_EXPR, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::WILDCARD, "_" }, "x+s+Follows*38" },
+      { qpbackend::WHILE_PATTERN, { qpbackend::STMT_SYNONYM, "w" }, { qpbackend::WILDCARD, "_" }, "_" },
+      { qpbackend::IF_PATTERN, { qpbackend::STMT_SYNONYM, "ifs" }, { qpbackend::WILDCARD, "_" }, "_" },
+      { qpbackend::WHILE_PATTERN, { qpbackend::STMT_SYNONYM, "w" }, { qpbackend::WILDCARD, "_" }, "_" },
       { qpbackend::ASSIGN_PATTERN_SUB_EXPR, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::WILDCARD, "_" }, "x+s+Follows*38" } });
 
     std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
