@@ -193,6 +193,7 @@ void SingleQueryEvaluator::initializeCandidate(const backend::PKB* pkb,
             { PRINT, [pkb](STATEMENT_NUMBER x) { return pkb->isPrint(x); } },
             { READ, [pkb](STATEMENT_NUMBER x) { return pkb->isRead(x); } },
             { STMT, [pkb](STATEMENT_NUMBER x) { return true; } },
+            { PROG_LINE, [pkb](STATEMENT_NUMBER x) { return true; } },
             { WHILE, [pkb](STATEMENT_NUMBER x) { return pkb->isWhile(x); } },
         };
         if (entityTypeToUnaryPredictor.find(entityType) == entityTypeToUnaryPredictor.end()) {

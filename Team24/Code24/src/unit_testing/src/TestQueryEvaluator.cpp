@@ -1511,19 +1511,21 @@ TEST_CASE("Test getting attributes") {
     PKBMock pkb(3);
     queryevaluator::QueryEvaluator qe(&pkb);
 
-    Query query_proc_name = { { { "cl", CALL } }, { { CALL_PROC_NAME, "cl" } }, {}, {} };
+    Query query_proc_name = { { { "cl", CALL } }, { { PROC_NAME, "cl" } }, {}, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query_proc_name),
                                        { "computeCentroid", "printResults", "readPoint" }));
 
-    Query query_read_var = { { { "rd", READ } }, { { READ_VAR_NAME, "rd" } }, {}, {} };
+    Query query_read_var = { { { "rd", READ } }, { { VAR_NAME, "rd" } }, {}, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query_read_var), { "x", "y" }));
 
-    Query query_print_var = { { { "pt", PRINT } }, { { PRINT_VAR_NAME, "pt" } }, {}, {} };
+    Query query_print_var = { { { "pt", PRINT } }, { { VAR_NAME, "pt" } }, {}, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query_print_var), { "flag", "cenX", "cenY", "normSq" }));
 
     // test invalid attributes
-    Query query_invalid = { { { "rd", STMT } }, { { READ_VAR_NAME, "rd" } }, {}, {} };
-    REQUIRE(qe.evaluateQuery(query_invalid).empty());
+    Query query_invalid_1 = { { { "rd", STMT } }, { { VAR_NAME, "rd" } }, {}, {} };
+    REQUIRE(qe.evaluateQuery(query_invalid_1).empty());
+    Query query_invalid_2 = { { { "pl", PROG_LINE } }, { { STMT_NO, "pl" } }, {}, {} };
+    REQUIRE(qe.evaluateQuery(query_invalid_2).empty());
 }
 
 TEST_CASE("Test getting tuples as return values") {
@@ -1532,7 +1534,7 @@ TEST_CASE("Test getting tuples as return values") {
 
     // stmt s1; stmt s2; variable v; Select v, s1, s2 such that Parent(s2, s1) and Modifies(s1, v) and Uses(s1, v)
     Query query1 = { { { "s1", STMT }, { "s2", STMT }, { "v", VARIABLE } },
-                     { { VAR_VAR_NAME, "v" }, { STMT_STMT_NO, "s1" }, { STMT_STMT_NO, "s2" } },
+                     { "v", "s1", "s2" },
                      { { MODIFIES, { STMT_SYNONYM, "s1" }, { VAR_SYNONYM, "v" } },
                        { USES, { STMT_SYNONYM, "s1" }, { VAR_SYNONYM, "v" } },
                        { PARENT, { STMT_SYNONYM, "s2" }, { STMT_SYNONYM, "s1" } } },
@@ -1541,20 +1543,19 @@ TEST_CASE("Test getting tuples as return values") {
 
     // read rd; stmt s; assign a; variable v; Select rd.varName, s, a, v such that Parent*(s, a) pattern a(v, _"1"_)
     Query query2 = { { { "s", STMT }, { "a", ASSIGN }, { "v", VARIABLE }, { "rd", READ } },
-                     { { READ_VAR_NAME, "rd" }, { STMT_STMT_NO, "s" }, { ASSIGN_STMT_NO, "a" }, { VAR_VAR_NAME, "v" } },
+                     { { VAR_NAME, "rd" }, { DEFAULT_VAL, "s" }, { DEFAULT_VAL, "a" }, { DEFAULT_VAL, "v" } },
                      { { PARENTT, { STMT_SYNONYM, "s" }, { STMT_SYNONYM, "a" } } },
                      { { ASSIGN_PATTERN_SUB_EXPR, { STMT_SYNONYM, "a" }, { VAR_SYNONYM, "v" }, "1" } } };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query2),
                                        { "random 4 5 n", "random 7 9 a", "random 8 9 a" }));
 
     // duplicate synonyms
-    Query query4 = { { { "c", CONSTANT } }, { { CONSTANT_VALUE, "c" }, { CONSTANT_VALUE, "c" } }, {}, {} };
+    Query query4 = { { { "c", CONSTANT } }, { { DEFAULT_VAL, "c" }, { DEFAULT_VAL, "c" } }, {}, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query4), { "1 1", "2 2", "3 3" }));
     // duplicate synonyms
-    Query query5 = { { { "c", CONSTANT }, { "c1", CONSTANT } },
-                     { { CONSTANT_VALUE, "c" }, { CONSTANT_VALUE, "c1" } },
-                     {},
-                     {} };
+    Query query5 = {
+        { { "c", CONSTANT }, { "c1", CONSTANT } }, { { DEFAULT_VAL, "c" }, { DEFAULT_VAL, "c1" } }, {}, {}
+    };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query5), { "1 1", "1 2", "1 3", "2 1", "2 2",
                                                                    "2 3", "3 1", "3 2", "3 3" }));
 
@@ -1562,7 +1563,7 @@ TEST_CASE("Test getting tuples as return values") {
     PKBMock pkb2(3);
     queryevaluator::QueryEvaluator qe2(&pkb2);
     Query query3 = { { { "cl", CALL }, { "rd", READ } },
-                     { { CALL_STMT_NO, "cl" }, { CALL_PROC_NAME, "cl" }, { READ_STMT_NO, "rd" }, { READ_VAR_NAME, "rd" } },
+                     { { DEFAULT_VAL, "cl" }, { PROC_NAME, "cl" }, { DEFAULT_VAL, "rd" }, { VAR_NAME, "rd" } },
                      {},
                      {} };
     REQUIRE(checkIfVectorOfStringMatch(qe2.evaluateQuery(query3),

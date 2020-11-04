@@ -98,6 +98,18 @@ Query::Query(const std::unordered_map<std::string, EntityType>& declarationMap,
     this->patternClauses = patternClauses;
 }
 
+Query::Query(const DECLARATION_MAP& declarationMap,
+             const RETURN_CANDIDATE_LIST& returnCandidates,
+             const std::vector<RELATIONTUPLE>& suchThatClauses,
+             const CLAUSE_LIST& patternClauses,
+             const WITH_CLAUSE_LIST& withClauses) {
+    this->declarationMap = declarationMap;
+    this->returnCandidates = returnCandidates;
+    this->suchThatClauses = suchThatClauses;
+    this->patternClauses = patternClauses;
+    this->withClauses = withClauses;
+}
+
 // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/157):
 // Complete this implementation for better debugging.
 std::string Query::toString() const {
@@ -128,9 +140,15 @@ std::string Query::toString() const {
         stringstream << prettyPrintCLAUSE(patternClause);
     }
 
+    stringstream << "\nWith clauses: ";
+    for (const WITH_CLAUSE& withClause : withClauses) {
+        stringstream << "{" << prettyPrintWithClause(withClause) << "} ";
+    }
+
     stringstream << "\n}";
     return stringstream.str();
 }
+
 Query::Query(const DECLARATION_MAP& declarationMap,
              const std::vector<std::string>& returnCandidates,
              const std::vector<RELATIONTUPLE>& suchThatClauses,

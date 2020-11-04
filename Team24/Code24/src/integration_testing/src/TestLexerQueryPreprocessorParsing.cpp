@@ -77,7 +77,7 @@ TEST_CASE("Test selects clause BOOLEAN as synonym") {
     std::stringstream queryString = std::stringstream("variable BOOLEAN; Select BOOLEAN");
     qpbackend::Query expectedQuery =
     qpbackend::Query({ { "BOOLEAN", qpbackend::EntityType::VARIABLE } },
-                     { { qpbackend::ReturnType::VAR_VAR_NAME, "BOOLEAN" } }, {}, {});
+                     { { qpbackend::ReturnType::DEFAULT_VAL, "BOOLEAN" } }, {}, {});
 
     std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
@@ -133,7 +133,7 @@ TEST_CASE("Test selects clause TUPLE return type singular with <>") {
     { "a", qpbackend::EntityType::VARIABLE },
     },
     {
-    { qpbackend::ReturnType::VAR_VAR_NAME, "a" },
+    { qpbackend::ReturnType::DEFAULT_VAL, "a" },
     },
     {}, {});
 
@@ -148,9 +148,9 @@ TEST_CASE("Test selects clause TUPLE return type multiple") {
     qpbackend::Query expectedQuery = qpbackend::Query({ { "a", qpbackend::EntityType::VARIABLE },
                                                         { "b", qpbackend::EntityType::VARIABLE },
                                                         { "c", qpbackend::EntityType::VARIABLE } },
-                                                      { { qpbackend::ReturnType::VAR_VAR_NAME, "a" },
-                                                        { qpbackend::ReturnType::VAR_VAR_NAME, "b" },
-                                                        { qpbackend::ReturnType::VAR_VAR_NAME, "c" } },
+                                                      { { qpbackend::ReturnType::DEFAULT_VAL, "a" },
+                                                        { qpbackend::ReturnType::DEFAULT_VAL, "b" },
+                                                        { qpbackend::ReturnType::DEFAULT_VAL, "c" } },
                                                       {}, {});
 
     std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
@@ -165,9 +165,9 @@ TEST_CASE("Test selects clause TUPLE return type multiple duplicates") {
     {
     { "a", qpbackend::EntityType::VARIABLE },
     },
-    { { qpbackend::ReturnType::VAR_VAR_NAME, "a" },
-      { qpbackend::ReturnType::VAR_VAR_NAME, "a" },
-      { qpbackend::ReturnType::VAR_VAR_NAME, "a" } },
+    { { qpbackend::ReturnType::DEFAULT_VAL, "a" },
+      { qpbackend::ReturnType::DEFAULT_VAL, "a" },
+      { qpbackend::ReturnType::DEFAULT_VAL, "a" } },
     {}, {});
 
     std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);

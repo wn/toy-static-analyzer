@@ -21,6 +21,7 @@ enum EntityType {
     VARIABLE,
     CONSTANT,
     PROCEDURE,
+    PROG_LINE,
     INVALID_ENTITY_TYPE
 };
 
@@ -51,23 +52,12 @@ enum ClauseType {
 };
 
 enum ReturnType {
-    PROC_PROC_NAME,
-    CALL_PROC_NAME,
-    VAR_VAR_NAME,
-    READ_VAR_NAME,
-    PRINT_VAR_NAME,
-    CONSTANT_VALUE,
-    STMT_STMT_NO,
-    READ_STMT_NO,
-    PRINT_STMT_NO,
-    CALL_STMT_NO,
-    WHILE_STMT_NO,
-    IF_STMT_NO,
-    ASSIGN_STMT_NO,
-    // Implicit elem types
-    PROG_LINE, // prog_line pl; Select pl ...
+    DEFAULT_VAL,
+    PROC_NAME,
+    VAR_NAME,
+    STMT_NO,
+    CONST_VALUE,
     BOOLEAN, // `Select BOOLEAN`
-    INVALID_BOOLEAN_RETURN_TYPE,
     // Invalid return type, not accepted for evaluation
     INVALID_RETURN_TYPE
 };
@@ -112,17 +102,23 @@ typedef std::pair<ArgType, std::string /*argValue*/> ARG;
 typedef std::tuple<ClauseType, ARG, ARG> RELATIONTUPLE;
 typedef std::tuple<ClauseType, ARG, ARG, std::string /*expr*/> CLAUSE;
 typedef CLAUSE PATTERNTUPLE;
+typedef std::tuple<ArgType, ReturnType, std::string /*argValue*/> ATTR_ARG;
+typedef std::tuple<ATTR_ARG, ATTR_ARG> WITH_CLAUSE;
+typedef std::vector<WITH_CLAUSE> WITH_CLAUSE_LIST;
 typedef std::vector<CLAUSE> CLAUSE_LIST;
 typedef std::pair<ReturnType, std::string /*synonymName*/> RETURN_CANDIDATE;
 typedef std::vector<RETURN_CANDIDATE> RETURN_CANDIDATE_LIST;
 // Legacy typedefs
 typedef std::tuple<std::string /* pattern synonym */, std::string /* var */, std::string /* expression spec */> LEGACY_PATTERN_TUPLE;
 
+std::string prettyPrintReturnType(ReturnType returnType);
 std::string prettyReturnCandidate(const RETURN_CANDIDATE& returnCandidate);
 
 std::string prettyPrintArg(const ARG& arg);
+std::string prettyPrintAttrArg(const ATTR_ARG& attrArg);
 std::string prettyPrintArgType(ArgType argType);
 std::string prettyPrintClauseType(ClauseType t);
+std::string prettyPrintWithClause(const WITH_CLAUSE& withClause);
 std::string prettyPrintCLAUSE(const CLAUSE& clause);
 
 std::ostream& operator<<(std::ostream& os, const CLAUSE& value);

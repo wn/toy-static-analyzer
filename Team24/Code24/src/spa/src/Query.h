@@ -14,12 +14,19 @@ struct Query {
     RETURN_CANDIDATE_LIST returnCandidates;
     std::vector<RELATIONTUPLE> suchThatClauses;
     std::vector<PATTERNTUPLE> patternClauses;
+    std::vector<WITH_CLAUSE> withClauses;
 
-    explicit Query() : declarationMap(), returnCandidates(), suchThatClauses(), patternClauses(){};
+    explicit Query()
+    : declarationMap(), returnCandidates(), suchThatClauses(), patternClauses(), withClauses(){};
     Query(const DECLARATION_MAP& declarationMap,
           const RETURN_CANDIDATE_LIST& returnCandidates,
           const std::vector<RELATIONTUPLE>& suchThatClauses,
           const CLAUSE_LIST& patternClauses);
+    Query(const DECLARATION_MAP& declarationMap,
+          const RETURN_CANDIDATE_LIST& returnCandidates,
+          const std::vector<RELATIONTUPLE>& suchThatClauses,
+          const CLAUSE_LIST& patternClauses,
+          const WITH_CLAUSE_LIST& withClauses);
 
     // Legacy constructor, for backwards compatibility with existing tests.
     Query(const DECLARATION_MAP& declarationMap,

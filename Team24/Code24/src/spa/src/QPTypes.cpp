@@ -5,74 +5,35 @@
 #include <string>
 
 namespace qpbackend {
-std::string prettyReturnCandidate(const RETURN_CANDIDATE& returnCandidate) {
-    std::string prettyString = "< ";
-    switch (returnCandidate.first) {
-    case PROC_PROC_NAME: {
-        prettyString += "PROC_PROC_NAME";
-        break;
+std::string prettyPrintReturnType(ReturnType returnType) {
+    switch (returnType) {
+    case PROC_NAME: {
+        return "PROC_NAME";
     }
-    case CALL_PROC_NAME: {
-        prettyString += "CALL_PROC_NAME";
-        break;
+    case VAR_NAME: {
+        return "VAR_NAME";
     }
-    case VAR_VAR_NAME: {
-        prettyString += "VAR_VAR_NAME";
-        break;
+    case CONST_VALUE: {
+        return "CONST_VALUE";
     }
-    case READ_VAR_NAME: {
-        prettyString += "READ_VAR_NAME";
-        break;
+    case STMT_NO: {
+        return "STMT_NO";
     }
-    case PRINT_VAR_NAME: {
-        prettyString += "PRINT_VAR_NAME";
-        break;
-    }
-    case CONSTANT_VALUE: {
-        prettyString += "CONSTANT_VALUE";
-        break;
-    }
-    case STMT_STMT_NO: {
-        prettyString += "STMT_STMT_NO";
-        break;
-    }
-    case READ_STMT_NO: {
-        prettyString += "READ_STMT_NO";
-        break;
-    }
-    case PRINT_STMT_NO: {
-        prettyString += "PRINT_STMT_NO";
-        break;
-    }
-    case CALL_STMT_NO: {
-        prettyString += "CALL_STMT_NO";
-        break;
-    }
-    case WHILE_STMT_NO: {
-        prettyString += "WHILE_STMT_NO";
-        break;
-    }
-    case IF_STMT_NO: {
-        prettyString += "IF_STMT_NO";
-        break;
-    }
-    case ASSIGN_STMT_NO: {
-        prettyString += "ASSIGN_STMT_NO";
-        break;
-    }
-    case PROG_LINE: {
-        prettyString += "PROG_LINE";
-        break;
+    case DEFAULT_VAL: {
+        return "DEFAULT_VAL";
     }
     case BOOLEAN: {
-        prettyString += "BOOLEAN";
-        break;
+        return "BOOLEAN";
     }
     case INVALID_RETURN_TYPE: {
-        prettyString += "INVALID_RETURN_TYPE";
-        break;
+        return "INVALID_RETURN_TYPE";
     }
     }
+}
+
+std::string prettyReturnCandidate(const RETURN_CANDIDATE& returnCandidate) {
+    std::string prettyString = "< ";
+    prettyString += prettyPrintReturnType(returnCandidate.first);
     prettyString += ", ";
     prettyString += returnCandidate.second;
     prettyString += " >";
@@ -109,6 +70,13 @@ std::string prettyPrintArgType(ArgType argType) {
 std::string prettyPrintArg(const ARG& arg) {
     std::stringstream stringstream;
     stringstream << "<" << prettyPrintArgType(arg.first) << ", " << arg.second << '>';
+    return stringstream.str();
+}
+
+std::string prettyPrintAttrArg(const ATTR_ARG& attrArg) {
+    std::stringstream stringstream;
+    stringstream << "<" << prettyPrintArgType(std::get<0>(attrArg)) << ", "
+                 << prettyPrintReturnType(std::get<1>(attrArg)) << ", " << std::get<2>(attrArg) << '>';
     return stringstream.str();
 }
 
@@ -212,10 +180,16 @@ std::string prettyPrintClauseType(ClauseType t) {
         return "INVALID_CLAUSE_TYPE";
     };
 }
+
 std::string prettyPrintCLAUSE(const CLAUSE& clause) {
     std::string pattern = std::get<3>(clause);
     return prettyPrintClauseType(std::get<0>(clause)) + "(" + prettyPrintArg(std::get<1>(clause)) +
            ", " + prettyPrintArg(std::get<2>(clause)) + (pattern.empty() ? "" : ", " + pattern) + ")";
+}
+
+std::string prettyPrintWithClause(const WITH_CLAUSE& withClause) {
+    return "WITH: (" + prettyPrintAttrArg(std::get<0>(withClause)) + ", " +
+           prettyPrintAttrArg(std::get<1>(withClause)) + ")";
 }
 
 std::ostream& operator<<(std::ostream& os, const CLAUSE& value) {
