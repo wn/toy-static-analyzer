@@ -917,6 +917,8 @@ STATE_ARG_RESULT_STATUS_TRIPLE parseEntRef(State state) {
     case backend::lexer::MOD:
     case backend::lexer::INTEGER:
     case backend::lexer::WHITESPACE:
+    case backend::lexer::PERIOD:
+    case backend::lexer::HASH:
         break;
     }
 

@@ -34,6 +34,8 @@ enum TokenType {
     MULT,
     DIV,
     MOD,
+    PERIOD,
+    HASH,
 
     // Words, which have value in them.
     NAME,

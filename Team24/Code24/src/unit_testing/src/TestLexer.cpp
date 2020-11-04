@@ -285,3 +285,35 @@ TEST_CASE("Names and Integers can be immediately followed by other tokens") {
     std::vector<backend::lexer::Token> lexerTokens1 = backend::lexer::tokenizeWithWhitespace(query1);
     REQUIRE(prettyTypeStr(lexerTokens1) == expected1);
 }
+
+TEST_CASE("Test PERIOD") {
+    std::stringstream queryString = std::stringstream(". .. .");
+    std::stringstream queryStringCopy = std::stringstream(". .. .");
+
+    std::string expectedTokensWithWhitespace = "PERIOD WHITESPACE PERIOD PERIOD WHITESPACE PERIOD";
+    std::string expectedTokensWithoutWhitespace = "PERIOD PERIOD PERIOD PERIOD";
+
+    std::vector<backend::lexer::Token> tokensWithWhitespace =
+    backend::lexer::tokenizeWithWhitespace(queryString);
+    std::vector<backend::lexer::Token> tokensWithoutWhitespace = backend::lexer::tokenize(queryStringCopy);
+
+
+    REQUIRE(expectedTokensWithWhitespace == prettyTypeStr(tokensWithWhitespace));
+    REQUIRE(expectedTokensWithoutWhitespace == prettyTypeStr(tokensWithoutWhitespace));
+}
+
+TEST_CASE("Test HASH") {
+    std::stringstream queryString = std::stringstream("# ## #");
+    std::stringstream queryStringCopy = std::stringstream("# ## #");
+
+    std::string expectedTokensWithWhitespace = "HASH WHITESPACE HASH HASH WHITESPACE HASH";
+    std::string expectedTokensWithoutWhitespace = "HASH HASH HASH HASH";
+
+    std::vector<backend::lexer::Token> tokensWithWhitespace =
+    backend::lexer::tokenizeWithWhitespace(queryString);
+    std::vector<backend::lexer::Token> tokensWithoutWhitespace = backend::lexer::tokenize(queryStringCopy);
+
+
+    REQUIRE(expectedTokensWithWhitespace == prettyTypeStr(tokensWithWhitespace));
+    REQUIRE(expectedTokensWithoutWhitespace == prettyTypeStr(tokensWithoutWhitespace));
+}

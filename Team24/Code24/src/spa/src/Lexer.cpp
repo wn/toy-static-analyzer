@@ -32,6 +32,8 @@ std::string prettyPrintType(TokenType t) {
         { MULT, "MULT" },
         { DIV, "DIV" },
         { MOD, "MOD" },
+        { PERIOD, "PERIOD" },
+        { HASH, "HASH" },
         { NAME, "NAME" },
         { INTEGER, "INTEGER" },
         { WHITESPACE, "WHITESPACE" },
@@ -66,6 +68,9 @@ std::vector<std::pair<TokenType, std::string>> rules = { { LBRACE, "^(\\{)" },
                                                          { MULT, "^(\\*)" },
                                                          { DIV, "^(\\/)" },
                                                          { MOD, "^(%)" },
+
+                                                         { PERIOD, "^(\\.)" },
+                                                         { HASH, "^(#)" },
 
                                                          { NAME, "^([a-zA-Z]\\w*)\\b" },
 
