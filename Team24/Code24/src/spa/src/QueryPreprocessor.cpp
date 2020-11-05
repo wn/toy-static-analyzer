@@ -28,6 +28,7 @@ typedef std::pair<State, bool> STATESTATUSPAIR;
 // <state of parser, string representation of parsed token(s), isValidState>
 typedef std::tuple<State, std::string, qpbackend::ClauseType, bool> STATE_STRING_RESULT_CLAUSE_TYPE_STATUS_QUADRUPLE;
 typedef std::tuple<State, qpbackend::ARG, bool> STATE_ARG_RESULT_STATUS_TRIPLE;
+typedef std::tuple<State, qpbackend::EntityType, bool> STATE_ENTITY_RESULT_STATUS_TRIPLE;
 void throwIfTokenDoesNotHaveExpectedTokenType(backend::lexer::TokenType expectedTokenType, const TOKEN& token);
 static qpbackend::EntityType getEntityTypeFromToken(const TOKEN& token);
 State parseSelect(State state);
@@ -388,18 +389,51 @@ State parseDeclarations(State state) {
 }
 
 
+STATE_ENTITY_RESULT_STATUS_TRIPLE parseDesignEntity(State state) {
+    const TOKEN& designEntity = state.popUntilNonWhitespaceToken();
+
+    if (designEntity.type != backend::lexer::NAME) {
+        return { state, qpbackend::INVALID_ENTITY_TYPE, false };
+    }
+
+    if (qpbackend::isEntityString(designEntity.nameValue)) {
+        qpbackend::EntityType entityType = getEntityTypeFromToken(designEntity);
+        return { state, entityType, entityType != qpbackend::INVALID_ENTITY_TYPE };
+    }
+
+    if (designEntity.nameValue != "prog") {
+        return { state, qpbackend::INVALID_ENTITY_TYPE, false };
+    }
+
+    if (!state.hasTokensLeftToParse()) {
+        return { state, qpbackend::INVALID_ENTITY_TYPE, false };
+    }
+    const TOKEN& underscore = state.popToken();
+    if (underscore.type != backend::lexer::UNDERSCORE || !state.hasTokensLeftToParse()) {
+        return { state, qpbackend::INVALID_ENTITY_TYPE, false };
+    }
+    const TOKEN& line = state.popToken();
+    if (line.type != backend::lexer::NAME || line.nameValue != "line" || !state.hasTokensLeftToParse()) {
+        return { state, qpbackend::INVALID_ENTITY_TYPE, false };
+    }
+    return { state, qpbackend::PROG_LINE, true };
+}
+
+
 /**
  * declaration : design-entity synonym (‘,’ synonym)* ‘;’
  *
  * @return <state of parser, isStateInvalid> after attempting to parse a single declaration.
  */
 STATESTATUSPAIR parseSingleDeclaration(State state) {
-    const TOKEN& designEntity = state.popUntilNonWhitespaceToken();
-    if (designEntity.type != backend::lexer::NAME || !qpbackend::isEntityString(designEntity.nameValue)) {
-        return STATESTATUSPAIR(state, false);
+    bool isValid;
+    qpbackend::EntityType entityType;
+    State tempState;
+    std::tie(tempState, entityType, isValid) = parseDesignEntity(state);
+    if (!isValid) {
+        return { tempState, false };
     }
-    qpbackend::EntityType entityType = getEntityTypeFromToken(designEntity);
-
+    state = tempState;
     TOKEN synonym = state.popUntilNonWhitespaceToken();
     TOKEN delimiter = state.popUntilNonWhitespaceToken();
     logLine(kQppLogInfoPrefix + "parseSingleDeclaration:\n Synonym: " + synonym.nameValue +

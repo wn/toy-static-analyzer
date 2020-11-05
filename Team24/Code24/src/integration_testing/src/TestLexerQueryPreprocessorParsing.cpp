@@ -261,6 +261,25 @@ TEST_CASE("Test such that clause handles whitespace") {
     REQUIRE(expectedQuery == actualQuery);
 }
 
+// Test prog line used as stmt synonym
+
+TEST_CASE("Test prog line used as stmt synony,") {
+    std::stringstream queryString =
+    std::stringstream("while w; prog_line pl; Select w such that Follows(w, pl)");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "pl", qpbackend::EntityType::PROG_LINE } },
+        { "w" },
+        { { qpbackend::ClauseType::FOLLOWS, { qpbackend::STMT_SYNONYM, "w" }, { qpbackend::STMT_SYNONYM, "pl" } } },
+        {}
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+
 // Test Follows
 
 TEST_CASE("Test while w; if ifs; Select w such that Follows(w, ifs)") {
@@ -1340,7 +1359,7 @@ TEST_CASE("Test multiple declarations, multiple synonyms") {
 }
 
 // Test parsing synonym declarations of all entity types
-// design-entity : ‘stmt’ | ‘read’ | ‘print’ | ‘call’ | ‘while’ | ‘if’ | ‘assign’ | ‘variable’ | ‘constant’ | ‘procedure’
+// design-entity : ‘stmt’ | ‘read’ | ‘print’ | ‘call’ | ‘while’ | ‘if’ | ‘assign’ | ‘variable’ | ‘constant’ | ‘procedure’ | 'prog_line'
 
 TEST_CASE("Test declaring stmt") {
     std::stringstream queryString = std::stringstream("stmt v; Select v");
@@ -1451,6 +1470,18 @@ TEST_CASE("Test declaring procedure") {
 
     REQUIRE(expectedQuery == actualQuery);
 }
+
+TEST_CASE("Test declaring prog line") {
+    std::stringstream queryString = std::stringstream("prog_line v; Select v");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "v", qpbackend::EntityType::PROG_LINE } }, { "v" }, {}, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
 
 // Test semantic error detection
 

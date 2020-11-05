@@ -19,12 +19,12 @@ TEST_CASE("Test entityTypeFromString mappings") {
     REQUIRE(EntityType::PROCEDURE == entityTypeFromString("procedure"));
 }
 
-TEST_CASE("Test entityTypeFromString nonsense string throws") {
-    REQUIRE_THROWS(entityTypeFromString("isberget"));
+TEST_CASE("Test entityTypeFromString nonsense string") {
+    REQUIRE(INVALID_ENTITY_TYPE == entityTypeFromString("isberget"));
 }
 
-TEST_CASE("Test entityTypeFromString throws") {
-    REQUIRE_THROWS(entityTypeFromString("Stmt"));
+TEST_CASE("Test entityTypeFromString") {
+    REQUIRE(INVALID_ENTITY_TYPE == entityTypeFromString("Stmt"));
 }
 
 // Test the keywords from the following mappings
@@ -41,11 +41,11 @@ TEST_CASE("Test relationClauseTypeFromString mappings") {
 }
 
 TEST_CASE("Test relationClauseTypeFromString nonsense string throws") {
-    REQUIRE_THROWS(entityTypeFromString("isberget"));
+    REQUIRE_THROWS(relationClauseTypeFromString("isberget"));
 }
 
 TEST_CASE("Test relationClauseTypeFromString case sensitivity") {
-    REQUIRE_THROWS(entityTypeFromString("follows"));
+    REQUIRE_THROWS(relationClauseTypeFromString("follows"));
 }
 
 TEST_CASE("Test isRelationClauseString") {

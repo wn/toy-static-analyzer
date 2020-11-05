@@ -1,6 +1,7 @@
 #include "Query.h"
 
 #include "LegacyQueryShims.h"
+#include "Logger.h"
 #include "QPTypes.h"
 
 #include <algorithm>
@@ -22,6 +23,7 @@ const std::map<std::string, EntityType> kEntityStringToTypeMap = {
     { "variable", EntityType::VARIABLE },
     { "constant", EntityType::CONSTANT },
     { "procedure", EntityType::PROCEDURE },
+    { "prog_line", EntityType::PROG_LINE },
     { "INVALID ENTITY TYPE", EntityType::INVALID_ENTITY_TYPE },
 };
 
@@ -42,7 +44,8 @@ bool isEntityString(const std::string& string) {
 EntityType entityTypeFromString(const std::string& entityString) {
     auto result = kEntityStringToTypeMap.find(entityString);
     if (result == kEntityStringToTypeMap.end()) {
-        throw std::invalid_argument("Error:entityTypeFromString: " + entityString + " does not map to any EntityType.");
+        logLine("Warning:entityTypeFromString: " + entityString + " does not map to any EntityType.");
+        return INVALID_ENTITY_TYPE;
     }
     return result->second;
 }
