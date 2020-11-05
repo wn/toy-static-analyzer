@@ -30,6 +30,7 @@ const std::vector<std::pair<std::string, ClauseType>> kRelationClauseStringClaus
     { "Parent", ClauseType::PARENT },   { "Parent*", ClauseType::PARENTT },
     { "Uses", ClauseType::USES },       { "Modifies", ClauseType::MODIFIES },
     { "Next", ClauseType::NEXT },       { "Next*", ClauseType::NEXTT },
+    { "NextBip", ClauseType::NEXTBIP }, { "NextBip*", ClauseType::NEXTBIPT },
     { "Calls", ClauseType::CALLS },     { "Calls*", ClauseType::CALLST },
     { "Affects", ClauseType::AFFECTS }, { "Affects*", ClauseType::AFFECTST },
 };

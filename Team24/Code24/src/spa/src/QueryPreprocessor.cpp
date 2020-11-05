@@ -611,6 +611,8 @@ STATESTATUSPAIR parseRelRef(State state) {
     case qpbackend::NEXTT:
     case qpbackend::AFFECTS:
     case qpbackend::AFFECTST:
+    case qpbackend::NEXTBIP:
+    case qpbackend::NEXTBIPT:
         return parseRelationStmtStmtOrLineLine(state, relationClauseType);
     case qpbackend::USES:
     case qpbackend::MODIFIES:

@@ -51,7 +51,7 @@ TEST_CASE("Test keywords are not reserved") {
         "stmt",     "read",     "print",     "call",      "while",    "if",      "assign",
         "variable", "constant", "procedure", "prog_line", "procName", "varName", "value",
         "such",     "that",     "with",      "and",       "Modifies", "Uses",    "Calls",
-        "Parent",   "Follows",  "Next",      "Affects",   "pattern",
+        "Parent",   "Follows",  "Next",      "Affects",   "pattern",  "NextBip",
     };
     queryString << "variable ";
     for (const auto& keyword : keywords) {
@@ -723,6 +723,104 @@ TEST_CASE("Test Next*(INTEGER, INTEGER)") {
         { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
         { "a" },
         { { qpbackend::ClauseType::NEXTT, { qpbackend::NUM_ENTITY, "1" }, { qpbackend::NUM_ENTITY, "2" } } },
+        {}
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+// Test NextBip ‘(’ lineRef ‘,’ lineRef ‘)’
+TEST_CASE("Test NextBip(synonym, synonym)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that NextBip(a, w)");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::NEXTBIP, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::STMT_SYNONYM, "w" } } },
+        {}
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test NextBip(_, _)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that NextBip(_, _)");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::NEXTBIP, { qpbackend::WILDCARD, "_" }, { qpbackend::WILDCARD, "_" } } },
+        {}
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test NextBip(INTEGER, INTEGER)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that NextBip(1, 2)");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::NEXTBIP, { qpbackend::NUM_ENTITY, "1" }, { qpbackend::NUM_ENTITY, "2" } } },
+        {}
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+// Test NextBip* ‘(’ lineRef ‘,’ lineRef ‘)’
+TEST_CASE("Test NextBip*(synonym, synonym)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that NextBip*(a, w)");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::NEXTBIPT, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::STMT_SYNONYM, "w" } } },
+        {}
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test NextBip*(_, _)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that NextBip*(_, _)");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::NEXTBIPT, { qpbackend::WILDCARD, "_" }, { qpbackend::WILDCARD, "_" } } },
+        {}
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test NextBip*(INTEGER, INTEGER)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that NextBip*(1, 2)");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::NEXTBIPT, { qpbackend::NUM_ENTITY, "1" }, { qpbackend::NUM_ENTITY, "2" } } },
         {}
     };
 
