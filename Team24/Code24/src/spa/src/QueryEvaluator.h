@@ -52,6 +52,8 @@ class SingleQueryEvaluator {
     // evaluate pairwise list relation
     bool evaluateSynonymSynonym(const backend::PKB* pkb,
                                 SubRelationType subrelation,
+                                ArgType argType1,
+                                ArgType argType2,
                                 const std::string& arg1,
                                 const std::string& arg2,
                                 std::string const& patternStr,
@@ -60,6 +62,7 @@ class SingleQueryEvaluator {
     // evaluate entity and list relation
     bool evaluateEntitySynonym(const backend::PKB* pkb,
                                SubRelationType subRelationType,
+                               ArgType synonymArgType,
                                const std::string& arg1,
                                const std::string& arg2,
                                const std::string& patternStr,
@@ -84,6 +87,11 @@ class SingleQueryEvaluator {
     // evaluate synonym and Wildcard relation
     bool evaluateWildcardWildcard(const backend::PKB* pkb, SubRelationType subRelationType);
 
+    // helper evaluate with condition between synonyms
+    // return a list of pair of the synonym value and corresponding attribute
+    std::unordered_set<std::vector<std::string>, StringVectorHash>
+    evaluateSynonymAttrForWith(const backend::PKB* pkb, SubRelationType srt, ArgType argType, const std::string& arg);
+
     // methods called to interact with PKB
     std::vector<std::string> inquirePKBForRelationOrPattern(const backend::PKB* pkb,
                                                             SubRelationType subRelationType,
@@ -93,7 +101,7 @@ class SingleQueryEvaluator {
                                                            SubRelationType subRelationType,
                                                            const std::string& patternStr);
     const std::string
-    inquirePKBForAttribute(const backend::PKB* pkb, AttrConversion convertType, const std::string& arg);
+    inquirePKBForAttribute(const backend::PKB* pkb, ArgType convertType, const std::string& arg);
 
     // sort and group clauses
     std::vector<std::vector<CLAUSE_LIST>> getClausesSortedAndGrouped(const backend::PKB* pkb);
@@ -104,6 +112,11 @@ class SingleQueryEvaluator {
     // helper function
     // check and link synonyms to declared entity type
     bool isSynonym(const std::string& str);
+
+    // relation / argument conversion helper
+    SubRelationType getSubRelationType(ClauseType clauseType, ArgType argType1, ArgType argType2);
+    ArgType getAttrArgType(ReturnType returnType, const std::string& synonym);
+    ARG getWithArgType(const ATTR_ARG& attrArg);
 
     // validate the clause
     bool validateClause(const CLAUSE& clause);

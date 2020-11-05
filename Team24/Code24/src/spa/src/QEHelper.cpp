@@ -27,6 +27,19 @@ bool isName(const std::string& str) {
     }
 }
 
+bool isNumArg(ArgType argType) {
+    return argType == STMT_SYNONYM || argType == CONST_SYNONYM || argType == NUM_ENTITY;
+}
+
+bool isNameArg(ArgType argType) {
+    return argType == VAR_SYNONYM || argType == PROC_SYNONYM || argType == NAME_ENTITY ||
+           argType == CALL_TO_PROC_SYNONYM || argType == READ_TO_VAR_SYNONYM || argType == PRINT_TO_VAR_SYNONYM;
+}
+
+bool needAttrConversion(ArgType argType) {
+    return argType == CALL_TO_PROC_SYNONYM || argType == READ_TO_VAR_SYNONYM || argType == PRINT_TO_VAR_SYNONYM;
+}
+
 std::tuple<bool, std::string, bool> extractPatternExpr(const std::string& str) {
     // wildcard case
     if (isWildCard(str)) {
@@ -123,8 +136,7 @@ SRT_LOOKUP_TABLE generateSrtTable() {
         { IF_PATTERN,
           { { STMT_SYNONYM, { { VAR_SYNONYM, IF_PATTERN_SRT }, { NAME_ENTITY, IF_PATTERN_SRT }, { WILDCARD, IF_PATTERN_SRT } } } } },
         { WHILE_PATTERN,
-          { { STMT_SYNONYM,
-              { { VAR_SYNONYM, WHILE_PATTERN_SRT }, { NAME_ENTITY, WHILE_PATTERN_SRT }, { WILDCARD, WHILE_PATTERN_SRT } } } } },
+          { { STMT_SYNONYM, { { VAR_SYNONYM, WHILE_PATTERN_SRT }, { NAME_ENTITY, WHILE_PATTERN_SRT }, { WILDCARD, WHILE_PATTERN_SRT } } } } }
     };
 
     return srt_table;
@@ -132,17 +144,17 @@ SRT_LOOKUP_TABLE generateSrtTable() {
 
 ATTR_CONVERT_TABLE generateAttrConvertTable() {
     ATTR_CONVERT_TABLE table = {
-        { PROG_LINE, { { DEFAULT_VAL, NO_CONVERSION } } },
-        { STMT, { { DEFAULT_VAL, NO_CONVERSION }, { STMT_NO, NO_CONVERSION } } },
-        { READ, { { DEFAULT_VAL, NO_CONVERSION }, { STMT_NO, NO_CONVERSION }, { VAR_NAME, READ_STMT_TO_VAR } } },
-        { PRINT, { { DEFAULT_VAL, NO_CONVERSION }, { STMT_NO, NO_CONVERSION }, { VAR_NAME, PRINT_STMT_TO_VAR } } },
-        { CALL, { { DEFAULT_VAL, NO_CONVERSION }, { STMT_NO, NO_CONVERSION }, { PROC_NAME, CALL_STMT_TO_PROC } } },
-        { WHILE, { { DEFAULT_VAL, NO_CONVERSION }, { STMT_NO, NO_CONVERSION } } },
-        { IF, { { DEFAULT_VAL, NO_CONVERSION }, { STMT_NO, NO_CONVERSION } } },
-        { ASSIGN, { { DEFAULT_VAL, NO_CONVERSION }, { STMT_NO, NO_CONVERSION } } },
-        { VARIABLE, { { DEFAULT_VAL, NO_CONVERSION }, { VAR_NAME, NO_CONVERSION } } },
-        { CONSTANT, { { DEFAULT_VAL, NO_CONVERSION }, { CONST_VALUE, NO_CONVERSION } } },
-        { PROCEDURE, { { DEFAULT_VAL, NO_CONVERSION }, { PROC_NAME, NO_CONVERSION } } }
+        { PROG_LINE, { { DEFAULT_VAL, STMT_SYNONYM } } },
+        { STMT, { { DEFAULT_VAL, STMT_SYNONYM }, { STMT_NO, STMT_SYNONYM } } },
+        { READ, { { DEFAULT_VAL, STMT_SYNONYM }, { STMT_NO, STMT_SYNONYM }, { VAR_NAME, READ_TO_VAR_SYNONYM } } },
+        { PRINT, { { DEFAULT_VAL, STMT_SYNONYM }, { STMT_NO, STMT_SYNONYM }, { VAR_NAME, PRINT_TO_VAR_SYNONYM } } },
+        { CALL, { { DEFAULT_VAL, STMT_SYNONYM }, { STMT_NO, STMT_SYNONYM }, { PROC_NAME, CALL_TO_PROC_SYNONYM } } },
+        { WHILE, { { DEFAULT_VAL, STMT_SYNONYM }, { STMT_NO, STMT_SYNONYM } } },
+        { IF, { { DEFAULT_VAL, STMT_SYNONYM }, { STMT_NO, STMT_SYNONYM } } },
+        { ASSIGN, { { DEFAULT_VAL, STMT_SYNONYM }, { STMT_NO, STMT_SYNONYM } } },
+        { VARIABLE, { { DEFAULT_VAL, VAR_SYNONYM }, { VAR_NAME, VAR_SYNONYM } } },
+        { CONSTANT, { { DEFAULT_VAL, CONST_SYNONYM }, { CONST_VALUE, CONST_SYNONYM } } },
+        { PROCEDURE, { { DEFAULT_VAL, PROC_SYNONYM }, { PROC_NAME, PROC_SYNONYM } } }
     };
 
     return table;

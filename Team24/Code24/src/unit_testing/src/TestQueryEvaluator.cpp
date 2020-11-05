@@ -35,6 +35,11 @@ TEST_CASE("Test without clauses") {
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryStmt), { "1", "2", "3", "4", "5", "6", "7", "8",
                                                                       "9", "10", "11", "12", "13", "14" }));
 
+    Query queryProgLine = { { { "pl", PROG_LINE } }, { "pl" }, {}, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryProgLine),
+                                       { "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11",
+                                         "12", "13", "14" }));
+
     // select variables
     Query queryVar = { { { "v", VARIABLE } }, { "v" }, {}, {} };
     REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryVar),
@@ -1611,5 +1616,149 @@ TEST_CASE("Test BOOLEAN as return value") {
     REQUIRE(qe.evaluateQuery(query9).empty());
 }
 
+TEST_CASE("Test with condition between synonyms") {
+    PKBMock pkb(3);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    // test with between the synonym and itself
+    // with a.stmt# = a.stmt#
+    Query query1 = { { { "a", ASSIGN } },
+                     { { DEFAULT_VAL, "a" } },
+                     {},
+                     {},
+                     { { { STMT_SYNONYM, STMT_NO, "a" }, { STMT_SYNONYM, STMT_NO, "a" } } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query1), { "1", "10", "11", "12", "15", "16",
+                                                                   "17", "20", "21", "22", "23" }));
+    // prog_line pl; Select pl with pl = pl
+    Query query2 = { { { "pl", PROG_LINE } },
+                     { { DEFAULT_VAL, "pl" } },
+                     {},
+                     {},
+                     { { { STMT_SYNONYM, DEFAULT_VAL, "pl" }, { STMT_SYNONYM, DEFAULT_VAL, "pl" } } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query2),
+                                       { "1",  "2",  "3",  "4",  "5",  "6",  "7",  "8",
+                                         "9",  "10", "11", "12", "13", "14", "15", "16",
+                                         "17", "18", "19", "20", "21", "22", "23" }));
+
+    // test with between different synonyms
+    // read rd; variable v; Select v with v.varName = rd.varName
+    Query query3 = { { { "v", VARIABLE }, { "rd", READ } },
+                     { { DEFAULT_VAL, "v" } },
+                     {},
+                     {},
+                     { { { VAR_SYNONYM, VAR_NAME, "v" }, { STMT_SYNONYM, VAR_NAME, "rd" } } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query3), { "x", "y" }));
+
+    // procedure p; call cl; Select p such that p.procName = cl.varName
+    Query query4 = { { { "p", PROCEDURE }, { "cl", CALL } },
+                     { { DEFAULT_VAL, "p" } },
+                     {},
+                     {},
+                     { { { PROC_SYNONYM, PROC_NAME, "p" }, { STMT_SYNONYM, PROC_NAME, "cl" } } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query4),
+                                       { "computeCentroid", "printResults", "readPoint" }));
+    // constant c; stmt s; Select s such that s.stmt# = c.value
+    Query query5 = { { { "s", STMT }, { "c", CONSTANT } },
+                     { { DEFAULT_VAL, "s" } },
+                     {},
+                     {},
+                     { { { STMT_SYNONYM, STMT_NO, "s" }, { CONST_SYNONYM, CONST_VALUE, "c" } } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query5), { "1", "10" }));
+}
+
+TEST_CASE("Test with condition between entities") {
+    PKBMock pkb(3);
+    queryevaluator::QueryEvaluator qe(&pkb);
+    // test with between synonyms and entities
+    // print pt; Select pt with "cenX" = pt.varName
+    Query query1 = { { { "pt", PRINT } },
+                     { { DEFAULT_VAL, "pt" } },
+                     {},
+                     {},
+                     { { { NAME_ENTITY, DEFAULT_VAL, "cenX" }, { STMT_SYNONYM, VAR_NAME, "pt" } } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query1), { "7" }));
+
+    // constant c; Select c with "0" = c.value
+    Query query2 = { { { "c", CONSTANT } },
+                     { { DEFAULT_VAL, "c" } },
+                     {},
+                     {},
+                     { { { NUM_ENTITY, DEFAULT_VAL, "0" }, { CONST_SYNONYM, CONST_VALUE, "c" } } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query2), { "0" }));
+
+    // test with between entities
+    // constant c; Select c with "randomstr" = "randomstr"
+    Query query3 = { { { "c", CONSTANT } },
+                     { { DEFAULT_VAL, "c" } },
+                     {},
+                     {},
+                     { { { NAME_ENTITY, DEFAULT_VAL, "randomstr" }, { NAME_ENTITY, DEFAULT_VAL, "randomstr" } } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query3), { "0", "1", "10" }));
+}
+
+TEST_CASE("Test invalid with condition") {
+    PKBMock pkb(3);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    // type not match (string to string, num to num)
+    Query query1 = { { { "c", CONSTANT } },
+                     { { DEFAULT_VAL, "c" } },
+                     {},
+                     {},
+                     { { { NAME_ENTITY, DEFAULT_VAL, "1" }, { NUM_ENTITY, DEFAULT_VAL, "1" } } } };
+    REQUIRE(qe.evaluateQuery(query1).empty());
+
+    // wildcard not alLowed
+    Query query2 = { { { "s", STMT } },
+                     { { DEFAULT_VAL, "s" } },
+                     {},
+                     {},
+                     { { { STMT_SYNONYM, STMT_NO, "s" }, { WILDCARD, DEFAULT_VAL, "_" } } } };
+    REQUIRE(qe.evaluateQuery(query2).empty());
+
+    // for synonym, only prog_line is allowed
+    // stmt s; Select s with s = 3
+    Query query3 = { { { "s", STMT } },
+                     { { DEFAULT_VAL, "s" } },
+                     {},
+                     {},
+                     { { { STMT_SYNONYM, DEFAULT_VAL, "s" }, { NUM_ENTITY, DEFAULT_VAL, "3" } } } };
+    REQUIRE(qe.evaluateQuery(query3).empty());
+
+    // check if attribute is valid
+    // stmt s; varible v; Select v with s.varName=v.varName
+    Query query4 = { { { "s", STMT }, { "v", VARIABLE } },
+                     { { DEFAULT_VAL, "v" } },
+                     {},
+                     {},
+                     { { { STMT_SYNONYM, VAR_NAME, "s" }, { VAR_SYNONYM, VAR_NAME, "v" } } } };
+    REQUIRE(qe.evaluateQuery(query4).empty());
+    // prog_line pl; Select pl with pl = "1".stmt#
+    Query query5 = { { { "pl", PROG_LINE } },
+                     { { DEFAULT_VAL, "pl" } },
+                     {},
+                     {},
+                     { { { STMT_SYNONYM, DEFAULT_VAL, "pl" }, { NUM_ENTITY, STMT_NO, "1" } } } };
+    REQUIRE(qe.evaluateQuery(query5).empty());
+    // prog_line pl; Select pl with pl.stmt# = "1"
+    Query query6 = { { { "pl", PROG_LINE } },
+                     { { DEFAULT_VAL, "pl" } },
+                     {},
+                     {},
+                     { { { STMT_SYNONYM, STMT_NO, "pl" }, { NUM_ENTITY, DEFAULT_VAL, "1" } } } };
+    REQUIRE(qe.evaluateQuery(query6).empty());
+
+    // to validate the pkb mock
+    // prog_line pl; Select pl with 1 = 1
+    Query query7 = { { { "pl", PROG_LINE } },
+                     { { DEFAULT_VAL, "pl" } },
+                     {},
+                     {},
+                     { { { NUM_ENTITY, DEFAULT_VAL, "1" }, { NUM_ENTITY, DEFAULT_VAL, "1" } } } };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query7),
+                                       { "1",  "2",  "3",  "4",  "5",  "6",  "7",  "8",
+                                         "9",  "10", "11", "12", "13", "14", "15", "16",
+                                         "17", "18", "19", "20", "21", "22", "23" }));
+}
 } // namespace qetest
 } // namespace qpbackend

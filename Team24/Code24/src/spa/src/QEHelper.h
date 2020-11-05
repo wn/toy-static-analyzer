@@ -57,15 +57,8 @@ enum SubRelationType {
     ASSIGN_PATTERN_WILDCARD_SRT, // evaluate pattern a(..., _)
     WHILE_PATTERN_SRT, // evaluate pattern w(..., _)
     IF_PATTERN_SRT, // evaluate pattern if(..., _)
+    WITH_SRT, // for with
     INVALID // no suitable subrelation to evaluate
-};
-
-enum AttrConversion {
-    CALL_STMT_TO_PROC,
-    READ_STMT_TO_VAR,
-    PRINT_STMT_TO_VAR,
-    NO_CONVERSION,
-    INVALID_CONVERSION
 };
 
 // 2nd level SubRelation table: table mapping ArgType to SubRelationType>
@@ -76,12 +69,16 @@ typedef std::unordered_map<int, SEC_SRT_TABLE> FIR_SRT_TABLE;
 typedef std::unordered_map<int, FIR_SRT_TABLE> SRT_LOOKUP_TABLE;
 
 // sub attribute convert table
-typedef std::unordered_map<int, AttrConversion> SUB_ATTR_CONVERT_TABLE;
+typedef std::unordered_map<int, ArgType> SUB_ATTR_CONVERT_TABLE;
 typedef std::unordered_map<int, SUB_ATTR_CONVERT_TABLE> ATTR_CONVERT_TABLE;
 
 bool isWildCard(const std::string& str); // check if the argument is a wildcard
 bool isPosInt(const std::string& str); // check if the argument is a positive integer
 bool isName(const std::string& str); // check if the argument is the name of a variable or procedure
+
+bool isNumArg(ArgType argType);
+bool isNameArg(ArgType argType);
+bool needAttrConversion(ArgType argType);
 
 // extract quoted part of a string
 // if it's not quoted, return the original string

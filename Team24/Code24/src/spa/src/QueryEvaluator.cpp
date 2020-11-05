@@ -103,23 +103,19 @@ std::vector<std::string> SingleQueryEvaluator::produceResult(const backend::PKB*
     // evaluate attribute reference
     std::vector<std::string> synNames;
     for (const auto& returnSyn : query.returnCandidates) {
-        AttrConversion convertType = INVALID_CONVERSION;
         const std::string& synName = returnSyn.second;
         const EntityType entityType = query.declarationMap.at(synName);
         const ReturnType returnType = returnSyn.first;
 
-        try {
-            convertType = attr_convert_table.at(entityType).at(returnType);
-        } catch (const std::out_of_range& oor) {
-            // invalid return type, e.g. stmt s; Select s.varName
-            // since only variable, read statement, print statement have .varName
-            // a synonym declared as statement type does not have 'varName' attribute
-            (void)oor;
+        ArgType argType = getAttrArgType(returnType, synName);
+        if (argType == INVALID_ARG) {
             handleError("invalid return type");
             return std::vector<std::string>();
         }
 
-        if (convertType == NO_CONVERSION) {
+        bool needConversion = needAttrConversion(argType);
+
+        if (!needConversion) {
             if (!resultTable.isSynonymContained(synName)) {
                 std::unordered_set<std::string> tempSet(synonym_candidates[synName].begin(),
                                                         synonym_candidates[synName].end());
@@ -130,7 +126,7 @@ std::vector<std::string> SingleQueryEvaluator::produceResult(const backend::PKB*
         } else {
             std::unordered_set<std::vector<std::string>, StringVectorHash> pairs;
             for (const auto& c1 : synonym_candidates[synName]) {
-                const std::string& attr = inquirePKBForAttribute(pkb, convertType, c1);
+                const std::string& attr = inquirePKBForAttribute(pkb, argType, c1);
                 pairs.insert({ c1, attr });
             }
             // assign cl.procName to cl_0
@@ -232,7 +228,7 @@ bool SingleQueryEvaluator::evaluateClause(const backend::PKB* pkb, const CLAUSE&
 
     const std::string& patternStr = std::get<3>(clause);
 
-    SubRelationType srt = srt_table.at(rt).at(arg_type_1).at(arg_type_2);
+    SubRelationType srt = getSubRelationType(rt, arg_type_1, arg_type_2);
 
     // Initializes arguments if they point to declared synonyms.
     initializeIfSynonym(pkb, arg1);
@@ -242,14 +238,14 @@ bool SingleQueryEvaluator::evaluateClause(const backend::PKB* pkb, const CLAUSE&
 
     switch (argsType) {
     case SynonymSynonym:
-        return evaluateSynonymSynonym(pkb, srt, arg2, arg1, patternStr, groupResultTable);
+        return evaluateSynonymSynonym(pkb, srt, arg_type_2, arg_type_1, arg2, arg1, patternStr, groupResultTable);
     case SynonymEntity:
-        return evaluateEntitySynonym(pkb, srt, arg2, arg1, patternStr,
+        return evaluateEntitySynonym(pkb, srt, arg_type_1, arg2, arg1, patternStr,
                                      groupResultTable); // swap the arguments as the called method required
     case SynonymWildcard:
         return evaluateSynonymWildcard(pkb, srt, arg1, patternStr, groupResultTable);
     case EntitySynonym:
-        return evaluateEntitySynonym(pkb, srt, arg1, arg2, patternStr, groupResultTable);
+        return evaluateEntitySynonym(pkb, srt, arg_type_2, arg1, arg2, patternStr, groupResultTable);
     case EntityEntity:
         return evaluateEntityEntity(pkb, srt, arg1, arg2);
     case EntityWildcard:
@@ -285,6 +281,8 @@ bool SingleQueryEvaluator::evaluateClause(const backend::PKB* pkb, const CLAUSE&
  */
 bool SingleQueryEvaluator::evaluateSynonymSynonym(const backend::PKB* pkb,
                                                   SubRelationType subRelationType,
+                                                  ArgType argType1,
+                                                  ArgType argType2,
                                                   std::string const& arg1,
                                                   std::string const& arg2,
                                                   std::string const& patternStr,
@@ -303,17 +301,33 @@ bool SingleQueryEvaluator::evaluateSynonymSynonym(const backend::PKB* pkb,
     // check all pairs
     std::unordered_set<std::string> singleEntity;
     std::unordered_set<std::vector<std::string>, StringVectorHash> pairs;
-    for (const auto& c1 : candidates_1) {
-        std::vector<std::string> c1_result;
-        c1_result = inquirePKBForRelationOrPattern(pkb, subRelationType, c1, patternStr);
+    if (subRelationType == WITH_SRT) {
+        const std::string& attrName = arg1 + "_" + arg2;
+        std::unordered_set<std::vector<std::string>, StringVectorHash> attrPairs1 =
+        evaluateSynonymAttrForWith(pkb, subRelationType, argType1, arg1);
+        std::unordered_set<std::vector<std::string>, StringVectorHash> attrPairs2 =
+        evaluateSynonymAttrForWith(pkb, subRelationType, argType2, arg2);
+        ResultTable rt1({ arg1, attrName }, attrPairs1);
+        ResultTable rt2({ arg2, attrName }, attrPairs2);
+        rt1.mergeTable(std::move(rt2));
         if (isSelfRelation) {
-            if (isFoundInVector<std::string>(c1_result, c1)) {
-                singleEntity.insert(c1);
-            }
+            rt1.updateSynonymValueSet(arg1, singleEntity);
         } else {
-            for (const auto& c2 : candidates_2) {
-                if (isFoundInVector<std::string>(c1_result, c2)) {
-                    pairs.insert({ c1, c2 });
+            rt1.updateSynonymValueTupleSet({ arg1, arg2 }, pairs);
+        }
+    } else {
+        for (const auto& c1 : candidates_1) {
+            std::vector<std::string> c1_result;
+            c1_result = inquirePKBForRelationOrPattern(pkb, subRelationType, c1, patternStr);
+            if (isSelfRelation) {
+                if (isFoundInVector<std::string>(c1_result, c1)) {
+                    singleEntity.insert(c1);
+                }
+            } else {
+                for (const auto& c2 : candidates_2) {
+                    if (isFoundInVector<std::string>(c1_result, c2)) {
+                        pairs.insert({ c1, c2 });
+                    }
                 }
             }
         }
@@ -344,15 +358,26 @@ bool SingleQueryEvaluator::evaluateSynonymSynonym(const backend::PKB* pkb,
  */
 bool SingleQueryEvaluator::evaluateEntitySynonym(const backend::PKB* pkb,
                                                  SubRelationType subRelationType,
+                                                 ArgType synonymArgType,
                                                  std::string const& arg1,
                                                  std::string const& arg2,
                                                  std::string const& patternStr,
                                                  ResultTable& groupResultTable) {
-    std::vector<std::string> arg1_result;
-    arg1_result = inquirePKBForRelationOrPattern(pkb, subRelationType, arg1, patternStr);
-
-    std::vector<std::string> result = vectorIntersection<>(arg1_result, synonym_candidates[arg2]);
-    std::unordered_set<std::string> resultSet(result.begin(), result.end());
+    std::unordered_set<std::string> resultSet;
+    if (subRelationType == WITH_SRT) {
+        std::unordered_set<std::vector<std::string>, StringVectorHash> attrPairs =
+        evaluateSynonymAttrForWith(pkb, subRelationType, synonymArgType, arg2);
+        for (const auto& elem : attrPairs) {
+            if (arg1 == elem[1]) {
+                resultSet.insert(elem[0]);
+            }
+        }
+    } else {
+        std::vector<std::string> arg1_result =
+        inquirePKBForRelationOrPattern(pkb, subRelationType, arg1, patternStr);
+        std::vector<std::string> result = vectorIntersection<>(arg1_result, synonym_candidates[arg2]);
+        resultSet = std::unordered_set<std::string>(result.begin(), result.end());
+    }
     ResultTable newRT(arg2, resultSet);
     groupResultTable.mergeTable(std::move(newRT));
     updateSynonymsWithResultTable(groupResultTable);
@@ -371,6 +396,9 @@ bool SingleQueryEvaluator::evaluateEntityEntity(const backend::PKB* pkb,
                                                 SubRelationType subRelationType,
                                                 std::string const& arg1,
                                                 std::string const& arg2) {
+    if (subRelationType == WITH_SRT) {
+        return arg1 == arg2;
+    }
     std::vector<std::string> arg1_result = inquirePKBForRelationOrPattern(pkb, subRelationType, arg1, "");
     return isFoundInVector<std::string>(arg1_result, arg2);
 }
@@ -421,6 +449,19 @@ bool SingleQueryEvaluator::evaluateEntityWildcard(const backend::PKB* pkb,
 bool SingleQueryEvaluator::evaluateWildcardWildcard(const backend::PKB* pkb, SubRelationType subRelationType) {
     std::vector<std::string> result = inquirePKBForRelationWildcard(pkb, subRelationType, "");
     return !(result.empty());
+}
+
+std::unordered_set<std::vector<std::string>, StringVectorHash>
+SingleQueryEvaluator::evaluateSynonymAttrForWith(const backend::PKB* pkb,
+                                                 SubRelationType srt,
+                                                 ArgType argType,
+                                                 const std::string& arg) {
+    std::unordered_set<std::vector<std::string>, StringVectorHash> result;
+    for (const auto& val : synonym_candidates[arg]) {
+        const std::string& attr = inquirePKBForAttribute(pkb, argType, val);
+        result.insert({ val, attr });
+    }
+    return result;
 }
 
 /**
@@ -702,19 +743,20 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelationWildcard(con
     return result;
 }
 
-const std::string SingleQueryEvaluator::inquirePKBForAttribute(const backend::PKB* pkb,
-                                                               AttrConversion convertType,
-                                                               const std::string& arg) {
-    switch (convertType) {
-    case CALL_STMT_TO_PROC:
+const std::string
+SingleQueryEvaluator::inquirePKBForAttribute(const backend::PKB* pkb, ArgType argType, const std::string& arg) {
+    switch (argType) {
+    case CALL_TO_PROC_SYNONYM:
         return pkb->getProcedureNameFromCallStatement(std::stoi(arg));
-    case READ_STMT_TO_VAR:
+    case READ_TO_VAR_SYNONYM:
         return pkb->getVariableNameFromReadStatement(std::stoi(arg));
-    case PRINT_STMT_TO_VAR:
+    case PRINT_TO_VAR_SYNONYM:
         return pkb->getVariableNameFromPrintStatement(std::stoi(arg));
-    default:
+    case INVALID_ARG:
         handleError("cannot retrieve the attribute");
         return "";
+    default:
+        return arg;
     }
 }
 
@@ -732,10 +774,14 @@ std::vector<std::vector<CLAUSE_LIST>> SingleQueryEvaluator::getClausesSortedAndG
                              std::get<2>(relationClause), "");
     }
 
-    CLAUSE invalidClause = { INVALID_CLAUSE_TYPE, { INVALID_ARG, "" }, { INVALID_ARG, "" }, "" };
-
     for (const auto& patternClause : query.patternClauses) {
         clauses.push_back(patternClause);
+    }
+
+    for (const auto& rawWithClause : query.withClauses) {
+        ARG arg1 = getWithArgType(std::get<0>(rawWithClause));
+        ARG arg2 = getWithArgType(std::get<1>(rawWithClause));
+        clauses.emplace_back(WITH, arg1, arg2, "");
     }
 
     // check if there are invalid clauses
@@ -750,6 +796,63 @@ std::vector<std::vector<CLAUSE_LIST>> SingleQueryEvaluator::getClausesSortedAndG
     return optimisation::optimizeQueries(clauses, query.returnCandidates);
 }
 
+SubRelationType SingleQueryEvaluator::getSubRelationType(ClauseType clauseType, ArgType argType1, ArgType argType2) {
+    if (clauseType == WITH) {
+        if ((isNameArg(argType1) && isNameArg(argType2)) || (isNumArg(argType1) && isNumArg(argType2))) {
+            return WITH_SRT;
+        } else {
+            return INVALID;
+        }
+    } else {
+        SubRelationType srt;
+        try {
+            srt = srt_table.at(clauseType).at(argType1).at(argType2);
+        } catch (const std::out_of_range& oor) {
+            (void)oor;
+            srt = INVALID;
+        }
+        return srt;
+    }
+}
+
+ArgType SingleQueryEvaluator::getAttrArgType(ReturnType returnType, const std::string& synonym) {
+    if (query.declarationMap.find(synonym) == query.declarationMap.end()) {
+        return INVALID_ARG;
+    }
+    EntityType entityType = query.declarationMap.at(synonym);
+    ArgType argType;
+    try {
+        argType = attr_convert_table.at(entityType).at(returnType);
+    } catch (const std::out_of_range& oor) {
+        // invalid return type, e.g. stmt s; Select s.varName
+        // since only variable, read statement, print statement have .varName
+        // a synonym declared as statement type does not have 'varName' attribute
+        (void)oor;
+        argType = INVALID_ARG;
+    }
+
+    return argType;
+}
+
+ARG SingleQueryEvaluator::getWithArgType(const ATTR_ARG& attrArg) {
+    ArgType rawArgType;
+    ReturnType returnType;
+    std::string synonym;
+    std::tie(rawArgType, returnType, synonym) = attrArg;
+
+    // only prog_line synonym is allowed for with
+    if (returnType == DEFAULT_VAL) {
+        if (rawArgType == NAME_ENTITY || rawArgType == NUM_ENTITY ||
+            (rawArgType == STMT_SYNONYM && query.declarationMap.at(synonym) == PROG_LINE)) {
+            return { rawArgType, synonym };
+        } else {
+            return { INVALID_ARG, "" };
+        }
+    }
+    ArgType argType = getAttrArgType(returnType, synonym);
+    return { argType, synonym };
+}
+
 bool SingleQueryEvaluator::validateClause(const CLAUSE& clause) {
     // check if anything invalid
     ClauseType clauseType = std::get<0>(clause);
@@ -760,14 +863,8 @@ bool SingleQueryEvaluator::validateClause(const CLAUSE& clause) {
     }
 
     // check if found in srt table
-    try {
-        (void)srt_table.at(clauseType).at(argType1).at(argType2);
-    } catch (const std::out_of_range& oor) {
-        (void)oor;
-        return false;
-    }
-
-    return true;
+    SubRelationType srt = getSubRelationType(clauseType, argType1, argType2);
+    return srt != INVALID;
 }
 
 /**

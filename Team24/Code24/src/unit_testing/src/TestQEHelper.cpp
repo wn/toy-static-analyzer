@@ -66,6 +66,9 @@ const VARIABLE_NAME_LIST& PKBMock::getAllVariables() const {
     case 2:
         variables = { "x", "y", "z", "m", "n", "count", "random", "a" };
         break;
+    case 3:
+        variables = { "flag", "x", "y", "cenX", "cenY", "count", "normSq" };
+        break;
     case 4:
         variables = { "a", "b" };
         break;
