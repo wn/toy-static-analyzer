@@ -164,6 +164,14 @@ std::string prettyPrintClauseType(ClauseType t) {
         return "Affects";
     case AFFECTST:
         return "Affects*";
+    case NEXTBIP:
+        return "NextBip";
+    case NEXTBIPT:
+        return "NextBip*";
+    case AFFECTSBIP:
+        return "AffectsBip";
+    case AFFECTSBIPT:
+        return "AffectsBip*";
     case ASSIGN_PATTERN_EXACT:
         return "ASSIGN_PATTERN_EXACT";
     case ASSIGN_PATTERN_SUB_EXPR:

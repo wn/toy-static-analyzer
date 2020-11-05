@@ -39,6 +39,10 @@ enum ClauseType {
     NEXTT,
     AFFECTS,
     AFFECTST,
+    NEXTBIP,
+    NEXTBIPT,
+    AFFECTSBIP,
+    AFFECTSBIPT,
     // Pattern
     ASSIGN_PATTERN_EXACT,
     ASSIGN_PATTERN_SUB_EXPR,

@@ -133,6 +133,14 @@ struct Node {
             return 9;
         case AFFECTST:
             return 14;
+        case NEXTBIP:
+            return 15;
+        case NEXTBIPT:
+            return 17;
+        case AFFECTSBIP:
+            return 16;
+        case AFFECTSBIPT:
+            return 18;
         case ASSIGN_PATTERN_EXACT:
             return 2;
         case ASSIGN_PATTERN_SUB_EXPR:
