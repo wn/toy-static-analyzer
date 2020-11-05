@@ -128,6 +128,14 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
     patternsMap = extractor::getPatternsMap(tNodeTypeToTNodesMap[Assign], tNodeToStatementNumber);
     conditionVariablesToStatementNumbers =
     extractor::getConditionVariablesToStatementNumbers(statementNumberToTNode);
+    std::unordered_set<int> allConditionStatementWithVariables;
+    for (const auto& pair : conditionVariablesToStatementNumbers) {
+        for (int stmtNo : pair.second) {
+            allConditionStatementWithVariables.insert(stmtNo);
+        }
+    }
+    allWhileCondWithVariables = foost::SetIntersection(allConditionStatementWithVariables, allWhileStatements);
+    allIfElseCondWithVariables = foost::SetIntersection(allConditionStatementWithVariables, allIfElseStatements);
 
     // Uses
     std::unordered_map<const TNode*, std::unordered_set<std::string>> usesMapping =
@@ -541,7 +549,7 @@ STATEMENT_NUMBER_SET PKBImplementation::getAllWhileStatementsThatMatch(const VAR
         "getAllWhileStatementsThatMatch: body-pattern match is not implemented yet.");
     }
     if (variable == "_") {
-        return allWhileStatements;
+        return allWhileCondWithVariables;
     }
     // Get all while statements, and get all statements whose cond uses variable, and find intersection.
     auto it = conditionVariablesToStatementNumbers.find(variable);
@@ -563,7 +571,7 @@ STATEMENT_NUMBER_SET PKBImplementation::getAllIfElseStatementsThatMatch(const VA
         "getAllIfElseStatementsThatMatch: body-pattern match is not implemented yet.");
     }
     if (variable == "_") {
-        return allIfElseStatements;
+        return allIfElseCondWithVariables;
     }
     // Get all if statements, and get all statements whose cond uses variable, and find intersection.
     auto it = conditionVariablesToStatementNumbers.find(variable);

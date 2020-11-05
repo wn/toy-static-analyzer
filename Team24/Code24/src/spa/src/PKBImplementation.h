@@ -130,6 +130,8 @@ class PKBImplementation : virtual public backend::PKB {
     VARIABLE_NAME_SET allVariablesModifiedBySomeStatement;
 
     // Pattern helper:
+    std::unordered_set<int> allWhileCondWithVariables;
+    std::unordered_set<int> allIfElseCondWithVariables;
     std::unordered_map<std::string, std::vector<std::tuple<std::string, STATEMENT_NUMBER, bool>>> patternsMap;
     std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_SET> conditionVariablesToStatementNumbers;
 

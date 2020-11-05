@@ -1359,13 +1359,16 @@ TEST_CASE("Test getAllWhileStatementsThatMatch") {
                            "    }                           "
                            "  } else {                      "
                            "    y = 2;                      " // 6
-                           "}                               "
+                           "  }                             "
                            "  while (a + b < f) {           " // 7
                            "    if (a + b == d * h) then {  " // 8
                            "      y = 1;                    " // 9
                            "    } else {                    "
                            "      y = 2;                    " // 10
                            "    }                           "
+                           "  }                             "
+                           "  while (1==1) {                " // 11
+                           "    y = 1;                      " // 12
                            "  }                             "
                            "}";
 
@@ -1427,6 +1430,11 @@ TEST_CASE("Test getAllIfElseStatementsThatMatch") {
                            "      y = 1;                    " // 9
                            "    } else {                    "
                            "      y = 2;                    " // 10
+                           "    }                           "
+                           "    if (1 == 1) then {          " // 11
+                           "      y = 1;                    " // 12
+                           "    } else {                    "
+                           "      y = 2;                    " // 13
                            "    }                           "
                            "  }                             "
                            "}";
