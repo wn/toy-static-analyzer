@@ -934,12 +934,19 @@ getAffectsMapping(const std::unordered_map<TNodeType, std::vector<const TNode*>,
         variablesGoingOut[statementNumber] = variablesReachingIn[statementNumber];
 
         const TNode* tNode = statementNumberToTNode.at(statementNumber);
+
+        // - KILL modified variables
+        if (tNode->type == Assign || tNode->type == Read || tNode->type == Call) {
+            const VARIABLE_NAME_SET& modifiedVariables = modifiesMapping[tNode];
+            for (const VARIABLE_NAME& modifiedVariable : modifiedVariables) {
+                variablesGoingOut[statementNumber].erase(modifiedVariable);
+            }
+        }
+
+        // + GEN new variables
         if (tNode->type == Assign) {
             assert(modifiesMapping[tNode].size() == 1);
             VARIABLE_NAME variableModified = *modifiesMapping[tNode].begin();
-            // - KILL
-            variablesGoingOut[statementNumber].erase(variableModified);
-            // + GEN
             variablesGoingOut[statementNumber][variableModified] = { statementNumber };
         }
 

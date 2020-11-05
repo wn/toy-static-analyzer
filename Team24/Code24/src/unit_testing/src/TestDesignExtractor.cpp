@@ -1195,6 +1195,42 @@ TEST_CASE("Test getAffectedMapping") {
     REQUIRE(actual == expected);
 }
 
+TEST_CASE("Test getAffectsMapping blocked by non-assignment modification") {
+    //
+    const char program[] = "procedure Proc { "
+                           "x = 1;" // 1
+                           "y = 2;" // 2
+                           "read x;" // 3
+                           "w = x + y;" // 4
+                           "z = x - y;" // 5
+                           "call ModifyZ;" // 6
+                           "end = z + w;" // 7
+                           "}"
+                           "procedure ModifyZ {"
+                           "z = 23;"
+                           "}";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto nextRelationship = extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto actual =
+    extractor::getAffectsMapping(tNodeTypeToTNodes, tNodeToStatementNumber,
+                                 extractor::getStatementNumberToTNode(tNodeToStatementNumber),
+                                 nextRelationship, extractor::getPreviousRelationship(nextRelationship),
+                                 extractor::getUsesMapping(tNodeTypeToTNodes),
+                                 extractor::getModifiesMapping(tNodeTypeToTNodes));
+
+    // assignment to x (line 1) does not affect 4, 5.
+    // assignment to z (line 5) does not affect 7.
+    std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> expected = {
+        { 2, { 4, 5 } }, // assignment to y affects 4,5
+        { 4, { 7 } }, // assignment to w affects 7
+    };
+    REQUIRE(actual == expected);
+}
+
 TEST_CASE("Test getNextBipRelationship basic") {
     const char program[] = "procedure First { "
                            "x = 1;" // 1
