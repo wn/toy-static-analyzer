@@ -1637,5 +1637,207 @@ TEST_CASE("Test getAllStatementsThatAffect/getAllStatementsThatAreAffected") {
     expected = { 2, 3, 5, 7, 8 };
     REQUIRE(pkb.getAllStatementsThatAreAffected() == expected);
 }
+
+TEST_CASE("Test getNextBipStatementOf basic") {
+    const char STRUCTURED_STATEMENT[] = "procedure a {         "
+                                        "  while (1 == 1) {    " // 1
+                                        "    a = 1;            " // 2
+                                        "    call b;           " // 3
+                                        "  }"
+                                        "}"
+                                        ""
+                                        "procedure b {         "
+                                        "  a = 1;              " // 4
+                                        "  if (a == 1) then {  " // 5
+                                        "    b = 1;            " // 6
+                                        "  } else {            "
+                                        "    b = 1;            " // 7
+                                        "  }                   "
+                                        "}";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(STRUCTURED_STATEMENT);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    STATEMENT_NUMBER_SET expected = { 2 };
+    REQUIRE(pkb.getNextBipStatementOf(1, false) == expected);
+    expected = { 3 };
+    REQUIRE(pkb.getNextBipStatementOf(2, false) == expected);
+    expected = { 4 };
+    REQUIRE(pkb.getNextBipStatementOf(3, false) == expected);
+    expected = { 5 };
+    REQUIRE(pkb.getNextBipStatementOf(4, false) == expected);
+    expected = { 6, 7 };
+    REQUIRE(pkb.getNextBipStatementOf(5, false) == expected);
+    expected = { 1 };
+    REQUIRE(pkb.getNextBipStatementOf(6, false) == expected);
+    REQUIRE(pkb.getNextBipStatementOf(7, false) == expected);
+
+    expected = { 1, 2, 3, 4, 5, 6, 7 };
+    REQUIRE(pkb.getNextBipStatementOf(1, true) == expected);
+    REQUIRE(pkb.getNextBipStatementOf(2, true) == expected);
+    REQUIRE(pkb.getNextBipStatementOf(3, true) == expected);
+    REQUIRE(pkb.getNextBipStatementOf(4, true) == expected);
+    REQUIRE(pkb.getNextBipStatementOf(5, true) == expected);
+    REQUIRE(pkb.getNextBipStatementOf(6, true) == expected);
+    REQUIRE(pkb.getNextBipStatementOf(7, true) == expected);
+}
+
+TEST_CASE("Test getNextBipStatementOf branching") {
+    const char program[] = "procedure left {      "
+                           "  y = 1;              " // 1
+                           "  call middle;        " // 2
+                           "  left = end;         " // 3
+                           "}"
+                           "procedure middle {    "
+                           "  x = 1;              " // 4
+                           "}                     "
+                           "procedure right {     "
+                           "  call middle;        " // 5
+                           "  right = end;        " // 6
+                           "}                     ";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    // Non-transitive
+    STATEMENT_NUMBER_SET expected = { 2 };
+    REQUIRE(pkb.getNextBipStatementOf(1, false) == expected);
+    expected = { 4 };
+    REQUIRE(pkb.getNextBipStatementOf(2, false) == expected);
+    expected = {};
+    REQUIRE(pkb.getNextBipStatementOf(3, false) == expected);
+
+    expected = { 3, 6 };
+    REQUIRE(pkb.getNextBipStatementOf(4, false) == expected);
+
+    expected = { 4 };
+    REQUIRE(pkb.getNextBipStatementOf(5, false) == expected);
+    expected = {};
+    REQUIRE(pkb.getNextBipStatementOf(6, false) == expected);
+
+    // Transitive
+    expected = { 2, 4, 3 };
+    REQUIRE(pkb.getNextBipStatementOf(1, true) == expected);
+    expected = { 3, 6 };
+    REQUIRE(pkb.getNextBipStatementOf(4, true) == expected);
+    expected = { 4, 6 };
+    REQUIRE(pkb.getNextBipStatementOf(5, true) == expected);
+}
+
+TEST_CASE("Test getNextBipStatementOf nesting") {
+    const char program[] = "procedure top {       "
+                           "  y = 1;              " // 1
+                           "  call middle;        " // 2
+                           "  left = end;         " // 3
+                           "}"
+                           "procedure middle {    "
+                           "  call bottom;        " // 4
+                           "}                     "
+                           "procedure bottom {    "
+                           "  left = end;         " // 5
+                           "}                     ";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+
+    STATEMENT_NUMBER_SET expected = {};
+
+    expected = { 2, 4, 5, 3 };
+    REQUIRE(pkb.getNextBipStatementOf(1, true) == expected);
+
+    expected = { 4, 5, 3 };
+    REQUIRE(pkb.getNextBipStatementOf(2, true) == expected);
+
+    expected = {};
+    REQUIRE(pkb.getNextBipStatementOf(3, false) == expected);
+    REQUIRE(pkb.getNextBipStatementOf(3, true) == expected);
+
+    expected = { 5 };
+    REQUIRE(pkb.getNextBipStatementOf(4, false) == expected);
+    expected = { 5, 3 };
+    REQUIRE(pkb.getNextBipStatementOf(4, true) == expected);
+
+    expected = { 3 };
+    REQUIRE(pkb.getNextBipStatementOf(5, false) == expected);
+    REQUIRE(pkb.getNextBipStatementOf(5, true) == expected);
+}
+
+TEST_CASE("Test getPreviousBipStatementOf") {
+    const char program[] = "procedure left {      "
+                           "  y = 1;              " // 1
+                           "  call middle;        " // 2
+                           "  left = end;         " // 3
+                           "}"
+                           "procedure middle {    "
+                           "  x = 1;              " // 4
+                           "}                     "
+                           "procedure right {     "
+                           "  call middle;        " // 5
+                           "  right = end;        " // 6
+                           "}                     ";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+
+    STATEMENT_NUMBER_SET expected = {};
+
+    expected = {};
+    REQUIRE(pkb.getPreviousBipStatementOf(1, false) == expected);
+    REQUIRE(pkb.getPreviousBipStatementOf(1, true) == expected);
+
+    expected = { 1 };
+    REQUIRE(pkb.getPreviousBipStatementOf(2, false) == expected);
+    REQUIRE(pkb.getPreviousBipStatementOf(2, true) == expected);
+
+    expected = { 4 };
+    REQUIRE(pkb.getPreviousBipStatementOf(3, false) == expected);
+    expected = { 1, 2, 4 };
+    REQUIRE(pkb.getPreviousBipStatementOf(3, true) == expected);
+
+    expected = { 2, 5 };
+    REQUIRE(pkb.getPreviousBipStatementOf(4, false) == expected);
+    expected = { 1, 2, 5 };
+    REQUIRE(pkb.getPreviousBipStatementOf(4, true) == expected);
+
+    expected = {};
+    REQUIRE(pkb.getPreviousBipStatementOf(5, false) == expected);
+    REQUIRE(pkb.getPreviousBipStatementOf(5, true) == expected);
+
+    expected = { 4 };
+    REQUIRE(pkb.getPreviousBipStatementOf(6, false) == expected);
+    expected = { 5, 4 };
+    REQUIRE(pkb.getPreviousBipStatementOf(6, true) == expected);
+}
+
+TEST_CASE("Test getAllStatementsWithNextBip and getAllStatementsWithPreviousBip") {
+    const char program[] = "procedure left {      "
+                           "  y = 1;              " // 1
+                           "  call middle;        " // 2
+                           "  left = end;         " // 3
+                           "}"
+                           "procedure middle {    "
+                           "  x = 1;              " // 4
+                           "}                     "
+                           "procedure right {     "
+                           "  call middle;        " // 5
+                           "  right = end;        " // 6
+                           "}                     ";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    STATEMENT_NUMBER_SET expected = { 1, 2, 4, 5 };
+    REQUIRE(pkb.getAllStatementsWithNextBip() == expected);
+
+    expected = { 2, 3, 4, 6 };
+    REQUIRE(pkb.getAllStatementsWithPreviousBip() == expected);
+}
 } // namespace testpkb
 } // namespace backend

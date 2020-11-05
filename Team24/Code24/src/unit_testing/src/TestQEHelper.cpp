@@ -1393,6 +1393,20 @@ STATEMENT_NUMBER_SET PKBMock::getNextStatementOf(STATEMENT_NUMBER statementNumbe
     return lines;
 }
 
+STATEMENT_NUMBER_SET PKBMock::getNextBipStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const {
+    return STATEMENT_NUMBER_SET();
+}
+STATEMENT_NUMBER_SET PKBMock::getPreviousBipStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const {
+    return STATEMENT_NUMBER_SET();
+}
+STATEMENT_NUMBER_SET PKBMock::getAllStatementsWithNextBip() const {
+    return STATEMENT_NUMBER_SET();
+}
+STATEMENT_NUMBER_SET PKBMock::getAllStatementsWithPreviousBip() const {
+    return STATEMENT_NUMBER_SET();
+}
+
+
 const PROCEDURE_NAME_SET& PKBMock::getAllProceduresThatCallSomeProcedure() const {
     static PROCEDURE_NAME_SET procs;
     if (test_idx == 4) {

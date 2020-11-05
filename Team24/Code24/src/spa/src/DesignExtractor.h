@@ -3,8 +3,10 @@
 #include "PKB.h"
 #include "TNode.h"
 
+#include <functional>
 #include <unordered_map>
 #include <unordered_set>
+#include <utility>
 
 namespace backend {
 namespace extractor {
@@ -87,6 +89,7 @@ class NextBipEdge {
   public:
     NextBipEdge(PROGRAM_LINE prevLine, PROGRAM_LINE nextLine, PROGRAM_LINE label = 0)
     : prevLine(prevLine), nextLine(nextLine), label(label) {
+        isBranchBack = prevLine < 0;
     }
     PROGRAM_LINE prevLine;
     PROGRAM_LINE nextLine;
@@ -97,8 +100,30 @@ class NextBipEdge {
     }
 
     NextBipEdge reversed() const {
-        return { nextLine, prevLine, label };
+        NextBipEdge r = { nextLine, prevLine, label };
+        r.isBranchBack = false;
+
+        if (isBranchLineEdge()) {
+            r.isBranchBack = true;
+        }
+
+        return r;
     }
+
+    bool isLabelled() const {
+        return label > 0;
+    }
+
+    bool isBranchBackEdge() const {
+        return isLabelled() && isBranchBack;
+    }
+
+    bool isBranchLineEdge() const {
+        return isLabelled() && !isBranchBack;
+    }
+
+  private:
+    bool isBranchBack;
 };
 
 /**

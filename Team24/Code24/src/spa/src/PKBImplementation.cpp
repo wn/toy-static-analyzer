@@ -124,6 +124,12 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
         statementsWithPrev.insert(pair.first);
     }
 
+    // NextBip
+    std::tie(nextBipRelationship, procedureEndNodes) =
+    extractor::getNextBipRelationship(nextRelationship, tNodeTypeToTNodesMap, tNodeToStatementNumber);
+    previousBipRelationship = extractor::getPreviousBipRelationship(nextBipRelationship);
+
+
     // Pattern
     patternsMap = extractor::getPatternsMap(tNodeTypeToTNodesMap[Assign], tNodeToStatementNumber);
     conditionVariablesToStatementNumbers =
@@ -663,6 +669,153 @@ const STATEMENT_NUMBER_SET& PKBImplementation::getAllStatementsWithNext() const 
 
 const STATEMENT_NUMBER_SET& PKBImplementation::getAllStatementsWithPrev() const {
     return statementsWithPrev;
+}
+
+bool isProcedureEndLine(PROGRAM_LINE p) {
+    return p < 0;
+}
+
+STATEMENT_NUMBER_SET
+traverseBipGraph(PROGRAM_LINE start,
+                 bool isTransitive,
+                 const std::unordered_map<PROGRAM_LINE, std::unordered_set<extractor::NextBipEdge>>& bipGraph) {
+
+    auto it = bipGraph.find(start);
+    if (it == bipGraph.end()) {
+        return {};
+    }
+
+    if (!isTransitive) {
+        STATEMENT_NUMBER_SET result;
+        std::vector<STATEMENT_NUMBER> procedureEndLines;
+        for (const extractor::NextBipEdge& edge : it->second) {
+            if (isProcedureEndLine(edge.nextLine)) {
+                procedureEndLines.push_back(edge.nextLine);
+            } else {
+                result.insert(edge.nextLine);
+            }
+        }
+
+        while (!procedureEndLines.empty()) {
+            STATEMENT_NUMBER endLine = procedureEndLines.back();
+            procedureEndLines.pop_back();
+
+            if (bipGraph.find(endLine) == bipGraph.end()) {
+                continue;
+            }
+
+            for (extractor::NextBipEdge edge : bipGraph.at(endLine)) {
+                if (isProcedureEndLine(edge.nextLine)) {
+                    procedureEndLines.push_back(edge.nextLine);
+                } else {
+                    result.insert(edge.nextLine);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    // [(statement, procedure_scope)]
+    std::vector<std::pair<STATEMENT_NUMBER, std::vector<int>>> toVisit = {};
+    for (extractor::NextBipEdge edge : it->second) {
+        std::vector<int> scope;
+
+        // Add to scope if we are making a new call
+        if (edge.isBranchLineEdge()) {
+            scope.push_back(edge.label);
+        }
+
+        toVisit.emplace_back(edge.nextLine, scope);
+    }
+
+    STATEMENT_NUMBER_SET visited;
+    while (!toVisit.empty()) {
+        auto p = toVisit.back(); // Copy to prevent destruction of vector
+        toVisit.pop_back();
+
+        STATEMENT_NUMBER visiting = p.first;
+        std::vector<int>& scope = p.second;
+
+        if (visited.find(visiting) != visited.end()) {
+            continue;
+        }
+        visited.insert(visiting);
+
+        if (bipGraph.find(visiting) == bipGraph.end()) {
+            continue;
+        }
+
+        for (extractor::NextBipEdge edge : bipGraph.at(visiting)) {
+
+            STATEMENT_NUMBER nextLine = edge.nextLine;
+            std::vector<int> nextLineScope = scope;
+
+            if (edge.isBranchBackEdge() && !nextLineScope.empty()) {
+                if (nextLineScope.back() == edge.label) {
+                    // We can branch back, remove the current scope
+                    nextLineScope.pop_back();
+                } else {
+                    // If we cannot branch back, dont traverse this edge.
+                    continue;
+                }
+            }
+
+            if (edge.isBranchLineEdge()) {
+                // Start a new function call
+                nextLineScope.push_back(edge.label);
+            }
+
+            toVisit.emplace_back(nextLine, nextLineScope);
+        }
+    }
+
+    STATEMENT_NUMBER_SET result;
+    for (STATEMENT_NUMBER s : visited) {
+        if (!isProcedureEndLine(s)) {
+            result.insert(s);
+        }
+    }
+
+    return result;
+}
+
+STATEMENT_NUMBER_SET
+PKBImplementation::getNextBipStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const {
+    return traverseBipGraph(statementNumber, isTransitive, nextBipRelationship);
+}
+
+STATEMENT_NUMBER_SET PKBImplementation::getPreviousBipStatementOf(STATEMENT_NUMBER statementNumber,
+                                                                  bool isTransitive) const {
+    return traverseBipGraph(statementNumber, isTransitive, previousBipRelationship);
+}
+
+STATEMENT_NUMBER_SET PKBImplementation::getAllStatementsWithNextBip() const {
+    // TODO(remo5000) cache this after the first time it's called
+    STATEMENT_NUMBER_SET result;
+    for (auto& p : nextBipRelationship) {
+        if (isProcedureEndLine(p.first)) {
+            continue;
+        }
+        if (!getNextBipStatementOf(p.first, false).empty()) {
+            result.insert(p.first);
+        }
+    }
+    return result;
+}
+
+STATEMENT_NUMBER_SET PKBImplementation::getAllStatementsWithPreviousBip() const {
+    // TODO(remo5000) cache this after the first time it's called
+    STATEMENT_NUMBER_SET result;
+    for (auto& p : previousBipRelationship) {
+        if (isProcedureEndLine(p.first)) {
+            continue;
+        }
+        if (!getPreviousBipStatementOf(p.first, false).empty()) {
+            result.insert(p.first);
+        }
+    }
+    return result;
 }
 
 PROGRAM_LINE_SET PKBImplementation::getStatementsAffectedBy(PROGRAM_LINE statementNumber, bool isTransitive) const {

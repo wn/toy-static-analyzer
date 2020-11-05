@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DesignExtractor.h"
 #include "PKB.h"
 #include "TNode.h"
 
@@ -71,6 +72,11 @@ class PKBImplementation : virtual public backend::PKB {
     STATEMENT_NUMBER_SET getPreviousStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const override;
     const STATEMENT_NUMBER_SET& getAllStatementsWithNext() const override;
     const STATEMENT_NUMBER_SET& getAllStatementsWithPrev() const override;
+
+    STATEMENT_NUMBER_SET getNextBipStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const override;
+    STATEMENT_NUMBER_SET getPreviousBipStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const override;
+    STATEMENT_NUMBER_SET getAllStatementsWithNextBip() const override;
+    STATEMENT_NUMBER_SET getAllStatementsWithPreviousBip() const override;
 
     PROGRAM_LINE_SET getStatementsAffectedBy(PROGRAM_LINE statementNumber, bool isTransitive) const override;
     PROGRAM_LINE_SET getStatementsThatAffect(PROGRAM_LINE statementNumber, bool isTransitive) const override;
@@ -148,6 +154,11 @@ class PKBImplementation : virtual public backend::PKB {
     std::unordered_map<STATEMENT_NUMBER, std::unordered_set<STATEMENT_NUMBER>> previousRelationship;
     STATEMENT_NUMBER_SET statementsWithNext;
     STATEMENT_NUMBER_SET statementsWithPrev;
+
+    // NextBip helper:
+    std::unordered_map<PROGRAM_LINE, std::unordered_set<extractor::NextBipEdge>> nextBipRelationship;
+    std::unordered_map<PROGRAM_LINE, std::unordered_set<extractor::NextBipEdge>> previousBipRelationship;
+    std::unordered_set<std::unique_ptr<const TNode>> procedureEndNodes;
 
     // Affects helper:
     std::unordered_map<PROGRAM_LINE, PROGRAM_LINE_SET> affectsMapping;

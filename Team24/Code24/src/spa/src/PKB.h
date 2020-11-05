@@ -199,6 +199,20 @@ class PKB {
     virtual const STATEMENT_NUMBER_SET& getAllStatementsWithNext() const = 0;
     virtual const STATEMENT_NUMBER_SET& getAllStatementsWithPrev() const = 0;
 
+    // -- NEXT_BIP -- */
+    // For two program lines n1 and n2 (not necessarily in the saem procedure)
+    //    NextBip (n1, n2) holds if n2 can be executed immediately after n1 in some execution
+    //    sequence NextBip* (n1, n2) holds if n2 can be executed after n1 in some execution sequence
+
+    virtual STATEMENT_NUMBER_SET
+    getNextBipStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const = 0;
+    // list of all statement numbers that goes to `statementNumber`
+    virtual STATEMENT_NUMBER_SET
+    getPreviousBipStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const = 0;
+
+    virtual STATEMENT_NUMBER_SET getAllStatementsWithNextBip() const = 0;
+    virtual STATEMENT_NUMBER_SET getAllStatementsWithPreviousBip() const = 0;
+
     /* -- AFFECTS -- */
     // Affects(a,b) holds true iff
     // 1) a and b are assignment statements

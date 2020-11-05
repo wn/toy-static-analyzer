@@ -87,6 +87,14 @@ class PKBMock : public backend::PKB {
 
     STATEMENT_NUMBER_SET getNextStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const override;
     STATEMENT_NUMBER_SET getPreviousStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const override;
+    const STATEMENT_NUMBER_SET& getAllStatementsWithNext() const override;
+    const STATEMENT_NUMBER_SET& getAllStatementsWithPrev() const override;
+
+    STATEMENT_NUMBER_SET getNextBipStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const override;
+    STATEMENT_NUMBER_SET getPreviousBipStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const override;
+    STATEMENT_NUMBER_SET getAllStatementsWithNextBip() const override;
+    STATEMENT_NUMBER_SET getAllStatementsWithPreviousBip() const override;
+
 
     STATEMENT_NUMBER_SET
     getAllAssignmentStatementsThatMatch(const std::string& assignee, const std::string& pattern, bool isSubExpr) const override;
@@ -98,8 +106,6 @@ class PKBMock : public backend::PKB {
                                                          bool ifPatternIsSubExpr,
                                                          const std::string& elsePattern,
                                                          bool elsePatternIsSubExpr) const override;
-    const STATEMENT_NUMBER_SET& getAllStatementsWithNext() const override;
-    const STATEMENT_NUMBER_SET& getAllStatementsWithPrev() const override;
 
     PROGRAM_LINE_SET getStatementsAffectedBy(PROGRAM_LINE statementNumber, bool isTransitive) const override;
     PROGRAM_LINE_SET getStatementsThatAffect(PROGRAM_LINE statementNumber, bool isTransitive) const override;
