@@ -1231,6 +1231,303 @@ TEST_CASE("Test getAffectsMapping blocked by non-assignment modification") {
     REQUIRE(actual == expected);
 }
 
+TEST_CASE("Test getAffectsBipMapping works as an affects mapping (sanity check)") {
+    //
+    const char program[] = "procedure Proc { "
+                           "x = 1;" // 1
+                           "y = 2;" // 2
+                           "read x;" // 3
+                           "w = x + y;" // 4
+                           "lalala = z + w;" // 5
+                           "while (i == 0) {" // 6
+                           "  i = i + 1;" // 7
+                           "}"
+                           "xx = 1;" // 8
+                           "if (x < 3) then {" // 9
+                           "  xx = xx;" // 10
+                           "} else {"
+                           "  notxx = 123;" // 11
+                           "}"
+                           "yy = xx;" // 12
+                           "}";
+
+    std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> expectedUnscoped = {
+        { 2, { 4 } }, //
+        { 7, { 7 } }, //
+        { 4, { 5 } }, //
+        { 8, { 10, 12 } }, //
+        { 10, { 12 } } //
+    };
+
+    typedef std::vector<STATEMENT_NUMBER> Scope;
+    typedef std::pair<STATEMENT_NUMBER, Scope> ScopedStatement;
+    typedef std::set<ScopedStatement> ScopedStatements;
+    std::map<ScopedStatement, ScopedStatements> expectedScoped;
+    // scoped mapping is the same as the unscoped one, with empty scopes.
+    for (auto& p : expectedUnscoped) {
+        for (auto& s : p.second) {
+            expectedScoped[{ p.first, {} }].insert({ s, {} });
+        }
+    }
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto nextRelationship = extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto nextBipRelationship =
+    extractor::getNextBipRelationship(nextRelationship, tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto previousBipRelationship = extractor::getPreviousBipRelationship(nextBipRelationship.first);
+
+    auto actual = extractor::getAffectsBipMapping(tNodeTypeToTNodes, tNodeToStatementNumber,
+                                                  extractor::getStatementNumberToTNode(tNodeToStatementNumber),
+                                                  nextBipRelationship.first, previousBipRelationship,
+                                                  extractor::getUsesMapping(tNodeTypeToTNodes),
+                                                  extractor::getModifiesMapping(tNodeTypeToTNodes));
+    REQUIRE(actual.first == expectedUnscoped);
+    REQUIRE(actual.second == expectedScoped);
+}
+
+TEST_CASE("Test getAffectsBipMapping basic") {
+    const char program[] = "procedure A { "
+                           "x = 1;" // 1
+                           "call B;" // 2
+                           "endA = y;" // 3
+                           "}" // -3
+                           "procedure B {"
+                           "y = x + 1;" // 4
+                           "}" // -2
+                           "procedure C {"
+                           "y = 2;" // 5
+                           "call B;" // 6
+                           "endC = y;" // 7
+                           "}"; // -1
+
+
+    typedef std::vector<STATEMENT_NUMBER> Scope;
+    typedef std::pair<STATEMENT_NUMBER, Scope> ScopedStatement;
+    typedef std::set<ScopedStatement> ScopedStatements;
+    std::map<ScopedStatement, ScopedStatements> expectedScoped;
+    expectedScoped[{ 1, {} }] = {
+        { 4, { 2 } },
+    };
+
+    expectedScoped[{ 4, { 2 } }] = { { 3, {} } };
+
+    expectedScoped[{ 4, { 6 } }] = { { 7, {} } };
+
+    std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> expectedUnscoped = { { 1, { 4 } },
+                                                                                    { 4, { 3, 7 } } };
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto nextRelationship = extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto nextBipRelationship =
+    extractor::getNextBipRelationship(nextRelationship, tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto previousBipRelationship = extractor::getPreviousBipRelationship(nextBipRelationship.first);
+
+    auto actual = extractor::getAffectsBipMapping(tNodeTypeToTNodes, tNodeToStatementNumber,
+                                                  extractor::getStatementNumberToTNode(tNodeToStatementNumber),
+                                                  nextBipRelationship.first, previousBipRelationship,
+                                                  extractor::getUsesMapping(tNodeTypeToTNodes),
+                                                  extractor::getModifiesMapping(tNodeTypeToTNodes));
+    REQUIRE(actual.first == expectedUnscoped);
+    REQUIRE(actual.second == expectedScoped);
+}
+
+TEST_CASE("Test getAffectsBipMapping with while loop") {
+    const char program[] = "procedure A {"
+                           "x = 1;" // 1
+                           "while (y == 1) {" // 2
+                           "  call B;" // 3
+                           "}"
+                           "}" // -2
+                           "procedure B {"
+                           "c = b;" // 4
+                           "b = a;" // 5
+                           "a = x;" // 6
+                           "}" // -1
+    ;
+
+
+    typedef std::vector<STATEMENT_NUMBER> Scope;
+    typedef std::pair<STATEMENT_NUMBER, Scope> ScopedStatement;
+    typedef std::set<ScopedStatement> ScopedStatements;
+    std::map<ScopedStatement, ScopedStatements> expectedScoped;
+    expectedScoped[{ 1, {} }] = {
+        { 6, { 3 } },
+    };
+    expectedScoped[{ 6, { 3 } }] = { { 5, { 3 } } };
+    expectedScoped[{ 5, { 3 } }] = { { 4, { 3 } } };
+
+    std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> expectedUnscoped = {
+        { 1, { 6 } },
+        { 6, { 5 } },
+        { 5, { 4 } },
+    };
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto nextRelationship = extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto nextBipRelationship =
+    extractor::getNextBipRelationship(nextRelationship, tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto previousBipRelationship = extractor::getPreviousBipRelationship(nextBipRelationship.first);
+
+    auto actual = extractor::getAffectsBipMapping(tNodeTypeToTNodes, tNodeToStatementNumber,
+                                                  extractor::getStatementNumberToTNode(tNodeToStatementNumber),
+                                                  nextBipRelationship.first, previousBipRelationship,
+                                                  extractor::getUsesMapping(tNodeTypeToTNodes),
+                                                  extractor::getModifiesMapping(tNodeTypeToTNodes));
+    REQUIRE(actual.first == expectedUnscoped);
+    REQUIRE(actual.second == expectedScoped);
+}
+
+TEST_CASE("Test getAffectsBipMapping with if/else") {
+    const char program[] = "procedure A {"
+                           "x = 1;" // 1
+                           "if (epsilon != isomorphic) then {" // 2
+                           "y = 2;" // 3
+                           "call B;" // 4
+                           "y = a;" // 5
+                           "} else { call B; }" // 6
+                           "sink = a + y + x;" // 7
+                           "}" // -2
+                           "procedure B {"
+                           "a = x + y;" // 8
+                           "}" // -1
+    ;
+
+    typedef std::vector<STATEMENT_NUMBER> Scope;
+    typedef std::pair<STATEMENT_NUMBER, Scope> ScopedStatement;
+    typedef std::set<ScopedStatement> ScopedStatements;
+    std::map<ScopedStatement, ScopedStatements> expectedScoped;
+    expectedScoped[{ 1, {} }] = { { 8, { 4 } }, { 8, { 6 } }, { 7, {} } };
+    expectedScoped[{ 3, {} }] = { { 8, { 4 } } };
+    expectedScoped[{ 5, {} }] = { { 7, {} } };
+    expectedScoped[{ 8, { 4 } }] = { { 5, {} }, { 7, {} } };
+    expectedScoped[{ 8, { 6 } }] = { { 7, {} } };
+
+    std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> expectedUnscoped = {
+        { 1, { 8, 7 } },
+        { 3, { 8 } },
+        { 5, { 7 } },
+        { 8, { 5, 7 } },
+    };
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto nextRelationship = extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto nextBipRelationship =
+    extractor::getNextBipRelationship(nextRelationship, tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto previousBipRelationship = extractor::getPreviousBipRelationship(nextBipRelationship.first);
+
+    auto actual = extractor::getAffectsBipMapping(tNodeTypeToTNodes, tNodeToStatementNumber,
+                                                  extractor::getStatementNumberToTNode(tNodeToStatementNumber),
+                                                  nextBipRelationship.first, previousBipRelationship,
+                                                  extractor::getUsesMapping(tNodeTypeToTNodes),
+                                                  extractor::getModifiesMapping(tNodeTypeToTNodes));
+    REQUIRE(actual.first == expectedUnscoped);
+    REQUIRE(actual.second == expectedScoped);
+}
+
+TEST_CASE("Test getAffectsBipMapping nested scope") {
+    const char program[] = "procedure A { "
+                           "x = 1;" // 1
+                           "if (x == 1 ) then { call B; } else { call B; } " // 2 -> 3,4
+                           "}"
+                           "procedure B { if (x == 1 ) then { call C; } else { call C; } }" // 5 -> 6,7
+                           "procedure C { if (x == 1 ) then { call D; } else { call D; } }" // 8 -> 9,10
+                           "procedure D { if (x == 1 ) then { y = x; } else { y = 1; } }" // 11 -> 12,13
+    ;
+
+    typedef std::vector<STATEMENT_NUMBER> Scope;
+    typedef std::pair<STATEMENT_NUMBER, Scope> ScopedStatement;
+    typedef std::set<ScopedStatement> ScopedStatements;
+    std::map<ScopedStatement, ScopedStatements> expectedScoped;
+    expectedScoped[{ 1, {} }] = {
+        { 12, { 3, 6, 9 } }, { 12, { 3, 6, 10 } }, { 12, { 3, 7, 9 } }, { 12, { 3, 7, 10 } },
+        { 12, { 4, 6, 9 } }, { 12, { 4, 6, 10 } }, { 12, { 4, 7, 9 } }, { 12, { 4, 7, 10 } },
+    };
+
+    std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> expectedUnscoped = {
+        { 1, { 12 } },
+    };
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto nextRelationship = extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto nextBipRelationship =
+    extractor::getNextBipRelationship(nextRelationship, tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto previousBipRelationship = extractor::getPreviousBipRelationship(nextBipRelationship.first);
+
+    auto actual = extractor::getAffectsBipMapping(tNodeTypeToTNodes, tNodeToStatementNumber,
+                                                  extractor::getStatementNumberToTNode(tNodeToStatementNumber),
+                                                  nextBipRelationship.first, previousBipRelationship,
+                                                  extractor::getUsesMapping(tNodeTypeToTNodes),
+                                                  extractor::getModifiesMapping(tNodeTypeToTNodes));
+    REQUIRE(actual.first == expectedUnscoped);
+    REQUIRE(actual.second == expectedScoped);
+}
+
+TEST_CASE("Test getAffectedBipMapping") {
+    const char program[] = "procedure A {"
+                           "x = 1;" // 1
+                           "if (epsilon != isomorphic) then {" // 2
+                           "y = 2;" // 3
+                           "call B;" // 4
+                           "y = a;" // 5
+                           "} else { call B; }" // 6
+                           "sink = a + y + x;" // 7
+                           "}" // -2
+                           "procedure B {"
+                           "a = x + y;" // 8
+                           "}" // -1
+    ;
+
+    typedef std::vector<STATEMENT_NUMBER> Scope;
+    typedef std::pair<STATEMENT_NUMBER, Scope> ScopedStatement;
+    typedef std::set<ScopedStatement> ScopedStatements;
+    std::map<ScopedStatement, ScopedStatements> expectedScoped;
+    expectedScoped[{ 8, { 4 } }] = { { 1, {} }, { 3, {} } };
+    expectedScoped[{ 8, { 6 } }] = { { 1, {} } };
+    expectedScoped[{ 7, {} }] = { { 1, {} }, { 5, {} }, { 8, { 4 } }, { 8, { 6 } } };
+    expectedScoped[{ 5, {} }] = { { 8, { 4 } } };
+
+    std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> expectedUnscoped = {
+        { 8, { 1, 3 } },
+        { 7, { 1, 5, 8 } },
+        { 5, { 8 } },
+    };
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto nextRelationship = extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto nextBipRelationship =
+    extractor::getNextBipRelationship(nextRelationship, tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto previousBipRelationship = extractor::getPreviousBipRelationship(nextBipRelationship.first);
+
+    auto affectsBip =
+    extractor::getAffectsBipMapping(tNodeTypeToTNodes, tNodeToStatementNumber,
+                                    extractor::getStatementNumberToTNode(tNodeToStatementNumber),
+                                    nextBipRelationship.first, previousBipRelationship,
+                                    extractor::getUsesMapping(tNodeTypeToTNodes),
+                                    extractor::getModifiesMapping(tNodeTypeToTNodes));
+    auto actual = extractor::getAffectedBipMapping(affectsBip);
+
+    REQUIRE(actual.first == expectedUnscoped);
+    REQUIRE(actual.second == expectedScoped);
+}
+
 TEST_CASE("Test getNextBipRelationship basic") {
     const char program[] = "procedure First { "
                            "x = 1;" // 1

@@ -679,6 +679,11 @@ getNextBipRelationship(const std::unordered_map<int, std::unordered_set<int>>& n
         }
     }
 
+    // Return if there is no extra work to be done wrt call statements.
+    if (tNodeTypeToTNode.find(Call) == tNodeTypeToTNode.end()) {
+        return { nextBipRelationship, std::move(createdEndNodes) };
+    }
+
     // For every call statement, modify its outgoing edges and add edges from the end-nodes
     // of the called procedures.
     for (const TNode* callStatement : tNodeTypeToTNode.at(Call)) {
@@ -863,9 +868,10 @@ std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET>
 getAffectsMapping(const std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes,
                   const std::unordered_map<const TNode*, STATEMENT_NUMBER>& tNodeToStatementNumber,
                   const std::unordered_map<STATEMENT_NUMBER, const TNode*>& statementNumberToTNode,
-                  const std::unordered_map<int, std::unordered_set<int>> nextRelationship,
-                  const std::unordered_map<int, std::unordered_set<int>> previousRelationship,
-                  const std::unordered_map<const TNode*, std::unordered_set<std::string>> usesMapping,
+                  const std::unordered_map<int, std::unordered_set<int>>& nextRelationship,
+                  const std::unordered_map<int, std::unordered_set<int>>& previousRelationship,
+                  const std::unordered_map<const TNode*, std::unordered_set<std::string>>& usesMapping,
+                  // TODO(remo5000) use const here
                   std::unordered_map<const TNode*, std::unordered_set<std::string>> modifiesMapping) {
     // This is an implementation of a worklist algorithm for reaching definition analysis.
 
@@ -1001,7 +1007,7 @@ getAffectsMapping(const std::unordered_map<TNodeType, std::vector<const TNode*>,
 }
 
 std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET>
-getAffectedMapping(const std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> affectsMapping) {
+getAffectedMapping(const std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET>& affectsMapping) {
     std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> result;
     for (const auto& affectsPair : affectsMapping) {
         for (int affected : affectsPair.second) {
@@ -1010,6 +1016,257 @@ getAffectedMapping(const std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_S
     }
     return result;
 }
+
+std::pair<std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET>, std::map<ScopedStatement, ScopedStatements>>
+getAffectsBipMapping(const std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes,
+                     const std::unordered_map<const TNode*, STATEMENT_NUMBER>& tNodeToStatementNumber,
+                     const std::unordered_map<STATEMENT_NUMBER, const TNode*>& statementNumberToTNode,
+                     const std::unordered_map<PROGRAM_LINE, std::unordered_set<NextBipEdge>>& nextBipRelationship,
+                     const std::unordered_map<PROGRAM_LINE, std::unordered_set<NextBipEdge>>& previousBipRelationship,
+                     const std::unordered_map<const TNode*, std::unordered_set<std::string>>& usesMapping,
+                     const std::unordered_map<const TNode*, std::unordered_set<std::string>>& modifiesMapping) {
+    // This is a small modification to the Affects algorithm.
+    // @see getAffectsMapping
+
+    typedef std::unordered_map<VARIABLE_NAME, ScopedStatements> VariableToAssigners;
+
+    // We don't store every scoped statement, as there could be an exponential number of them.
+    // It is thus heuristically (but not asymptotically) better to realize
+    // ScopedStatements when we run the algorithm.
+    std::map<ScopedStatement, VariableToAssigners> variablesReachingIn;
+    std::map<ScopedStatement, VariableToAssigners> variablesGoingOut;
+
+    // Initialize
+    std::unordered_set<const TNode*> startingTNodes;
+    startingTNodes.insert(tNodeTypeToTNodes.at(Assign).begin(), tNodeTypeToTNodes.at(Assign).end());
+    for (const TNode* tNode : startingTNodes) {
+        // Make this assignment produce affects information
+        ScopedStatement scopedStatement = { tNodeToStatementNumber.at(tNode), Scope() };
+        VariableToAssigners initialVariableToAssigners;
+        for (const VARIABLE_NAME& variable : modifiesMapping.at(tNode)) {
+            initialVariableToAssigners[variable] = ScopedStatements();
+            initialVariableToAssigners[variable].insert(scopedStatement);
+        }
+        variablesGoingOut[scopedStatement] = initialVariableToAssigners;
+    }
+
+    std::vector<ScopedStatement> changedScopedStatements;
+    // Unlike Affects, we don't have every statement in the program (e.g. dummy statements)
+    // so we initialize the algorithm with the statements that occur right after the assignments
+    // (with their appropriate scope)
+    for (const TNode* startingTNode : startingTNodes) {
+        STATEMENT_NUMBER startNodeStatementNumber = tNodeToStatementNumber.at(startingTNode);
+        for (const NextBipEdge& edge : nextBipRelationship.at(startNodeStatementNumber)) {
+            STATEMENT_NUMBER nextStatementNumber = edge.nextLine;
+            Scope scope;
+            if (edge.isBranchLineEdge()) {
+                scope.push_back(edge.label);
+            } else if (edge.isBranchBackEdge()) {
+                continue;
+            }
+
+            changedScopedStatements.emplace_back(nextStatementNumber, scope);
+        }
+    }
+
+    while (!changedScopedStatements.empty()) {
+        ScopedStatement scopedStatement = changedScopedStatements.back();
+        changedScopedStatements.pop_back();
+
+        STATEMENT_NUMBER statementNumber;
+        Scope currentScope;
+        std::tie(statementNumber, currentScope) = scopedStatement;
+
+        variablesReachingIn[scopedStatement] = VariableToAssigners();
+        VariableToAssigners& statementAffects = variablesReachingIn.at(scopedStatement);
+
+        if (previousBipRelationship.find(statementNumber) != previousBipRelationship.end()) {
+            for (const NextBipEdge previousBipEdge : previousBipRelationship.at(statementNumber)) {
+                Scope previousStatementScope = currentScope;
+                // If we are in a scope that could not possibly be created by
+                if (previousBipEdge.reversed().isBranchLineEdge()) {
+                    // If there is no scope here, we should not have come from this NextBipEdge.
+                    if (currentScope.empty()) {
+                        continue;
+                    }
+
+                    // If we took a branch that is labelled differently from the top of the scope,
+                    // we should not have come from this NextBipEdge.
+                    if (currentScope.back() != previousBipEdge.label) {
+                        continue;
+                    }
+
+                    // Since we came from a branch that is, labelled the same as the top of the
+                    // current scope, the current scope didnt exist in the previous statement.
+                    previousStatementScope.pop_back();
+                } else if (previousBipEdge.reversed().isBranchBackEdge()) {
+                    // If we returned from a procedure, make sure that the previous statement's
+                    // scope indicates that it was inside said procedure.
+                    previousStatementScope.push_back(previousBipEdge.label);
+                }
+
+                // Post-condition: This ScopedStatement can be reached via this NextBipEdge.
+
+                // Propagate the affected variables (and who caused them to be affected) from
+                // previous statements.
+                STATEMENT_NUMBER previousStatement = previousBipEdge.reversed().prevLine;
+                const ScopedStatement previousScopedStatement = { previousStatement, previousStatementScope };
+                for (auto& p1 : variablesGoingOut[previousScopedStatement]) {
+                    const VARIABLE_NAME& variable = p1.first;
+                    const ScopedStatements& newAffectors = p1.second;
+
+                    if (statementAffects.find(variable) == statementAffects.end()) {
+                        statementAffects[variable] = ScopedStatements();
+                    }
+
+                    statementAffects[variable].insert(newAffectors.begin(), newAffectors.end());
+                }
+            }
+        }
+
+
+        // Make a copy of the old affects
+        const VariableToAssigners oldOutwardAffects = variablesGoingOut[scopedStatement];
+
+        // OUT := IN
+        variablesGoingOut[scopedStatement] = variablesReachingIn[scopedStatement];
+
+        // KILL and GEN variables if this is not a dummy node.
+        if (statementNumberToTNode.find(statementNumber) != statementNumberToTNode.end()) {
+            const TNode* tNode = statementNumberToTNode.at(statementNumber);
+
+            // - KILL modified variables. Unlike Affects, we don't KILL for Call statements.
+            if (tNode->type == Assign || tNode->type == Read) {
+                if (modifiesMapping.find(tNode) != modifiesMapping.end()) {
+                    const VARIABLE_NAME_SET& modifiedVariables = modifiesMapping.at(tNode);
+                    for (const VARIABLE_NAME& modifiedVariable : modifiedVariables) {
+                        variablesGoingOut[scopedStatement].erase(modifiedVariable);
+                    }
+                }
+            }
+
+            // + GEN new variables
+            if (tNode->type == Assign) {
+                assert(modifiesMapping.at(tNode).size() == 1);
+                VARIABLE_NAME variableModified = *modifiesMapping.at(tNode).begin();
+                variablesGoingOut[scopedStatement][variableModified] = { scopedStatement };
+            }
+        }
+
+
+        // If there were new affected variables,
+        if (variablesGoingOut[scopedStatement] != oldOutwardAffects) {
+            if (nextBipRelationship.find(statementNumber) == nextBipRelationship.end()) {
+                continue;
+            }
+            for (const NextBipEdge& nextBipEdge : nextBipRelationship.at(statementNumber)) {
+                STATEMENT_NUMBER nextStatement = nextBipEdge.nextLine;
+                Scope nextStatementScope = currentScope;
+                if (nextBipEdge.isBranchBackEdge()) {
+                    // If we are trying to "return" from a call we didnt make, dont traverse
+                    // this nextBipEdge.
+                    if (currentScope.empty()) {
+                        continue;
+                    }
+
+                    if (currentScope.back() != nextBipEdge.label) {
+                        continue;
+                    }
+                }
+                // Post-condition: The next ScopedStatement can be reached via this NextBipEdge.
+
+                // Modify scope
+                if (nextBipEdge.isBranchLineEdge()) {
+                    nextStatementScope.push_back(nextBipEdge.label);
+                } else if (nextBipEdge.isBranchBackEdge()) {
+                    nextStatementScope.pop_back();
+                }
+
+                changedScopedStatements.emplace_back(nextStatement, nextStatementScope);
+            }
+        }
+    }
+
+    std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> unscopedAffectsBipMapping;
+    std::map<ScopedStatement, ScopedStatements> scopedAffectsBipMapping;
+    for (const auto& p : variablesReachingIn) {
+        ScopedStatement inStatement = p.first;
+        const VariableToAssigners& variableToAssigners = p.second;
+
+        STATEMENT_NUMBER statementNumber = inStatement.first;
+
+        if (statementNumberToTNode.find(statementNumber) == statementNumberToTNode.end()) {
+            continue;
+        }
+        const TNode* tNode = statementNumberToTNode.at(statementNumber);
+
+        // Only assignments affect each other
+        if (tNode->type != Assign) {
+            continue;
+        }
+
+        // If this assignment variable uses nothing, nothing can possibly Affect it.
+        if (usesMapping.find(tNode) == usesMapping.end()) {
+            continue;
+        }
+        auto& tNodeUses = usesMapping.at(tNode);
+
+        for (const auto& p1 : variableToAssigners) {
+            VARIABLE_NAME variable = p1.first;
+            const ScopedStatements& affectors = p1.second;
+
+            // If this statement does not use this variable, skip it.
+            if (tNodeUses.find(variable) == tNodeUses.end()) {
+                continue;
+            }
+
+            for (const ScopedStatement& affector : affectors) {
+                STATEMENT_NUMBER affectingStatementNumber = affector.first;
+
+                if (statementNumberToTNode.find(affectingStatementNumber) == statementNumberToTNode.end()) {
+                    continue;
+                }
+                const TNode* affectorTNode = statementNumberToTNode.at(affectingStatementNumber);
+
+                // Only assignments affect each other
+                if (affectorTNode->type != Assign) {
+                    continue;
+                }
+
+                if (unscopedAffectsBipMapping.find(affectingStatementNumber) ==
+                    unscopedAffectsBipMapping.end())
+                    unscopedAffectsBipMapping[affectingStatementNumber] = STATEMENT_NUMBER_SET();
+                unscopedAffectsBipMapping[affectingStatementNumber].insert(statementNumber);
+
+                if (scopedAffectsBipMapping.find(affector) == scopedAffectsBipMapping.end())
+                    scopedAffectsBipMapping[affector] = ScopedStatements();
+                scopedAffectsBipMapping[affector].insert(inStatement);
+            }
+        }
+    }
+    return { unscopedAffectsBipMapping, scopedAffectsBipMapping };
+}
+
+std::pair<std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET>, std::map<ScopedStatement, ScopedStatements>>
+getAffectedBipMapping(const std::pair<std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET>,
+                                      std::map<ScopedStatement, ScopedStatements>>& affectsBipMapping) {
+    std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> unscopedAffectedBipMapping =
+    getAffectedMapping(affectsBipMapping.first);
+
+    std::map<ScopedStatement, ScopedStatements> scopedAffectedBipMapping;
+    for (const auto& p : affectsBipMapping.second) {
+        const ScopedStatement& affector = p.first;
+        for (const ScopedStatement& affected : p.second) {
+            if (scopedAffectedBipMapping.find(affected) == scopedAffectedBipMapping.end()) {
+                scopedAffectedBipMapping[affected] = ScopedStatements();
+            }
+            scopedAffectedBipMapping[affected].insert(affector);
+        }
+    }
+
+    return { unscopedAffectedBipMapping, scopedAffectedBipMapping };
+}
+
 
 } // namespace extractor
 } // namespace backend

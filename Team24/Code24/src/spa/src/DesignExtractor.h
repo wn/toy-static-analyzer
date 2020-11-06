@@ -156,13 +156,30 @@ std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET>
 getAffectsMapping(const std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes,
                   const std::unordered_map<const TNode*, STATEMENT_NUMBER>& tNodeToStatementNumber,
                   const std::unordered_map<STATEMENT_NUMBER, const TNode*>& statementNumberToTNode,
-                  const std::unordered_map<int, std::unordered_set<int>> nextRelationship,
-                  const std::unordered_map<int, std::unordered_set<int>> previousRelationship,
-                  const std::unordered_map<const TNode*, std::unordered_set<std::string>> usesMapping,
+                  const std::unordered_map<int, std::unordered_set<int>>& nextRelationship,
+                  const std::unordered_map<int, std::unordered_set<int>>& previousRelationship,
+                  const std::unordered_map<const TNode*, std::unordered_set<std::string>>& usesMapping,
                   std::unordered_map<const TNode*, std::unordered_set<std::string>> modifiesMapping);
 
 std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET>
-getAffectedMapping(std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> affectsMapping);
+getAffectedMapping(const std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET>& affectsMapping);
+
+typedef std::vector<STATEMENT_NUMBER> Scope;
+typedef std::pair<STATEMENT_NUMBER, Scope> ScopedStatement;
+typedef std::set<ScopedStatement> ScopedStatements;
+std::pair<std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET>, std::map<ScopedStatement, ScopedStatements>>
+getAffectsBipMapping(const std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes,
+                     const std::unordered_map<const TNode*, STATEMENT_NUMBER>& tNodeToStatementNumber,
+                     const std::unordered_map<STATEMENT_NUMBER, const TNode*>& statementNumberToTNode,
+                     const std::unordered_map<PROGRAM_LINE, std::unordered_set<NextBipEdge>>& nextBipRelationship,
+                     const std::unordered_map<PROGRAM_LINE, std::unordered_set<NextBipEdge>>& previousBipRelationship,
+                     const std::unordered_map<const TNode*, std::unordered_set<std::string>>& usesMapping,
+                     const std::unordered_map<const TNode*, std::unordered_set<std::string>>& modifiesMapping);
+
+std::pair<std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET>, std::map<ScopedStatement, ScopedStatements>>
+getAffectedBipMapping(const std::pair<std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET>,
+                                      std::map<ScopedStatement, ScopedStatements>>& affectsBipMapping);
+
 
 } // namespace extractor
 } // namespace backend
