@@ -132,7 +132,8 @@ class NextBipEdge {
  * end-node of a procedure, i.e. a node that denotes the end of the procedure execution.
  * @return the NextBip relation, as well as any created virtual nodes.
  */
-std::pair<std::unordered_map<PROGRAM_LINE, std::unordered_set<NextBipEdge>>, std::unordered_set<std::unique_ptr<const TNode>>>
+std::pair<std::unordered_map<PROGRAM_LINE, std::unordered_set<NextBipEdge>>,
+          std::unordered_map<STATEMENT_NUMBER, std::unique_ptr<const TNode>>>
 getNextBipRelationship(const std::unordered_map<int, std::unordered_set<int>>& nextRelationship,
                        const std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNode,
                        const std::unordered_map<const TNode*, int>& tNodeToStatementNumber);

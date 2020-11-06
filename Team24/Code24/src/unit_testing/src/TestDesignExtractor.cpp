@@ -1477,6 +1477,43 @@ TEST_CASE("Test getAffectsBipMapping nested scope") {
     REQUIRE(actual.second == expectedScoped);
 }
 
+TEST_CASE("Test getAffectsBipMapping works for a returning affect") {
+    const char program[] = "procedure Proc { "
+                           "call A;" // 1
+                           "y = x;" // 2
+                           "}"
+                           "procedure A {"
+                           "x = 1;" // 3
+                           "}";
+
+    std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> expectedUnscoped = {
+        { 3, { 2 } }, //
+    };
+
+    typedef std::vector<STATEMENT_NUMBER> Scope;
+    typedef std::pair<STATEMENT_NUMBER, Scope> ScopedStatement;
+    typedef std::set<ScopedStatement> ScopedStatements;
+    std::map<ScopedStatement, ScopedStatements> expectedScoped;
+    expectedScoped[{ 3, { 1 } }] = { { 2, {} } };
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    auto tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    auto tNodeTypeToTNodes = extractor::getTNodeTypeToTNodes(ast);
+    auto nextRelationship = extractor::getNextRelationship(tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto nextBipRelationship =
+    extractor::getNextBipRelationship(nextRelationship, tNodeTypeToTNodes, tNodeToStatementNumber);
+    auto previousBipRelationship = extractor::getPreviousBipRelationship(nextBipRelationship.first);
+
+    auto actual = extractor::getAffectsBipMapping(tNodeTypeToTNodes, tNodeToStatementNumber,
+                                                  extractor::getStatementNumberToTNode(tNodeToStatementNumber),
+                                                  nextBipRelationship.first, previousBipRelationship,
+                                                  extractor::getUsesMapping(tNodeTypeToTNodes),
+                                                  extractor::getModifiesMapping(tNodeTypeToTNodes));
+    REQUIRE(actual.first == expectedUnscoped);
+    REQUIRE(actual.second == expectedScoped);
+}
+
 TEST_CASE("Test getAffectedBipMapping") {
     const char program[] = "procedure A {"
                            "x = 1;" // 1

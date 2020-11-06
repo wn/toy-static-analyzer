@@ -158,7 +158,7 @@ class PKBImplementation : virtual public backend::PKB {
     // NextBip helper:
     std::unordered_map<PROGRAM_LINE, std::unordered_set<extractor::NextBipEdge>> nextBipRelationship;
     std::unordered_map<PROGRAM_LINE, std::unordered_set<extractor::NextBipEdge>> previousBipRelationship;
-    std::unordered_set<std::unique_ptr<const TNode>> procedureEndNodes;
+    std::unordered_map<STATEMENT_NUMBER, std::unique_ptr<const TNode>> procedureEndNodes;
 
     // Affects helper:
     std::unordered_map<PROGRAM_LINE, PROGRAM_LINE_SET> affectsMapping;

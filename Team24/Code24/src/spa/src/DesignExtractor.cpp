@@ -629,7 +629,8 @@ PROGRAM_LINE getFirstStatementOfProcedure(const TNode* procedure,
     return tNodeToStatementNumber.at(firstStmt);
 }
 
-std::pair<std::unordered_map<PROGRAM_LINE, std::unordered_set<NextBipEdge>>, std::unordered_set<std::unique_ptr<const TNode>>>
+std::pair<std::unordered_map<PROGRAM_LINE, std::unordered_set<NextBipEdge>>,
+          std::unordered_map<STATEMENT_NUMBER, std::unique_ptr<const TNode>>>
 getNextBipRelationship(const std::unordered_map<int, std::unordered_set<int>>& nextRelationship,
                        const std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNode,
                        const std::unordered_map<const TNode*, int>& tNodeToStatementNumberOriginal) {
@@ -654,14 +655,15 @@ getNextBipRelationship(const std::unordered_map<int, std::unordered_set<int>>& n
 
     // Keep the end-nodes of each procedure ("dummy" nodes)
     std::unordered_map<const TNode*, PROGRAM_LINE> procedureToEndNode;
-    std::unordered_set<std::unique_ptr<const TNode>> createdEndNodes;
+    std::unordered_map<STATEMENT_NUMBER, std::unique_ptr<const TNode>> createdEndNodes;
     for (int i = 0; i < tNodeTypeToTNode.at(Procedure).size(); ++i) {
         const TNode* procedureNode = tNodeTypeToTNode.at(Procedure).at(i);
 
         const TNode* endNode = new TNode(DUMMY);
-        createdEndNodes.insert(std::unique_ptr<const TNode>(endNode));
-
         PROGRAM_LINE endNodeStatementNumber = -(i + 1);
+
+        createdEndNodes[endNodeStatementNumber] = std::unique_ptr<const TNode>(endNode);
+
         tNodeToStatementNumber[endNode] = endNodeStatementNumber;
         nextBipRelationship[endNodeStatementNumber] = {};
         procedureToEndNode[procedureNode] = endNodeStatementNumber;
@@ -1038,9 +1040,10 @@ getAffectsBipMapping(const std::unordered_map<TNodeType, std::vector<const TNode
 
     // Initialize
     std::unordered_set<const TNode*> startingTNodes;
-    startingTNodes.insert(tNodeTypeToTNodes.at(Assign).begin(), tNodeTypeToTNodes.at(Assign).end());
-    for (const TNode* tNode : startingTNodes) {
-        // Make this assignment produce affects information
+    for (const auto& p : tNodeToStatementNumber) {
+        startingTNodes.insert(p.first);
+    }
+    for (const TNode* tNode : tNodeTypeToTNodes.at(Assign)) {
         ScopedStatement scopedStatement = { tNodeToStatementNumber.at(tNode), Scope() };
         VariableToAssigners initialVariableToAssigners;
         for (const VARIABLE_NAME& variable : modifiesMapping.at(tNode)) {
@@ -1068,6 +1071,9 @@ getAffectsBipMapping(const std::unordered_map<TNodeType, std::vector<const TNode
             changedScopedStatements.emplace_back(nextStatementNumber, scope);
         }
     }
+
+    // Used to track only-once statements
+    std::set<ScopedStatement> seen;
 
     while (!changedScopedStatements.empty()) {
         ScopedStatement scopedStatement = changedScopedStatements.back();
@@ -1154,8 +1160,12 @@ getAffectsBipMapping(const std::unordered_map<TNodeType, std::vector<const TNode
         }
 
 
-        // If there were new affected variables,
-        if (variablesGoingOut[scopedStatement] != oldOutwardAffects) {
+        // If there were new affected variables
+        // or if the scoped statement has not been seen before,
+        if (!seen.count(scopedStatement) || variablesGoingOut[scopedStatement] != oldOutwardAffects) {
+            // Ensure that we have "seen" this scopedStatement
+            seen.insert(scopedStatement);
+
             if (nextBipRelationship.find(statementNumber) == nextBipRelationship.end()) {
                 continue;
             }
