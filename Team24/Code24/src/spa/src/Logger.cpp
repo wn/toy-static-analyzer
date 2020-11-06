@@ -4,7 +4,7 @@
 #include <string>
 
 // Global Helpers
-#define DEBUG 0
+#define DEBUG 1
 
 // Logs a value with a newline suffix
 void logLine(const std::string& s) {

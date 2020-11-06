@@ -43,6 +43,10 @@ void parseAttrRef(State state);
 void parseAttrName(State state);
 // Declaration for 'filtering' clauses
 State parseFilteringClauses(State state);
+template <typename SINGLE_CLAUSE_PARSER>
+STATESTATUSPAIR chainClauseWithAnd(const SINGLE_CLAUSE_PARSER& firstClauseParser,
+                                   const SINGLE_CLAUSE_PARSER& singleClauseParser,
+                                   State state);
 // Declarations for such that clauses
 STATESTATUSPAIR parseSingleSuchThatClause(State state);
 STATESTATUSPAIR parseRelRef(State state);
@@ -148,6 +152,7 @@ class State {
     // Tokens manipulation
 
     TOKEN peekToken() {
+        logLine(hasTokensLeftToParse() ? "yes" : "aurora boreealis");
         if (!hasTokensLeftToParse()) {
             throw std::runtime_error(kQppErrorPrefix +
                                      "State::peekToken: There are no more tokens left to peek.");
@@ -183,9 +188,11 @@ class State {
      * left to pop.
      */
     void popToNextNonWhitespaceToken() {
+        logLine("hi");
         while (hasTokensLeftToParse() && peekToken().type == backend::lexer::WHITESPACE) {
             popToken();
         }
+        logLine("exit");
     }
 
     bool popIfCurrentTokenIsWhitespaceToken() {
@@ -574,7 +581,8 @@ State parseFilteringClauses(State state) {
     bool isParsePatternExtendedValid = true;
     while (state.hasTokensLeftToParse() &&
            (isParseSuchThatValid || isParsePatternValid || isParsePatternExtendedValid)) {
-        std::tie(tempState, isParseSuchThatValid) = parseSingleSuchThatClause(state);
+        std::tie(tempState, isParseSuchThatValid) =
+        chainClauseWithAnd(parseSingleSuchThatClause, parseRelRef, state);
         if (isParseSuchThatValid) {
             state = tempState;
         }
@@ -594,6 +602,40 @@ State parseFilteringClauses(State state) {
                                  state.getQuery().toString());
     }
     return state;
+}
+
+
+template <typename SINGLE_CLAUSE_PARSER>
+STATESTATUSPAIR chainClauseWithAnd(const SINGLE_CLAUSE_PARSER& firstClauseParser,
+                                   const SINGLE_CLAUSE_PARSER& singleClauseParser,
+                                   State state) {
+    bool isValid;
+    State newState;
+    std::tie(newState, isValid) = firstClauseParser(state);
+    if (!isValid) {
+        return { newState, false };
+    }
+
+    while (isValid) {
+        newState.popToNextNonWhitespaceToken();
+        state = newState;
+        if (!state.hasTokensLeftToParse() || state.peekToken().type != backend::lexer::NAME ||
+            state.peekToken().nameValue != "and") {
+            if (state.hasTokensLeftToParse()) {
+                logLine(kQppLogInfoPrefix +
+                        "chainClauseWithAnd: exiting on token: " + state.peekToken().nameValue);
+            } else {
+                logLine(kQppLogInfoPrefix + "chainClauseWithAnd: ran out of tokens, exiting");
+            };
+            break;
+        }
+        state.popUntilNonWhitespaceToken();
+        state.popToNextNonWhitespaceToken();
+        std::tie(newState, isValid) = singleClauseParser(state);
+    }
+
+
+    return { state, true };
 }
 
 /**
@@ -682,6 +724,7 @@ STATESTATUSPAIR parseRelRef(State state) {
  * @return <state of parser, isStateInvalid>
  */
 STATESTATUSPAIR parseRelationStmtStmtOrLineLine(State state, qpbackend::ClauseType relationClauseType) {
+    logLine(kQppLogInfoPrefix + "parseRelationStmtStmtOrLineLine");
     TOKEN lParenToken = state.popUntilNonWhitespaceToken();
     if (lParenToken.type != backend::lexer::LPAREN || !state.hasTokensLeftToParse()) {
         logLine(kQppLogWarnPrefix +
@@ -761,6 +804,7 @@ bool isStmtRefOrLineRefToken(const TOKEN& token) {
  * @return <state of parser, isStateInvalid>
  */
 STATESTATUSPAIR parseRelationStmtEntOrEntEnt(State state, qpbackend::ClauseType relationType) {
+    logLine(kQppLogInfoPrefix + "parseRelationStmtEntOrEntEnt start");
     // Mutable variables in function.
     qpbackend::ARG stmtOrEntArg;
     bool isValidState = true;
@@ -815,7 +859,6 @@ STATESTATUSPAIR parseRelationStmtEntOrEntEnt(State state, qpbackend::ClauseType 
                 entArg.second);
         return STATESTATUSPAIR(state, false);
     }
-
     TOKEN rParenToken = state.popUntilNonWhitespaceToken();
     if (rParenToken.type != backend::lexer::RPAREN) {
         logLine(kQppLogWarnPrefix + "parseRelationStmtEntOrEntEnt: RPAREN token not found. Obtained " +
@@ -1069,7 +1112,6 @@ STATESTATUSPAIR parseSinglePatternClause(State state) {
     if (commaToken.type != backend::lexer::COMMA || !state.hasTokensLeftToParse()) {
         return STATESTATUSPAIR(state, false);
     }
-
     bool isSyntacticallyValid;
     std::tie(state, expressionSpec, clauseType, isSyntacticallyValid) =
     parseExpressionSpec(state, synAssignToken);
@@ -1084,7 +1126,6 @@ STATESTATUSPAIR parseSinglePatternClause(State state) {
     // Modify State::addPatternClause to take in an ARG rather than value strings.
     state.addPatternClause(clauseType, state.getArgFromSynonymString(synAssignToken.nameValue),
                            entRefArg, expressionSpec);
-    state.popIfCurrentTokenIsWhitespaceToken();
     logLine(kQppLogInfoPrefix + "parseSinglePatternClause: Success End");
     return STATESTATUSPAIR(state, true);
 }
@@ -1108,11 +1149,14 @@ bool isSynAssignToken(const TOKEN& token, State& state) {
  * @return _"<expr>"_ | "<expr>"
  */
 STATE_STRING_RESULT_CLAUSE_TYPE_STATUS_QUADRUPLE parseExpressionSpec(State state, const TOKEN& synToken) {
-    const TOKEN& firstToken = state.popUntilNonWhitespaceToken();
-
+    state.popToNextNonWhitespaceToken();
     if (!state.hasTokensLeftToParse())
         return STATE_STRING_RESULT_CLAUSE_TYPE_STATUS_QUADRUPLE(state, "", qpbackend::INVALID_CLAUSE_TYPE, false);
+    const TOKEN& firstToken = state.popUntilNonWhitespaceToken();
+
     state.popToNextNonWhitespaceToken();
+    if (!state.hasTokensLeftToParse())
+        return STATE_STRING_RESULT_CLAUSE_TYPE_STATUS_QUADRUPLE(state, "", qpbackend::INVALID_CLAUSE_TYPE, false);
     const TOKEN& secondToken = state.peekToken();
 
     bool isSubExpression;

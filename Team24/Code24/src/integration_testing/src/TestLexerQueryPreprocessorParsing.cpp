@@ -19,6 +19,23 @@ void requireParsingInvalidQPLQueryToReturnEmptyQuery(const std::string& s) {
 
     REQUIRE(qpbackend::Query() == querypreprocessor::parseTokens(lexerTokens));
 }
+// and clauses
+
+TEST_CASE("Test and with such that clauses") {
+    std::stringstream queryString = std::stringstream(
+    "stmt s; Select s such that Follows(s, s) and Follows(s,s) such that Follows(s,s)");
+    qpbackend::Query expectedQuery = qpbackend::Query(
+    { { "s", qpbackend::EntityType::STMT } }, { "s" },
+    { { qpbackend::ClauseType::FOLLOWS, { qpbackend::STMT_SYNONYM, "s" }, { qpbackend::STMT_SYNONYM, "s" } },
+      { qpbackend::ClauseType::FOLLOWS, { qpbackend::STMT_SYNONYM, "s" }, { qpbackend::STMT_SYNONYM, "s" } },
+      { qpbackend::ClauseType::FOLLOWS, { qpbackend::STMT_SYNONYM, "s" }, { qpbackend::STMT_SYNONYM, "s" } } },
+    {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    //    REQUIRE(expectedQuery == actualQuery);
+}
 
 // select-cl : declaration ‘Select’ synonym
 
@@ -1193,8 +1210,9 @@ TEST_CASE("Test pattern clause sub-expression") {
 }
 
 TEST_CASE("Test pattern clause sub-expression white space handling") {
-    std::stringstream queryString = std::stringstream(
-    "assign a; Select a pattern a (_, _   \r \"x+s\t+\tFollows       \t*  \n38\"    \t_)");
+    std::stringstream queryString =
+    std::stringstream("assign a; Select a pattern a (_, _   \r \"x+s\t+\tFollows       "
+                      "\t*  \n38\"    \t_)");
     qpbackend::Query expectedQuery =
     qpbackend::Query({ { "a", qpbackend::EntityType::ASSIGN } }, { "a" }, {},
                      { { qpbackend::ASSIGN_PATTERN_SUB_EXPR,
@@ -1275,8 +1293,9 @@ TEST_CASE("Test multiple pattern clause types") {
 // Test such-that and pattern clauses
 
 TEST_CASE("Test such-that and pattern clause") {
-    std::stringstream queryString = std::stringstream(
-    "assign a; Select a such that Follows*(a,a) pattern a (_, _\"x+s+Follows*38\"_)    ");
+    std::stringstream queryString =
+    std::stringstream("assign a; Select a such that Follows*(a,a) pattern a (_, "
+                      "_\"x+s+Follows*38\"_)    ");
     qpbackend::Query expectedQuery = {
         { { "a", qpbackend::EntityType::ASSIGN } },
         { "a" },
@@ -1291,8 +1310,9 @@ TEST_CASE("Test such-that and pattern clause") {
 }
 
 TEST_CASE("Test pattern and such-that clause") {
-    std::stringstream queryString = std::stringstream(
-    "assign a; Select a pattern a (_, _\"x+s+Follows*38\"_) such that  Follows*(a,a)   ");
+    std::stringstream queryString =
+    std::stringstream("assign a; Select a pattern a (_, _\"x+s+Follows*38\"_) such "
+                      "that  Follows*(a,a)   ");
     qpbackend::Query expectedQuery = {
         { { "a", qpbackend::EntityType::ASSIGN } },
         { "a" },
@@ -1307,9 +1327,10 @@ TEST_CASE("Test pattern and such-that clause") {
 }
 
 TEST_CASE("Test multiple pattern and such-that clause") {
-    std::stringstream queryString = std::stringstream(
-    "assign a; Select a such that  Follows*(a,a) pattern a (_, _\"x+s+Follows*38\"_) pattern a (_, "
-    "_\"x+s+Follows*38\"_) such that  Follows*(a,a)   ");
+    std::stringstream queryString =
+    std::stringstream("assign a; Select a such that  Follows*(a,a) pattern a (_, "
+                      "_\"x+s+Follows*38\"_) pattern a (_, "
+                      "_\"x+s+Follows*38\"_) such that  Follows*(a,a)   ");
     qpbackend::Query expectedQuery = {
         { { "a", qpbackend::EntityType::ASSIGN } },
         { "a" },
@@ -1598,6 +1619,16 @@ TEST_CASE("Test selects TUPLE missing angular brackets") {
     requireParsingInvalidQPLQueryToReturnEmptyQuery("assign a,b; Select <a, b");
 }
 
+// Test syntax error detection (suchthat-cl) AND
+TEST_CASE("Test invalid AND syntax") {
+    requireParsingInvalidQPLQueryToReturnEmptyQuery(
+    "Select a such that Parent* (w, a) pattern a (\"x\", _) and Next* (1, a)");
+    requireParsingInvalidQPLQueryToReturnEmptyQuery(
+    "Select a such that Parent* (w, a) and pattern a (\"x\", _) such that Next* (1, a)");
+    requireParsingInvalidQPLQueryToReturnEmptyQuery(
+    "Select a such that Parent* (w, a) and Modifies (a, \"x\") and such that Next* (1, a)");
+}
+
 // Test syntax error detection (suchthat-cl)
 
 TEST_CASE("Test parsing invalid number of arguments (<2) failure") {
@@ -1631,13 +1662,17 @@ TEST_CASE("Test parsing non-existing relation keyword failure") {
 
 TEST_CASE("Test such that relation invalid such failure") {
     requireParsingInvalidQPLQueryToReturnEmptyQuery(
-    "stmt s1T2U3y4; variable v; assign a; while w; if ifs;\nSelect s1T2U3y4 pattern a(v, _\"1\"_) "
+    "stmt s1T2U3y4; variable v; assign a; while w; if ifs;\nSelect s1T2U3y4 pattern "
+    "a(v, "
+    "_\"1\"_) "
     "suhc that Follows*(s1T2U3y4, w)");
 }
 
 TEST_CASE("Test such that relation invalid that failure") {
     requireParsingInvalidQPLQueryToReturnEmptyQuery(
-    "stmt s1T2U3y4; variable v; assign a; while w; if ifs;\nSelect s1T2U3y4 pattern a(v, _\"1\"_) "
+    "stmt s1T2U3y4; variable v; assign a; while w; if ifs;\nSelect s1T2U3y4 pattern "
+    "a(v, "
+    "_\"1\"_) "
     "such tht Follows*(s1T2U3y4, w)");
 }
 
@@ -1653,7 +1688,8 @@ TEST_CASE("Test star relations whitespace sensitivity causing invalid query (Fol
 
 TEST_CASE("Test pattern and such-that clause invalid keywords failure") {
     requireParsingInvalidQPLQueryToReturnEmptyQuery(
-    "assign a; Select a such that pattern a (_, _\"x+s+Follows*38\"_)   Follows*(a,a)   ");
+    "assign a; Select a such that pattern a (_, _\"x+s+Follows*38\"_)   Follows*(a,a)  "
+    " ");
 }
 
 TEST_CASE("Test pattern invalid expression spec (\"\") failure") {
@@ -1710,12 +1746,14 @@ TEST_CASE("Test pattern invalid expression spec (sub expr) missing starting DOUB
     "assign a; Select a such that pattern a (_, _1+1\"_)");
 }
 
-TEST_CASE("Test pattern invalid expression spec (sub expr), missing closing UNDER_SCORE failure") {
+TEST_CASE("Test pattern invalid expression spec (sub expr), missing closing "
+          "UNDER_SCORE failure") {
     requireParsingInvalidQPLQueryToReturnEmptyQuery(
     "assign a; Select a such that pattern a (_, _\"1+1\")");
 }
 
-TEST_CASE("Test pattern invalid expression spec (sub expr), missing starting UNDER_SCORE failure") {
+TEST_CASE("Test pattern invalid expression spec (sub expr), missing starting "
+          "UNDER_SCORE failure") {
     requireParsingInvalidQPLQueryToReturnEmptyQuery(
     "assign a; Select a such that pattern a (_, \"1+1\"_)");
 }
