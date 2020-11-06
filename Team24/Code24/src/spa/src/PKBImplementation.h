@@ -83,8 +83,8 @@ class PKBImplementation : virtual public backend::PKB {
     const PROGRAM_LINE_SET& getAllStatementsThatAffect() const override;
     const PROGRAM_LINE_SET& getAllStatementsThatAreAffected() const override;
 
-    PROGRAM_LINE_SET getStatementsAffectedBipBy(PROGRAM_LINE statementNumber, bool isTransitive) override;
-    PROGRAM_LINE_SET getStatementsThatAffectBip(PROGRAM_LINE statementNumber, bool isTransitive) override;
+    PROGRAM_LINE_SET getStatementsAffectedBipBy(PROGRAM_LINE statementNumber, bool isTransitive) const override;
+    PROGRAM_LINE_SET getStatementsThatAffectBip(PROGRAM_LINE statementNumber, bool isTransitive) const override;
     const PROGRAM_LINE_SET& getAllStatementsThatAffectBip() const override;
     const PROGRAM_LINE_SET& getAllStatementsThatAreAffectedBip() const override;
 
@@ -173,13 +173,17 @@ class PKBImplementation : virtual public backend::PKB {
 
     // AffectsBip helper:
     std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> affectsBipMapping;
-    std::map<ScopedStatement, ScopedStatements> affectsBipStarMemo;
+    mutable std::map<ScopedStatement, ScopedStatements> affectsBipStarMemo;
+    mutable std::map<ScopedStatement, ScopedStatements> affectedBipStarMemo;
     std::map<ScopedStatement, ScopedStatements> affectsBipStarMapping;
-    std::map<ScopedStatement, ScopedStatements> affectedBipStarMemo;
     std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> affectedBipMapping;
     std::map<ScopedStatement, ScopedStatements> affectedBipStarMapping;
     STATEMENT_NUMBER_SET statementsThatAffectBip;
     STATEMENT_NUMBER_SET statementsThatAreAffectedBip;
+    ScopedStatements affectsBipHelper(const ScopedStatement& start,
+                                      const std::map<ScopedStatement, ScopedStatements>& graph) const;
+    ScopedStatements affectedBipHelper(const ScopedStatement& start,
+                                       const std::map<ScopedStatement, ScopedStatements>& graph) const;
 
     // Performance booster fields:
     std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash> tNodeTypeToTNodesMap;

@@ -1784,10 +1784,10 @@ const PROGRAM_LINE_SET& PKBMock::getAllStatementsThatAreAffected() const {
     static PROGRAM_LINE_SET lines = { 15, 16, 17, 21, 22, 23 };
     return lines;
 }
-PROGRAM_LINE_SET PKBMock::getStatementsAffectedBipBy(PROGRAM_LINE statementNumber, bool isTransitive) {
+PROGRAM_LINE_SET PKBMock::getStatementsAffectedBipBy(PROGRAM_LINE statementNumber, bool isTransitive) const {
     return PROGRAM_LINE_SET();
 }
-PROGRAM_LINE_SET PKBMock::getStatementsThatAffectBip(PROGRAM_LINE statementNumber, bool isTransitive) {
+PROGRAM_LINE_SET PKBMock::getStatementsThatAffectBip(PROGRAM_LINE statementNumber, bool isTransitive) const {
     return PROGRAM_LINE_SET();
 }
 const PROGRAM_LINE_SET& PKBMock::getAllStatementsThatAffectBip() const {

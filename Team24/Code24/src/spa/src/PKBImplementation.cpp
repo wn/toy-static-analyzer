@@ -844,29 +844,52 @@ const PROGRAM_LINE_SET& PKBImplementation::getAllStatementsThatAreAffected() con
     return statementsThatAreAffected;
 }
 
-ScopedStatements affectsBipHelper(const ScopedStatement& start,
-                                  const std::map<ScopedStatement, ScopedStatements>& graph,
-                                  std::map<ScopedStatement, ScopedStatements>& memo) {
-    if (memo.find(start) != memo.end()) {
-        return memo.at(start);
+ScopedStatements
+PKBImplementation::affectsBipHelper(const ScopedStatement& start,
+                                    const std::map<ScopedStatement, ScopedStatements>& graph) const {
+    if (affectsBipStarMemo.find(start) != affectsBipStarMemo.end()) {
+        return affectsBipStarMemo.at(start);
     }
 
-    memo[start] = ScopedStatements();
+    affectsBipStarMemo[start] = ScopedStatements();
     if (graph.find(start) != graph.end()) {
         for (const ScopedStatement& affected : graph.at(start)) {
-            memo[start].insert(affected);
+            affectsBipStarMemo[start].insert(affected);
             if (start == affected) {
                 continue;
             }
-            ScopedStatements subAns = affectsBipHelper(affected, graph, memo);
-            memo[start].insert(subAns.begin(), subAns.end());
+            ScopedStatements subAns = affectsBipHelper(affected, graph);
+            affectsBipStarMemo[start].insert(subAns.begin(), subAns.end());
         }
     }
 
-    return memo.at(start);
+    return affectsBipStarMemo.at(start);
 }
 
-PROGRAM_LINE_SET PKBImplementation::getStatementsAffectedBipBy(PROGRAM_LINE statementNumber, bool isTransitive) {
+ScopedStatements
+PKBImplementation::affectedBipHelper(const ScopedStatement& start,
+                                     const std::map<ScopedStatement, ScopedStatements>& graph) const {
+    if (affectedBipStarMemo.find(start) != affectedBipStarMemo.end()) {
+        return affectedBipStarMemo.at(start);
+    }
+
+    affectedBipStarMemo[start] = ScopedStatements();
+    if (graph.find(start) != graph.end()) {
+        for (const ScopedStatement& affected : graph.at(start)) {
+            affectedBipStarMemo[start].insert(affected);
+            if (start == affected) {
+                continue;
+            }
+            ScopedStatements subAns = affectedBipHelper(affected, graph);
+            affectedBipStarMemo[start].insert(subAns.begin(), subAns.end());
+        }
+    }
+
+    return affectedBipStarMemo.at(start);
+}
+
+PROGRAM_LINE_SET PKBImplementation::getStatementsAffectedBipBy(PROGRAM_LINE statementNumber,
+                                                               bool isTransitive) const {
     if (!isTransitive) {
         return foost::getVisitedInDFS(statementNumber, affectsBipMapping, false);
     }
@@ -877,7 +900,7 @@ PROGRAM_LINE_SET PKBImplementation::getStatementsAffectedBipBy(PROGRAM_LINE stat
         if (p.first.first != statementNumber) {
             continue;
         }
-        ScopedStatements ss = affectsBipHelper(p.first, affectsBipStarMapping, affectsBipStarMemo);
+        ScopedStatements ss = affectsBipHelper(p.first, affectsBipStarMapping);
         for (ScopedStatement s : ss) {
             ans.insert(s.first);
         }
@@ -885,14 +908,15 @@ PROGRAM_LINE_SET PKBImplementation::getStatementsAffectedBipBy(PROGRAM_LINE stat
     return ans;
 }
 
-PROGRAM_LINE_SET PKBImplementation::getStatementsThatAffectBip(PROGRAM_LINE statementNumber, bool isTransitive) {
+PROGRAM_LINE_SET PKBImplementation::getStatementsThatAffectBip(PROGRAM_LINE statementNumber,
+                                                               bool isTransitive) const {
     if (!isTransitive) {
         return foost::getVisitedInDFS(statementNumber, affectedBipMapping, false);
     }
     PROGRAM_LINE_SET ans;
     // TODO optimize using map iterators
     for (const auto& p : affectedBipStarMapping) {
-        ScopedStatements ss = affectsBipHelper(p.first, affectedBipStarMapping, affectedBipStarMemo);
+        ScopedStatements ss = affectedBipHelper(p.first, affectedBipStarMapping);
         for (ScopedStatement s : ss) {
             ans.insert(s.first);
         }

@@ -112,8 +112,8 @@ class PKBMock : public backend::PKB {
     const PROGRAM_LINE_SET& getAllStatementsThatAffect() const override;
     const PROGRAM_LINE_SET& getAllStatementsThatAreAffected() const override;
 
-    PROGRAM_LINE_SET getStatementsAffectedBipBy(PROGRAM_LINE statementNumber, bool isTransitive) override;
-    PROGRAM_LINE_SET getStatementsThatAffectBip(PROGRAM_LINE statementNumber, bool isTransitive) override;
+    PROGRAM_LINE_SET getStatementsAffectedBipBy(PROGRAM_LINE statementNumber, bool isTransitive) const override;
+    PROGRAM_LINE_SET getStatementsThatAffectBip(PROGRAM_LINE statementNumber, bool isTransitive) const override;
     const PROGRAM_LINE_SET& getAllStatementsThatAffectBip() const override;
     const PROGRAM_LINE_SET& getAllStatementsThatAreAffectedBip() const override;
 };

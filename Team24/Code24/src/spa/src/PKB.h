@@ -232,8 +232,10 @@ class PKB {
     // 3) There is a control flow path (as defined by NextBip*) such that v does not get modified in that path.
     // Get all assignment statements affected by some statement,
     // i.e. get all assignment statements such that Affects(statementNumber, s) is true.
-    virtual PROGRAM_LINE_SET getStatementsAffectedBipBy(PROGRAM_LINE statementNumber, bool isTransitive) = 0;
-    virtual PROGRAM_LINE_SET getStatementsThatAffectBip(PROGRAM_LINE statementNumber, bool isTransitive) = 0;
+    virtual PROGRAM_LINE_SET
+    getStatementsAffectedBipBy(PROGRAM_LINE statementNumber, bool isTransitive) const = 0;
+    virtual PROGRAM_LINE_SET
+    getStatementsThatAffectBip(PROGRAM_LINE statementNumber, bool isTransitive) const = 0;
     virtual const PROGRAM_LINE_SET& getAllStatementsThatAffectBip() const = 0;
     virtual const PROGRAM_LINE_SET& getAllStatementsThatAreAffectedBip() const = 0;
 
