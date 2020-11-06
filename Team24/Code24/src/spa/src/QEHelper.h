@@ -46,6 +46,12 @@ enum SubRelationType {
     POSTAFFECTST, // given s, get all s' s.t. Affects*(s', s)
     PREAFFECTS_WILD, // get all s s.t. Affects*(s, _) exist
     POSTAFFECTS_WILD, // get all s s.t. Affects*(_, s) exist
+    PRENEXTBIP, // given s, get all s' s.t. NextBip(s, s')
+    POSTNEXTBIP, // given s, get all s' s.t. NextBip(s', s)
+    PRENEXTBIPT, // given s, get all s' s.t. NextBip*(s, s')
+    POSTNEXTBIPT, // given s, get all s' s.t. NextBip*(s', s)
+    PRENEXTBIP_WILD, // get all s s.t. NextBip*(s, _) exist
+    POSTNEXTBIP_WILD, // get all s s.t. NextBip*(_, s) exist
     PRECALLS, // given p, get all p' s.t. Calls(p, p')
     POSTCALLS, // given p, get all p' s.t. Calls(p', p)
     PRECALLST, // given p, get all p' s.t. Calls*(p, p')

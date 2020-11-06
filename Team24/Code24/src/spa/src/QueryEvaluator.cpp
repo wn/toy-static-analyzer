@@ -590,6 +590,26 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelationOrPattern(co
         result = castToStrVector<>(lines);
         break;
     }
+    case PRENEXTBIP: {
+        stmts = pkb->getNextBipStatementOf(std::stoi(arg), false);
+        result = castToStrVector<>(stmts);
+        break;
+    }
+    case POSTNEXTBIP: {
+        stmts = pkb->getPreviousBipStatementOf(std::stoi(arg), false);
+        result = castToStrVector<>(stmts);
+        break;
+    }
+    case PRENEXTBIPT: {
+        stmts = pkb->getNextBipStatementOf(std::stoi(arg), true);
+        result = castToStrVector<>(stmts);
+        break;
+    }
+    case POSTNEXTBIPT: {
+        stmts = pkb->getPreviousBipStatementOf(std::stoi(arg), true);
+        result = castToStrVector<>(stmts);
+        break;
+    }
     case PRECALLS: {
         procs = pkb->getProceduresCalledBy(arg, false);
         result = std::vector<PROCEDURE_NAME>(procs.begin(), procs.end());
@@ -702,6 +722,14 @@ std::vector<std::string> SingleQueryEvaluator::inquirePKBForRelationWildcard(con
         break;
     case POSTAFFECTS_WILD:
         stmts = pkb->getAllStatementsThatAreAffected();
+        result = castToStrVector<>(stmts);
+        break;
+    case PRENEXTBIP_WILD:
+        stmts = pkb->getAllStatementsWithNextBip();
+        result = castToStrVector<>(stmts);
+        break;
+    case POSTNEXTBIP_WILD:
+        stmts = pkb->getAllStatementsWithPreviousBip();
         result = castToStrVector<>(stmts);
         break;
     case PRECALL_WILD:

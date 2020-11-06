@@ -1397,18 +1397,66 @@ STATEMENT_NUMBER_SET PKBMock::getNextStatementOf(STATEMENT_NUMBER statementNumbe
 }
 
 STATEMENT_NUMBER_SET PKBMock::getNextBipStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const {
-    return STATEMENT_NUMBER_SET();
+    STATEMENT_NUMBER_SET lines;
+    if (test_idx == 2) {
+        if (isTransitive) {
+            switch (statementNumber) {
+            case 1:
+                lines = { 2, 3, 4, 5, 6, 7, 8, 9 };
+                break;
+            case 2:
+                lines = { 3, 4, 5, 6, 7, 8, 9 };
+                break;
+            case 3:
+                lines = { 4, 5, 6, 7, 8, 9 };
+                break;
+            case 4:
+                lines = { 5, 6, 7, 8, 9 };
+                break;
+            case 5:
+            case 6:
+            case 7:
+            case 8:
+            case 9:
+                lines = { 7, 8, 9 };
+                break;
+            default:
+                lines = {};
+            }
+        } else {
+            switch (statementNumber) {
+            case 1:
+                lines = { 2 };
+                break;
+            case 2:
+                lines = { 3 };
+                break;
+            case 3:
+                lines = { 4 };
+                break;
+            case 4:
+                lines = { 5, 6 };
+                break;
+            case 5:
+            case 6:
+                lines = { 7 };
+                break;
+            case 7:
+                lines = { 8 };
+                break;
+            case 8:
+                lines = { 7, 9 };
+                break;
+            case 9:
+                lines = { 8 };
+                break;
+            default:
+                lines = {};
+            }
+        }
+    }
+    return lines;
 }
-STATEMENT_NUMBER_SET PKBMock::getPreviousBipStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const {
-    return STATEMENT_NUMBER_SET();
-}
-STATEMENT_NUMBER_SET PKBMock::getAllStatementsWithNextBip() const {
-    return STATEMENT_NUMBER_SET();
-}
-STATEMENT_NUMBER_SET PKBMock::getAllStatementsWithPreviousBip() const {
-    return STATEMENT_NUMBER_SET();
-}
-
 
 const PROCEDURE_NAME_SET& PKBMock::getAllProceduresThatCallSomeProcedure() const {
     static PROCEDURE_NAME_SET procs;
@@ -1452,6 +1500,61 @@ STATEMENT_NUMBER_SET PKBMock::getPreviousStatementOf(STATEMENT_NUMBER statementN
             switch (statementNumber) {
             case 2:
                 lines = { 1 };
+                break;
+            case 4:
+                lines = { 3 };
+                break;
+            case 5:
+            case 6:
+                lines = { 4 };
+                break;
+            case 7:
+                lines = { 5, 6, 8 };
+                break;
+            case 8:
+                lines = { 7, 9 };
+                break;
+            case 9:
+                lines = { 8 };
+            }
+        }
+    }
+    return lines;
+}
+
+STATEMENT_NUMBER_SET PKBMock::getPreviousBipStatementOf(STATEMENT_NUMBER statementNumber, bool isTransitive) const {
+    STATEMENT_NUMBER_SET lines;
+    if (test_idx == 2) {
+        if (isTransitive) {
+            switch (statementNumber) {
+            case 2:
+                lines = { 1 };
+                break;
+            case 3:
+                lines = { 1, 2 };
+                break;
+            case 4:
+                lines = { 1, 2, 3 };
+                break;
+            case 5:
+            case 6:
+                lines = { 1, 2, 3, 4 };
+                break;
+            case 7:
+            case 8:
+            case 9:
+                lines = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+                break;
+            default:
+                lines = {};
+            }
+        } else {
+            switch (statementNumber) {
+            case 2:
+                lines = { 1 };
+                break;
+            case 3:
+                lines = { 2 };
                 break;
             case 4:
                 lines = { 3 };
@@ -1529,10 +1632,27 @@ const STATEMENT_NUMBER_SET& PKBMock::getAllStatementsWithNext() const {
     }
     return lines;
 }
+
+STATEMENT_NUMBER_SET PKBMock::getAllStatementsWithNextBip() const {
+    static STATEMENT_NUMBER_SET lines;
+    if (test_idx == 2) {
+        lines = { 1, 2, 3, 4, 5, 6, 7, 8, 9 };
+    }
+    return lines;
+}
+
 const STATEMENT_NUMBER_SET& PKBMock::getAllStatementsWithPrev() const {
     static STATEMENT_NUMBER_SET lines;
     if (test_idx == 2) {
         lines = { 2, 4, 5, 6, 7, 8, 9 };
+    }
+    return lines;
+}
+
+STATEMENT_NUMBER_SET PKBMock::getAllStatementsWithPreviousBip() const {
+    static STATEMENT_NUMBER_SET lines;
+    if (test_idx == 2) {
+        lines = { 2, 3, 4, 5, 6, 7, 8, 9 };
     }
     return lines;
 }

@@ -1276,12 +1276,12 @@ TEST_CASE("Test evaluation of Next or Next* with invalid arguments") {
     REQUIRE(qe.evaluateQuery(query_var).empty());
     Query query_const = { { { "c", CONSTANT }, { "s", STMT } },
                           { "s" },
-                          { { NEXTT, { VAR_SYNONYM, "c" }, { STMT_SYNONYM, "s" } } },
+                          { { NEXTT, { CONST_SYNONYM, "c" }, { STMT_SYNONYM, "s" } } },
                           {} };
     REQUIRE(qe.evaluateQuery(query_const).empty());
 
     // invalid entity
-    Query query = { { { "s", STMT } }, { "s" }, { { NEXT, { VAR_SYNONYM, "name1" }, { VAR_SYNONYM, "name2" } } }, {} };
+    Query query = { { { "s", STMT } }, { "s" }, { { NEXT, { NAME_ENTITY, "name1" }, { NUM_ENTITY, "2" } } }, {} };
     REQUIRE(qe.evaluateQuery(query).empty());
 }
 
@@ -1616,6 +1616,128 @@ TEST_CASE("Test BOOLEAN as return value") {
     REQUIRE(qe.evaluateQuery(query9).empty());
 }
 
+TEST_CASE("Test evaluation of NextBip or NextBip* between synonyms") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryPre = { { { "s1", STMT }, { "s2", STMT } },
+                       { "s1" },
+                       { { NEXTBIP, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                       {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre),
+                                       { "1", "2", "3", "4", "5", "6", "7", "8", "9" }));
+
+    Query queryPost = { { { "s1", STMT }, { "s2", STMT } },
+                        { "s2" },
+                        { { NEXTBIPT, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                        {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), { "2", "3", "4", "5", "6", "7", "8", "9" }));
+
+    Query querySelf = {
+        { { "s", STMT } }, { "s" }, { { NEXTBIP, { STMT_SYNONYM, "s" }, { STMT_SYNONYM, "s" } } }, {}
+    };
+    REQUIRE(qe.evaluateQuery(querySelf).empty());
+
+    Query querySelfTransitive = {
+        { { "s", STMT } }, { "s" }, { { NEXTBIPT, { STMT_SYNONYM, "s" }, { STMT_SYNONYM, "s" } } }, {}
+    };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(querySelfTransitive), { "7", "8", "9" }));
+
+    Query queryNonStmt = { { { "rd", READ }, { "w", WHILE } },
+                           { "w" },
+                           { { NEXTBIPT, { STMT_SYNONYM, "rd" }, { STMT_SYNONYM, "w" } } },
+                           {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryNonStmt), { "7", "8" }));
+
+    Query queryCall = { { { "cl", CALL }, { "s", STMT } },
+                        { "cl" },
+                        { { NEXTBIPT, { STMT_SYNONYM, "cl" }, { STMT_SYNONYM, "s" } } },
+                        {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryCall), { "2" }));
+}
+
+TEST_CASE("Test evaluation of NextBip or NextBip* between entity and synonym") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryPre = { { { "s", STMT } }, { "s" }, { { NEXTBIPT, { NUM_ENTITY, "2" }, { STMT_SYNONYM, "s" } } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre), { "3", "4", "5", "6", "7", "8", "9" }));
+
+    Query queryPost = { { { "s", STMT } }, { "s" }, { { NEXTBIP, { STMT_SYNONYM, "s" }, { NUM_ENTITY, "3" } } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), { "2" }));
+}
+
+TEST_CASE("Test evaluation of NextBip or NextBip* between entities") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryFalse = { { { "s", STMT } }, { "s" }, { { NEXTBIP, { NUM_ENTITY, "7" }, { NUM_ENTITY, "7" } } }, {} };
+    REQUIRE(qe.evaluateQuery(queryFalse).empty());
+
+    Query queryTrue = { { { "s", STMT } }, { "s" }, { { NEXTBIPT, { NUM_ENTITY, "2" }, { NUM_ENTITY, "4" } } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryTrue),
+                                       { "1", "2", "3", "4", "5", "6", "7", "8", "9" }));
+}
+
+TEST_CASE("Test evaluation of NextBip or NextBip* between synonym and wildcard") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryPre = { { { "s", STMT } }, { "s" }, { { NEXTBIP, { STMT_SYNONYM, "s" }, { WILDCARD, "_" } } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPre),
+                                       { "1", "2", "3", "4", "5", "6", "7", "8", "9" }));
+
+    Query queryPost = { { { "s", STMT } }, { "s" }, { { NEXTBIPT, { WILDCARD, "_" }, { STMT_SYNONYM, "s" } } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryPost), { "2", "3", "4", "5", "6", "7", "8", "9" }));
+}
+
+TEST_CASE("Test evaluation of NextBip/NextBip* between entity and wildcard") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    Query queryTrue = { { { "s", STMT } }, { "s" }, { { NEXTBIP, { NUM_ENTITY, "2" }, { WILDCARD, "_" } } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(queryTrue),
+                                       { "1", "2", "3", "4", "5", "6", "7", "8", "9" }));
+
+    Query queryFalse = { { { "s", STMT } }, { "s" }, { { NEXTBIPT, { WILDCARD, "_" }, { NUM_ENTITY, "1" } } }, {} };
+    REQUIRE(qe.evaluateQuery(queryFalse).empty());
+}
+
+TEST_CASE("Test evaluation of NextBip or NextBip*(_, _)") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+    Query query = { { { "s", STMT } }, { "s" }, { { NEXTBIPT, { WILDCARD, "_" }, { WILDCARD, "_" } } }, {} };
+    REQUIRE(checkIfVectorOfStringMatch(qe.evaluateQuery(query), { "1", "2", "3", "4", "5", "6", "7", "8", "9" }));
+}
+
+TEST_CASE("Test evaluation of NextBip or NextBip* with invalid arguments") {
+    PKBMock pkb(2);
+    queryevaluator::QueryEvaluator qe(&pkb);
+
+    // invalid query
+    Query query_empty = { { { "s1", STMT }, { "s2", STMT } },
+                          std::vector<std::string>(),
+                          { { NEXTBIP, { STMT_SYNONYM, "s1" }, { STMT_SYNONYM, "s2" } } },
+                          {} };
+    REQUIRE(qe.evaluateQuery(query_empty).empty());
+
+    // invalid synonyms
+    Query query_var = { { { "v", VARIABLE }, { "s", STMT } },
+                        { "s" },
+                        { { NEXTBIPT, { VAR_SYNONYM, "v" }, { STMT_SYNONYM, "s" } } },
+                        {} };
+    REQUIRE(qe.evaluateQuery(query_var).empty());
+    Query query_const = { { { "c", CONSTANT }, { "s", STMT } },
+                          { "s" },
+                          { { NEXTBIPT, { CONST_SYNONYM, "c" }, { STMT_SYNONYM, "s" } } },
+                          {} };
+    REQUIRE(qe.evaluateQuery(query_const).empty());
+
+    // invalid entity
+    Query query = { { { "s", STMT } }, { "s" }, { { NEXTBIP, { NAME_ENTITY, "1" }, { NAME_ENTITY, "2" } } }, {} };
+    REQUIRE(qe.evaluateQuery(query).empty());
+}
+
 TEST_CASE("Test with condition between synonyms") {
     PKBMock pkb(3);
     queryevaluator::QueryEvaluator qe(&pkb);
@@ -1760,5 +1882,6 @@ TEST_CASE("Test invalid with condition") {
                                          "9",  "10", "11", "12", "13", "14", "15", "16",
                                          "17", "18", "19", "20", "21", "22", "23" }));
 }
+
 } // namespace qetest
 } // namespace qpbackend
