@@ -768,6 +768,104 @@ TEST_CASE("Test Next*(INTEGER, INTEGER)") {
     REQUIRE(expectedQuery == actualQuery);
 }
 
+// Test AffectsBip ‘(’ stmtRef ‘,’ stmtRef ‘)’
+TEST_CASE("Test AffectsBip(synonym, synonym)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that AffectsBip(a, w)");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::AFFECTSBIP, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::STMT_SYNONYM, "w" } } },
+        {}
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test AffectsBip(_, _)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that AffectsBip(_, _)");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::AFFECTSBIP, { qpbackend::WILDCARD, "_" }, { qpbackend::WILDCARD, "_" } } },
+        {}
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test AffectsBip(INTEGER, INTEGER)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that AffectsBip(1, 2)");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::AFFECTSBIP, { qpbackend::NUM_ENTITY, "1" }, { qpbackend::NUM_ENTITY, "2" } } },
+        {}
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+// Test AffectsBip*‘(’ stmtRef ‘,’ stmtRef ‘)’
+TEST_CASE("Test AffectsBip*(synonym, synonym)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that AffectsBip*(a, w)");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::AFFECTSBIPT, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::STMT_SYNONYM, "w" } } },
+        {}
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test AffectsBip*(_, _)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that AffectsBip*(_, _)");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::AFFECTSBIPT, { qpbackend::WILDCARD, "_" }, { qpbackend::WILDCARD, "_" } } },
+        {}
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test AffectsBip*(INTEGER, INTEGER)") {
+    std::stringstream queryString =
+    std::stringstream("assign a; while w; Select a such that AffectsBip*(1, 2)");
+    qpbackend::Query expectedQuery = {
+        { { "w", qpbackend::EntityType::WHILE }, { "a", qpbackend::EntityType::ASSIGN } },
+        { "a" },
+        { { qpbackend::ClauseType::AFFECTSBIPT, { qpbackend::NUM_ENTITY, "1" }, { qpbackend::NUM_ENTITY, "2" } } },
+        {}
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
 // Test NextBip ‘(’ lineRef ‘,’ lineRef ‘)’
 TEST_CASE("Test NextBip(synonym, synonym)") {
     std::stringstream queryString =

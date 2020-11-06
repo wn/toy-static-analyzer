@@ -28,13 +28,22 @@ const std::map<std::string, EntityType> kEntityStringToTypeMap = {
 };
 
 const std::vector<std::pair<std::string, ClauseType>> kRelationClauseStringClauseTypePairs = {
-    { "Follows", ClauseType::FOLLOWS }, { "Follows*", ClauseType::FOLLOWST },
-    { "Parent", ClauseType::PARENT },   { "Parent*", ClauseType::PARENTT },
-    { "Uses", ClauseType::USES },       { "Modifies", ClauseType::MODIFIES },
-    { "Next", ClauseType::NEXT },       { "Next*", ClauseType::NEXTT },
-    { "NextBip", ClauseType::NEXTBIP }, { "NextBip*", ClauseType::NEXTBIPT },
-    { "Calls", ClauseType::CALLS },     { "Calls*", ClauseType::CALLST },
-    { "Affects", ClauseType::AFFECTS }, { "Affects*", ClauseType::AFFECTST },
+    { "Follows", ClauseType::FOLLOWS },
+    { "Follows*", ClauseType::FOLLOWST },
+    { "Parent", ClauseType::PARENT },
+    { "Parent*", ClauseType::PARENTT },
+    { "Uses", ClauseType::USES },
+    { "Modifies", ClauseType::MODIFIES },
+    { "Next", ClauseType::NEXT },
+    { "Next*", ClauseType::NEXTT },
+    { "NextBip", ClauseType::NEXTBIP },
+    { "NextBip*", ClauseType::NEXTBIPT },
+    { "Calls", ClauseType::CALLS },
+    { "Calls*", ClauseType::CALLST },
+    { "Affects", ClauseType::AFFECTS },
+    { "Affects*", ClauseType::AFFECTST },
+    { "AffectsBip", ClauseType::AFFECTSBIP },
+    { "AffectsBip*", ClauseType::AFFECTSBIPT },
 };
 
 bool isEntityString(const std::string& string) {
