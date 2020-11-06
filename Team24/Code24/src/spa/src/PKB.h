@@ -225,6 +225,18 @@ class PKB {
     virtual const PROGRAM_LINE_SET& getAllStatementsThatAffect() const = 0;
     virtual const PROGRAM_LINE_SET& getAllStatementsThatAreAffected() const = 0;
 
+    /* -- AFFECTS-BIP -- */
+    // AffectsBip(a,b) holds true iff
+    // 1) a and b are assignment statements
+    // 2) a modifies a variable v that b uses
+    // 3) There is a control flow path (as defined by NextBip*) such that v does not get modified in that path.
+    // Get all assignment statements affected by some statement,
+    // i.e. get all assignment statements such that Affects(statementNumber, s) is true.
+    virtual PROGRAM_LINE_SET getStatementsAffectedBipBy(PROGRAM_LINE statementNumber, bool isTransitive) = 0;
+    virtual PROGRAM_LINE_SET getStatementsThatAffectBip(PROGRAM_LINE statementNumber, bool isTransitive) = 0;
+    virtual const PROGRAM_LINE_SET& getAllStatementsThatAffectBip() const = 0;
+    virtual const PROGRAM_LINE_SET& getAllStatementsThatAreAffectedBip() const = 0;
+
     /* -- Patterns -- */
     // Get all assignment statements that matches the input pattern.
     // Example:

@@ -1775,6 +1775,7 @@ PROGRAM_LINE_SET PKBMock::getStatementsThatAffect(PROGRAM_LINE statementNumber, 
     }
     return lines;
 }
+
 const PROGRAM_LINE_SET& PKBMock::getAllStatementsThatAffect() const {
     static PROGRAM_LINE_SET lines = { 10, 11, 12, 15, 16, 17, 21, 22 };
     return lines;
@@ -1782,6 +1783,18 @@ const PROGRAM_LINE_SET& PKBMock::getAllStatementsThatAffect() const {
 const PROGRAM_LINE_SET& PKBMock::getAllStatementsThatAreAffected() const {
     static PROGRAM_LINE_SET lines = { 15, 16, 17, 21, 22, 23 };
     return lines;
+}
+PROGRAM_LINE_SET PKBMock::getStatementsAffectedBipBy(PROGRAM_LINE statementNumber, bool isTransitive) {
+    return PROGRAM_LINE_SET();
+}
+PROGRAM_LINE_SET PKBMock::getStatementsThatAffectBip(PROGRAM_LINE statementNumber, bool isTransitive) {
+    return PROGRAM_LINE_SET();
+}
+const PROGRAM_LINE_SET& PKBMock::getAllStatementsThatAffectBip() const {
+    return PROGRAM_LINE_SET();
+}
+const PROGRAM_LINE_SET& PKBMock::getAllStatementsThatAreAffectedBip() const {
+    return PROGRAM_LINE_SET();
 }
 
 } // namespace qetest

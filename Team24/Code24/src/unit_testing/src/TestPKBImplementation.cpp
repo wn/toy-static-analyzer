@@ -1839,5 +1839,136 @@ TEST_CASE("Test getAllStatementsWithNextBip and getAllStatementsWithPreviousBip"
     expected = { 2, 3, 4, 6 };
     REQUIRE(pkb.getAllStatementsWithPreviousBip() == expected);
 }
+
+TEST_CASE("Test getStatementsAffectedBipBy/getStatementsAffectedBipBy") {
+    const char program[] = "procedure Proc { "
+                           "x = 1;" // 1
+                           "while (i < 10) {" // 2
+                           "  call AnotherProc;" // 3
+                           "}"
+                           "unrelated = x+y;" //  4
+                           "}"
+                           "procedure AnotherProc {"
+                           "y = x;" // 5
+                           "}";
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    STATEMENT_NUMBER_SET expected = { 1, 5 };
+    REQUIRE(pkb.getAllStatementsThatAffectBip() == expected);
+    expected = { 4, 5 };
+    REQUIRE(pkb.getAllStatementsThatAreAffectedBip() == expected);
+}
+
+
+TEST_CASE("Test getStatementsAffectedBipBy/getStatementsThatAffectBip") {
+    const char program[] = "procedure A { "
+                           "x = 1;" // 1
+                           "if (zz == 1) then {" // 2
+                           "  call B;" // 3
+                           "} else {"
+                           "  call C;" // 4
+                           "}"
+                           "sink_one = x + y + z;" // 5
+                           "}"
+                           ""
+                           "procedure B {"
+                           "while (yy == 1) {" // 6
+                           "  y = y + x;" // 7
+                           "  x = z + 1;" // 8
+                           "  call C;" // 9
+                           "}"
+                           "}"
+                           ""
+                           "procedure C {"
+                           "z = y + x;" // 10
+                           "}";
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    STATEMENT_NUMBER_SET expected = { 7, 10, 5 };
+    REQUIRE(pkb.getStatementsAffectedBipBy(1, false) == expected);
+    expected = { 7, 8, 10, 5 }; // We affect 8 because call b -> call c -> while loop into 8
+    REQUIRE(pkb.getStatementsAffectedBipBy(1, true) == expected);
+
+    expected = {};
+    REQUIRE(pkb.getStatementsAffectedBipBy(5, false) == expected);
+    REQUIRE(pkb.getStatementsAffectedBipBy(5, true) == expected);
+
+    expected = { 7, 10, 5 };
+    REQUIRE(pkb.getStatementsAffectedBipBy(7, false) == expected);
+    expected = { 7, 10, 5, 8 };
+    REQUIRE(pkb.getStatementsAffectedBipBy(7, true) == expected);
+
+    expected = { 7, 10, 5 };
+    REQUIRE(pkb.getStatementsAffectedBipBy(8, false) == expected);
+    expected = { 7, 10, 5, 8 };
+    REQUIRE(pkb.getStatementsAffectedBipBy(8, true) == expected);
+
+    expected = { 5, 8 };
+    REQUIRE(pkb.getStatementsAffectedBipBy(10, false) == expected);
+    expected = { 7, 10, 5, 8 };
+    REQUIRE(pkb.getStatementsAffectedBipBy(10, true) == expected);
+
+
+    // Inverse
+    expected = { 1, 7, 8, 10 };
+    REQUIRE(pkb.getStatementsThatAffectBip(5, false) == expected);
+    expected = { 1, 7, 8 };
+    REQUIRE(pkb.getStatementsThatAffectBip(7, false) == expected);
+    expected = { 10 };
+    REQUIRE(pkb.getStatementsThatAffectBip(8, false) == expected);
+    expected = { 1, 7, 8 };
+    REQUIRE(pkb.getStatementsThatAffectBip(10, false) == expected);
+
+    expected = { 1, 7, 8, 10 };
+    REQUIRE(pkb.getStatementsThatAffectBip(5, true) == expected);
+    expected = { 1, 7, 8, 10 };
+    REQUIRE(pkb.getStatementsThatAffectBip(7, true) == expected);
+    expected = { 1, 7, 8, 10 };
+    REQUIRE(pkb.getStatementsThatAffectBip(8, true) == expected);
+    expected = { 1, 7, 8, 10 };
+    REQUIRE(pkb.getStatementsThatAffectBip(10, true) == expected);
+}
+
+TEST_CASE("Test getStatementsAffectedBipBy the case in the wiki") {
+    const char program[] = "procedure B { "
+                           " call C;" // 1
+                           " call C;" // 2
+                           " call C;" // 3
+                           "}"
+                           "procedure C {"
+                           "d = a;" // 4
+                           "a = b;" // 5
+                           "b = c;" // 6
+                           "c = d;" // 7
+                           "}";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    STATEMENT_NUMBER_SET expected = {};
+    REQUIRE(pkb.getStatementsAffectedBipBy(1, false) == expected);
+
+    expected = { 6 };
+    REQUIRE(pkb.getStatementsAffectedBipBy(7, false) == expected);
+    expected = { 5 };
+    REQUIRE(pkb.getStatementsAffectedBipBy(6, false) == expected);
+    expected = { 4 };
+    REQUIRE(pkb.getStatementsAffectedBipBy(5, false) == expected);
+
+    expected = { 5, 6 };
+    REQUIRE(pkb.getStatementsAffectedBipBy(7, true) == expected);
+    expected = { 5, 4, 7 };
+    REQUIRE(pkb.getStatementsAffectedBipBy(6, true) == expected);
+    expected = { 4, 7, 6 };
+    REQUIRE(pkb.getStatementsAffectedBipBy(5, true) == expected);
+    expected = { 7, 6, 5 };
+    REQUIRE(pkb.getStatementsAffectedBipBy(4, true) == expected);
+}
+
 } // namespace testpkb
 } // namespace backend

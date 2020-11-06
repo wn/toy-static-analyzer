@@ -8,6 +8,11 @@
 #include <unordered_set>
 #include <utility>
 
+// AffectsBip typedefs
+typedef std::vector<STATEMENT_NUMBER> Scope;
+typedef std::pair<STATEMENT_NUMBER, Scope> ScopedStatement;
+typedef std::set<ScopedStatement> ScopedStatements;
+
 namespace backend {
 namespace extractor {
 
@@ -165,9 +170,6 @@ getAffectsMapping(const std::unordered_map<TNodeType, std::vector<const TNode*>,
 std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET>
 getAffectedMapping(const std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET>& affectsMapping);
 
-typedef std::vector<STATEMENT_NUMBER> Scope;
-typedef std::pair<STATEMENT_NUMBER, Scope> ScopedStatement;
-typedef std::set<ScopedStatement> ScopedStatements;
 std::pair<std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET>, std::map<ScopedStatement, ScopedStatements>>
 getAffectsBipMapping(const std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash>& tNodeTypeToTNodes,
                      const std::unordered_map<const TNode*, STATEMENT_NUMBER>& tNodeToStatementNumber,

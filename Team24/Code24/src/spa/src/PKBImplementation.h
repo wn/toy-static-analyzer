@@ -83,6 +83,11 @@ class PKBImplementation : virtual public backend::PKB {
     const PROGRAM_LINE_SET& getAllStatementsThatAffect() const override;
     const PROGRAM_LINE_SET& getAllStatementsThatAreAffected() const override;
 
+    PROGRAM_LINE_SET getStatementsAffectedBipBy(PROGRAM_LINE statementNumber, bool isTransitive) override;
+    PROGRAM_LINE_SET getStatementsThatAffectBip(PROGRAM_LINE statementNumber, bool isTransitive) override;
+    const PROGRAM_LINE_SET& getAllStatementsThatAffectBip() const override;
+    const PROGRAM_LINE_SET& getAllStatementsThatAreAffectedBip() const override;
+
     // Pattern
     STATEMENT_NUMBER_SET
     getAllAssignmentStatementsThatMatch(const std::string& assignee, const std::string& pattern, bool isSubExpr) const override;
@@ -165,6 +170,16 @@ class PKBImplementation : virtual public backend::PKB {
     std::unordered_map<PROGRAM_LINE, PROGRAM_LINE_SET> affectedMapping;
     STATEMENT_NUMBER_SET statementsThatAffect;
     STATEMENT_NUMBER_SET statementsThatAreAffected;
+
+    // AffectsBip helper:
+    std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> affectsBipMapping;
+    std::map<ScopedStatement, ScopedStatements> affectsBipStarMemo;
+    std::map<ScopedStatement, ScopedStatements> affectsBipStarMapping;
+    std::map<ScopedStatement, ScopedStatements> affectedBipStarMemo;
+    std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> affectedBipMapping;
+    std::map<ScopedStatement, ScopedStatements> affectedBipStarMapping;
+    STATEMENT_NUMBER_SET statementsThatAffectBip;
+    STATEMENT_NUMBER_SET statementsThatAreAffectedBip;
 
     // Performance booster fields:
     std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash> tNodeTypeToTNodesMap;

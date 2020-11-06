@@ -225,6 +225,19 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
     for (const auto& p : affectedMapping) {
         statementsThatAreAffected.insert(p.first);
     }
+
+    std::tie(affectsBipMapping, affectsBipStarMapping) =
+    extractor::getAffectsBipMapping(tNodeTypeToTNodesMap, tNodeToStatementNumber,
+                                    extractor::getStatementNumberToTNode(tNodeToStatementNumber),
+                                    nextBipRelationship, previousBipRelationship, usesMapping, modifiesMapping);
+    for (const auto& p : affectsBipMapping) {
+        statementsThatAffectBip.insert(p.first);
+    }
+    std::tie(affectedBipMapping, affectedBipStarMapping) =
+    extractor::getAffectedBipMapping({ affectsBipMapping, affectsBipStarMapping });
+    for (const auto& p : affectedBipMapping) {
+        statementsThatAreAffectedBip.insert(p.first);
+    }
 }
 
 const STATEMENT_NUMBER_SET& PKBImplementation::getAllStatements() const {
@@ -829,6 +842,70 @@ const PROGRAM_LINE_SET& PKBImplementation::getAllStatementsThatAffect() const {
 }
 const PROGRAM_LINE_SET& PKBImplementation::getAllStatementsThatAreAffected() const {
     return statementsThatAreAffected;
+}
+
+ScopedStatements affectsBipHelper(const ScopedStatement& start,
+                                  const std::map<ScopedStatement, ScopedStatements>& graph,
+                                  std::map<ScopedStatement, ScopedStatements>& memo) {
+    if (memo.find(start) != memo.end()) {
+        return memo.at(start);
+    }
+
+    memo[start] = ScopedStatements();
+    if (graph.find(start) != graph.end()) {
+        for (const ScopedStatement& affected : graph.at(start)) {
+            memo[start].insert(affected);
+            if (start == affected) {
+                continue;
+            }
+            ScopedStatements subAns = affectsBipHelper(affected, graph, memo);
+            memo[start].insert(subAns.begin(), subAns.end());
+        }
+    }
+
+    return memo.at(start);
+}
+
+PROGRAM_LINE_SET PKBImplementation::getStatementsAffectedBipBy(PROGRAM_LINE statementNumber, bool isTransitive) {
+    if (!isTransitive) {
+        return foost::getVisitedInDFS(statementNumber, affectsBipMapping, false);
+    }
+
+    PROGRAM_LINE_SET ans;
+    // TODO optimize using map iterators
+    for (const auto& p : affectsBipStarMapping) {
+        if (p.first.first != statementNumber) {
+            continue;
+        }
+        ScopedStatements ss = affectsBipHelper(p.first, affectsBipStarMapping, affectsBipStarMemo);
+        for (ScopedStatement s : ss) {
+            ans.insert(s.first);
+        }
+    }
+    return ans;
+}
+
+PROGRAM_LINE_SET PKBImplementation::getStatementsThatAffectBip(PROGRAM_LINE statementNumber, bool isTransitive) {
+    if (!isTransitive) {
+        return foost::getVisitedInDFS(statementNumber, affectedBipMapping, false);
+    }
+    PROGRAM_LINE_SET ans;
+    // TODO optimize using map iterators
+    for (const auto& p : affectedBipStarMapping) {
+        ScopedStatements ss = affectsBipHelper(p.first, affectedBipStarMapping, affectedBipStarMemo);
+        for (ScopedStatement s : ss) {
+            ans.insert(s.first);
+        }
+    }
+    return ans;
+}
+
+const PROGRAM_LINE_SET& PKBImplementation::getAllStatementsThatAffectBip() const {
+    return statementsThatAffectBip;
+}
+
+const PROGRAM_LINE_SET& PKBImplementation::getAllStatementsThatAreAffectedBip() const {
+    return statementsThatAreAffectedBip;
 }
 
 } // namespace backend
