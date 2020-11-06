@@ -1,0 +1,210 @@
+1 - (Valid Query) Parent(s, s)
+stmt s;
+Select BOOLEAN such that Parent(s, s)
+FALSE
+5000
+2 - (Valid Query) Select statements that are children of #3
+stmt s;
+Select BOOLEAN such that Parent(3, s)
+FALSE
+5000
+3 - (Valid Query) Select statements that are parent of #3
+stmt s;
+Select BOOLEAN such that Parent(s, 3)
+FALSE
+5000
+4 - (Valid Query) Select statements that are children of #7
+stmt s;
+Select BOOLEAN such that Parent(7, s)
+TRUE
+5000
+5 - (Valid Query) Select statements that are children of #9
+stmt s;
+Select BOOLEAN such that Parent(9, s)
+TRUE
+5000
+6 - (Valid Query) Select statements in which they are a parent of some other statement
+stmt s;
+Select BOOLEAN such that Parent(s, _)
+TRUE
+5000
+7 - (Valid Query) Select statements such that Parent(_, _) is true
+stmt s;
+Select BOOLEAN such that Parent(_, _)
+TRUE
+5000
+8 - (Invalid Query) Invalid argument type in clause
+variable v;
+Select BOOLEAN such that Parent("s", v)
+
+5000
+9 - (Invalid Query) Invalid argument type in clause
+stmt s;
+Select BOOLEAN such that Parent(s, "abc")
+
+5000
+10 - (Valid Query) Select statements that are child statements of some other statement
+stmt s;
+Select BOOLEAN such that Parent(_, s)
+TRUE
+5000
+11 - (Valid Query) Select variables such that Parent(27, s) is true
+variable v; stmt s;
+Select BOOLEAN such that Parent(27, s)
+TRUE
+5000
+12 - (Valid Query) Select while statements that are a direct parent of some assign statement
+assign a; while w;
+Select BOOLEAN such that Parent(w, a)
+TRUE
+5000
+13 - (Valid Query) Select while statements that are direct or indirect parent of some assign statement
+assign a; while w;
+Select BOOLEAN such that Parent*(w, a)
+TRUE
+5000
+14 - (Valid Query) Select while statements that are direct or indirect parent of some assign statement with some pattern 
+assign a; while w;
+Select BOOLEAN such that Parent*(w, a) pattern a("H2O", _)
+TRUE
+5000
+15 - (Valid Query) Select while statements that are direct or indirect parent of some assign statement with some pattern 
+assign a; while w;
+Select BOOLEAN pattern a(_,_) such that Parent*(w, a)
+TRUE
+5000
+16 - (Valid Query) Select statements that are direct/indirect parents of statement #29
+stmt s;
+Select BOOLEAN such that Parent*(s, 29)
+TRUE
+5000
+17 - (Valid Query) Select statements that are child statements of statement #24
+stmt s;
+Select BOOLEAN such that Parent*(24, s)
+FALSE
+5000
+18 - (Valid Query) Select statements that are direct/indirect child statements of statement #25
+stmt s;
+Select BOOLEAN such that Parent*(25, s)
+TRUE
+5000
+19 - (Invalid Query) No such that clause
+stmt s;
+Select BOOLEAN Parent*(25, s)
+
+5000
+20 - (Valid Query) follows between synonyms
+stmt s; while w;
+Select BOOLEAN such that Follows(s, w)
+TRUE
+5000
+21 - (Valid Query) follows between synonyms
+call cl; assign a;
+Select BOOLEAN such that Follows(a, cl)
+TRUE
+5000
+22 - (Valid Query) follows* between synonyms
+print pt; stmt s;
+Select BOOLEAN such that Follows*(s, pt)
+TRUE
+5000
+23 - (Valid Query) follows* between synonyms
+read rd; print pt; stmt s;
+Select BOOLEAN such that Follows*(pt, rd)
+FALSE
+5000
+24 - (Valid Query) follows between synonym and entity
+stmt s;
+Select BOOLEAN such that Follows(s, 16)
+TRUE
+5000
+25 - (Valid Query) follows* between synonym and entity
+print pt;
+Select BOOLEAN such that Follows*(30, pt)
+FALSE
+5000
+26 - (Valid Query) follows between entities
+constant c;
+Select BOOLEAN such that Follows(8, 16)
+TRUE
+5000
+27 - (Valid Query) follows* between entities
+if ifs;
+Select BOOLEAN such that Follows*(30, 31)
+FALSE
+5000
+28 - (Valid Query) follows for wildcard
+read rd;
+Select BOOLEAN such that Follows(rd, _)
+TRUE
+5000
+29 - (Valid Query) follows for wildcard
+call cl; stmt s;
+Select BOOLEAN such that Follows(_, 16)
+TRUE
+5000
+30 - (Valid Query) follows* for wildcard
+procedure p;
+Select BOOLEAN such that Follows* (_, _)
+TRUE
+5000
+31 - (Valid Query) follows with pattern
+assign a; while w;
+Select BOOLEAN such that Follows(w, a) pattern a(_, _"1"_)
+TRUE
+5000
+32 - (Valid Query) follows* with pattern
+assign a; if ifs; variable v;
+Select BOOLEAN such that Follows*(a, ifs) pattern a(v, _"1"_)
+TRUE
+5000
+33 - (Valid Query) follows* with pattern
+assign a; call cl; variable v;
+Select BOOLEAN such that Follows*(a, cl) pattern a(v, _)
+TRUE
+5000
+34 - (Invalid Query) Such that with pattern
+assign a; while w;
+Select BOOLEAN such that pattern a(_,_) Parent*(w, a)
+
+5000
+35 - (Valid Query) Select statements such that it use some variable and it has a pattern
+assign a; variable v; 
+Select BOOLEAN such that Uses(a, v) pattern a(_, _"1"_)
+TRUE
+5000
+36 - (Valid Query) Select statements such that it modify some variable and it has a pattern
+assign a; variable v; 
+Select BOOLEAN such that Modifies(a, v) pattern a("x", _)
+TRUE
+5000
+37 - (Valid Query) Select statements such that it use some variable
+stmt s; variable v; 
+Select BOOLEAN such that Uses(s, _)
+TRUE
+5000
+38 - (Valid Query) Select statements such that some assignment statement modifies a variable v and v is on LHS.
+assign a; variable v; stmt s;
+Select BOOLEAN such that Modifies(a, v) pattern a(v, _)
+TRUE
+5000
+39 - (Invalid Query) Cannot have synonym on RHS argument of pattern
+assign a; variable v1, v2; stmt s;
+Select BOOLEAN such that Modifies(a, v1) pattern a(_, v2)
+
+5000
+40 - (Valid Query) Select assign statements with some pattern
+assign a1, a2, a3; 
+Select BOOLEAN pattern a1("H2O", _)
+TRUE
+5000
+41 - (Valid Query) Select assign statements with some pattern
+assign a;
+Select BOOLEAN pattern a(_, _)
+TRUE
+5000
+42 - (Valid Query) No clauses
+assign a;
+Select BOOLEAN
+TRUE
+5000

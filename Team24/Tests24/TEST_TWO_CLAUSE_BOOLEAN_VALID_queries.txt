@@ -1,0 +1,445 @@
+1 - (Valid Query) Follows + Follows
+call c; stmt s; assign a;
+Select BOOLEAN such that Follows(_, 16) such that Follows(a, c)
+TRUE
+5000
+2 - (Valid Query) Follows + Follows*
+stmt s; while w; assign a;
+Select BOOLEAN such that Follows(s, w) such that Follows*(a, s)
+TRUE
+5000
+3 - (Valie Query) Follows + Follows*, no results 
+print pt; stmt s; while w;
+Select BOOLEAN such that Follows(s, w) such that Follows*(s, pt)
+FALSE
+5000
+4 - (Valid Query) Follows + Parent
+call cl; assign a; if ifs;
+Select BOOLEAN such that Follows(a, cl) such that Parent(ifs, a)
+TRUE
+5000
+5 - (Valid Query) Follows + Parent*
+stmt s; assign a;
+Select BOOLEAN such that Follows(a, s) such that Parent*(25, s)
+TRUE
+5000
+6 - (Valid Query) Follows + Uses
+stmt s;
+Select BOOLEAN such that Follows(s, _) such that Uses(s, _)
+TRUE
+5000
+7 - (Valid Query) Follows + Modifies
+assign a; call c;
+Select BOOLEAN such that Follows(a, c) such that Modifies(2, _)
+TRUE
+5000
+8 - (Valid Query) Follows + Next
+assign a; if ifs; call c;
+Select BOOLEAN such that Follows(a, ifs) such that Next(ifs, c)
+FALSE
+5000
+9 - (Valid Query) Follows + Next*
+assign a; if ifs; call c;
+Select BOOLEAN such that Follows(a, ifs) such that Next*(ifs, c)
+TRUE
+5000
+10 - (Valid Query) Follows + pattern(assign)
+stmt s; assign a; print pt;
+Select BOOLEAN such that Follows(pt, s) pattern a(_ , "a + 1")
+TRUE
+5000
+11 - (Valid Query) Follows + Next* (Non-intesersecting, positive)
+assign a; if ifs;
+Select BOOLEAN such that Follows(a, ifs) such that Next(2, 3)
+TRUE
+5000
+12 - (Valid Query) Follows + Next* (Non-intesersecting, negative)
+assign a; if ifs;
+Select BOOLEAN such that Follows(a, ifs) such that Next(2, 4)
+FALSE
+5000
+13 - (Valid Query) Follows* + Follows, no results 
+print pt; stmt s; while w;
+Select BOOLEAN such that Follows*(s, pt) such that Follows(s, w)
+FALSE
+5000
+14 - (Valid Query) Follows* + Follows*
+print pt; stmt s; while w;
+Select BOOLEAN such that Follows*(s, pt) such that Follows*(s, w)
+TRUE
+5000
+15 - (Valid Query) Follows* + Parent
+print pt; stmt s;
+Select BOOLEAN such that Follows*(s, pt) such that Parent(9, s)
+TRUE
+5000
+16 - (Valid Query) Follows* + Parent*
+assign a1, a2; while w;
+Select BOOLEAN such that Follows*(a1, w) such that Parent*(w, a2)
+TRUE
+5000
+17 - (Valid Query) Follows* + Uses
+print pt; assign a; variable v;
+Select BOOLEAN such that Follows*(a, pt) such that Uses(a, v)
+TRUE
+5000
+18 - (Valid Query) Follows* + Modifies
+assign a; while w;
+Select BOOLEAN such that Follows*(a, w) such that Modifies(a, "H2O")
+TRUE
+5000
+19 - (Valid Query) Follows* + Next
+assign a; while w;
+Select BOOLEAN such that Follows*(a, w) such that Next(a, w)
+TRUE
+5000
+20 - (Valid Query) Follows* + Next*
+assign a; while w;
+Select BOOLEAN such that Follows*(a, w) such that Next*(a, w)
+TRUE
+5000
+21 - (Valid Query) Follows* + pattern
+assign a; while w;
+Select BOOLEAN such that Follows*(a, w) pattern a(_, _"H2O"_)
+TRUE
+5000
+22 - (Valid Query) Follows* + Modifies (Non-intersecting, positive)
+assign a; while w; stmt s;
+Select BOOLEAN such that Follows*(a, w) such that Modifies(s, "H2O")
+TRUE
+5000
+23 - (Valid Query) Follows* + Modifies (Non-intersecting, negative)
+assign a; while w; stmt s;
+Select BOOLEAN such that Follows*(a, w) such that Modifies(2, "H2O")
+FALSE
+5000
+24 - (Valid Query) Modifies + Follows
+assign a; call c;
+Select BOOLEAN such that Modifies(2, _) such that Follows(a, c)
+TRUE
+5000
+25 - (Valid Query) Modifies + Follows*
+assign a; while w;
+Select BOOLEAN such that Modifies(a, "H2O") such that Follows*(a, w)
+TRUE
+5000
+26 - (Valid Query) Modifies + Parent
+while w; assign a;
+Select BOOLEAN such that Modifies(a, "naMeWiThDiGiTS85") such that Parent(w,a)
+TRUE
+5000
+27 - (Valid Query) Modifies + Parent*
+stmt s; call c;
+Select BOOLEAN such that Modifies(c, "mango") such that Parent*(s, c)
+TRUE
+5000
+28 - (Valid Query) Modifies + Uses
+stmt s; variable v;
+Select BOOLEAN such that Uses(s, v) such that Modifies(s, v)
+TRUE
+5000
+29 - (Valid Query) Modifies + Modifies
+procedure p;
+Select BOOLEAN such that Modifies (p, "H2O") such that Modifies (p, "mango")
+TRUE
+5000
+30 - (Valid Query) Modifies + Next
+stmt s; call c;
+Select BOOLEAN such that Modifies(c, "mango") such that Next (s, c)
+TRUE
+5000
+31 - (Valid Query) Modifies + Next*
+stmt s; call c;
+Select BOOLEAN such that Modifies(c, "mango") such that Next*(s, c)
+TRUE
+5000
+32 - (Valid Query) Modifies + Pattern
+assign a;
+Select BOOLEAN such that Modifies (a, "a") pattern a("a", _)
+TRUE
+5000
+33 - (Valid Query) Modifies + Parent* (Non-intersecting, positive)
+stmt s; call c;
+Select BOOLEAN such that Modifies(s, "mango") such that Parent*(7, 10)
+TRUE
+5000
+34 - (Valid Query) Modifies + Parent* (Non-intersecting, negative)
+stmt s; call c;
+Select BOOLEAN such that Modifies(s, "mango") such that Parent*(1, 1)
+FALSE
+5000
+35 - (Valid Query) Next + Follows
+assign a; if ifs; call c;
+Select BOOLEAN such that Next(ifs, c) such that Follows(a, ifs)
+FALSE
+5000
+36 - (Valid Query) Next + Follows*
+assign a; while w;
+Select BOOLEAN such that Next(a, w) such that Follows*(a, w)
+TRUE
+5000
+37 - (Valid Query) Next + Parent
+stmt s; assign a;
+Select BOOLEAN such that Next(a, s) such that Parent(s, a)
+FALSE
+5000
+38 - (Valid Query) Next + Parent*
+stmt s; call c;
+Select BOOLEAN such that Next(s, s) such that Parent*(s, c)
+FALSE
+5000
+39 - (Valid Query) Next + Uses
+stmt s1, s2;
+Select BOOLEAN such that Next(s1,s2) such that Uses(s2,"tree")
+TRUE
+5000
+40 - (Valid Query) Next + Modifies
+stmt s; call c;
+Select BOOLEAN such that Next (s, c) such that Modifies(c, "mango")
+TRUE
+5000
+41 - (Valid Query) Next + Next
+stmt s1, s2; call c;
+Select BOOLEAN such that Next(s1,s2) such that Next(s2, c)
+TRUE
+5000
+42 - (Valid Query) Next + Next*
+stmt s1, s2; call c;
+Select BOOLEAN such that Next(s1,s2) such that Next*(s2, c)
+TRUE
+5000
+43 - (Valid Query) Next + Pattern
+print pt; assign a;
+Select BOOLEAN such that Next(pt, a) pattern a(_,_"dummy"_)
+TRUE
+5000
+44 - (Valid Query) Next + Next (Non-intersecting, positive)
+stmt s; call c; read rd; print pt;
+Select BOOLEAN such that Next(s,c) such that Next(rd, pt)
+TRUE
+5000
+45 - (Valid Query) Next + Next (Non-intersecting, negative)
+stmt s; call c;
+Select BOOLEAN such that Next(s,c) such that Next(1, 3)
+FALSE
+5000
+46 - (Valid Query) Next* + Follows
+assign a; if ifs; call c;
+Select BOOLEAN such that Next*(ifs, c) such that Follows(a, ifs)
+TRUE
+5000
+47 - (Valid Query) Next* + Follows*
+assign a; while w;
+Select BOOLEAN such that Next(a, w) such that Follows*(a, w)
+TRUE
+5000
+48 - (Valid Query) Next* + Parent
+stmt s; assign a;
+Select BOOLEAN such that Next*(a, s) such that Parent(s, a)
+TRUE
+5000
+49 - (Valid Query) Next* + Parent*
+stmt s; call c;
+Select BOOLEAN such that Next*(s, s) such that Parent*(s, c)
+TRUE
+5000
+50 - (Valid Query) Next* + Uses
+stmt s1, s2;
+Select BOOLEAN such that Next*(s1,s2) such that Uses(s2,"tree")
+TRUE
+5000
+51 - (Valid Query) Next* + Modifies
+stmt s; call c;
+Select BOOLEAN such that Next*(s, c) such that Modifies(c, "mango")
+TRUE
+5000
+52 - (Valid Query) Next* + Next
+stmt s1, s2; call c;
+Select BOOLEAN such that Next*(s2, c) such that Next(s1,s2)
+TRUE
+5000
+53 - (Valid Query) Next* + Next*
+read rd1, rd2; print pt;
+Select BOOLEAN such that Next*(rd1, pt) such that Next*(rd1, rd2)
+TRUE
+5000
+54 - (Valid Query) Next* + Pattern
+print pt; read rd; assign a;
+Select BOOLEAN such that Next*(pt, rd) pattern a(_,"x-1")
+TRUE
+5000
+55 - (Valid Query) Next* + Next* (Non-intersecting, positive)
+read rd; print pt; assign a; while w;
+Select BOOLEAN such that Next*(rd, pt) such that Next*(a, w)
+TRUE
+5000
+56 - (Valid Query) Next* + Next* (Non-intersecting, negative)
+read rd; print pt; stmt s;
+Select BOOLEAN such that Next*(rd, pt) such that Next*(4, s)
+FALSE
+5000
+57 - (Valid Query) Parent + Follows
+call cl; assign a; if ifs;
+Select BOOLEAN such that Parent(ifs, a) such that Follows(a, cl)
+TRUE
+5000
+58 - (Valid Query) Parent + Follows*
+print pt; stmt s;
+Select BOOLEAN such that Parent(9, s) such that Follows*(s, pt)
+TRUE
+5000
+59 - (Valid Query) Parent + Parent
+stmt s;
+Select BOOLEAN such that Parent(25, 26) such that Parent(7, s)
+TRUE	
+5000
+60 - (Valid Query) Parent + Parent*
+stmt s; if ifs; call c;
+Select BOOLEAN such that Parent(ifs, s) such that Parent*(ifs, c) 
+TRUE
+5000
+61 - (Valid Query) Parent + Uses
+stmt s; assign a;
+Select BOOLEAN such that Parent(s, a) such that Uses(a, "H2O")
+TRUE
+5000
+62 - (Valid Query) Parent + Modifies
+while w; assign a;
+Select BOOLEAN such that Parent(w,a) such that Modifies(a, "naMeWiThDiGiTS85")
+TRUE
+5000
+63 - (Valid Query) Parent + Next
+stmt s; assign a;
+Select BOOLEAN such that Parent(s, a) such that Next(a, s)
+FALSE
+5000
+64 - (Valid Query) Parent + Next*
+stmt s; assign a;
+Select BOOLEAN such that Parent(s, a) such that Next*(a, s)
+TRUE
+5000
+65 - (Valid Query) Parent + pattern
+stmt s; assign a; variable v;
+Select BOOLEAN such that Parent(s,a) pattern a(v, "H2O - 1")
+TRUE
+5000
+66 - (Valid Query) Parent + Parent (Non-intersecting, positive)
+stmt s; while w; if ifs;
+Select BOOLEAN such that Parent(7, s) such that Parent(w, ifs) 
+TRUE
+5000
+67 - (Valid Query) Parent + Parent (Non-intersecting, negative)
+stmt s; while w; read rd;
+Select BOOLEAN such that Parent(7, s) such that Parent(w, rd)
+FALSE
+5000
+68 - (Valid Query) Parent* + Follows
+stmt s; assign a;
+Select BOOLEAN such that Parent*(25, s) such that Follows(a, s)
+TRUE
+5000
+69 - (Valid Query) Parent* + Follows*
+assign a1, a2; while w;
+Select BOOLEAN such that Parent*(w, a2) such that Follows*(a1, w) 
+TRUE
+5000
+70 - (Valid Query) Parent* + Parent
+stmt s; if ifs; call c;
+Select BOOLEAN such that Parent*(ifs, c) such that Parent(ifs, s) 
+TRUE
+5000
+71 - (Valid Query) Parent* + Parent*
+stmt s1, s2; assign a;
+Select BOOLEAN such that Parent*(s1, a) such that Parent*(s2, s1)
+TRUE
+5000
+72 - (Valid Query) Parent* + Uses
+stmt s; call c;
+Select BOOLEAN such that Parent*(s, c) such that Uses(c, "mango")
+TRUE
+5000
+73 - (Valid Query) Parent* + Modifies
+stmt s; call c;
+Select BOOLEAN such that Parent*(s, c) such that Modifies(c, "mango")
+TRUE
+5000
+74 - (Valid Query) Parent* + Next
+stmt s; call c;
+Select BOOLEAN such that Parent*(s, c) such that Next(s, s)
+FALSE
+5000
+75 - (Valid Query) Parent* + Next*
+stmt s; call c;
+Select BOOLEAN such that Parent*(s, c) such that Next*(s, s)
+TRUE
+5000
+76 - (Valid Query) Parent* + Pattern
+assign a; while w;
+Select BOOLEAN such that Parent*(w, a) pattern a("a", _)
+TRUE
+5000
+77 - (Valid Query) Parent* + Parent* (Non-intersecting, positive)
+stmt s1, s2, s3; assign a;
+Select BOOLEAN such that Parent*(s1, a) such that Parent*(s2, s3)
+TRUE
+5000
+78 - (Valid Query) Parent* + Parent* (Non-intersecting, negative)
+stmt s; assign a; while w; read rd;
+Select BOOLEAN such that Parent*(s, a) such that Parent*(w, rd)
+FALSE
+5000
+79 - (Valid Query) Uses + Follows
+stmt s;
+Select BOOLEAN such that Uses(s, _) such that Follows(s, _)
+TRUE
+5000
+80 - (Valid Query) Uses + Follows*
+print pt; assign a; variable v;
+Select BOOLEAN such that Uses(a, v) such that Follows*(a, pt)
+TRUE
+5000
+81 - (Valid Query) Uses + Parent
+stmt s; assign a;
+Select BOOLEAN such that Uses(a, "H2O") such that Parent(s, a) 
+TRUE
+5000
+82 - (Valid Query) Uses + Parent*
+stmt s; call c;
+Select BOOLEAN such that Uses(c, "mango") such that Parent*(s, c) 
+TRUE
+5000
+83 - (Valid Query) Uses + Uses
+while w;
+Select BOOLEAN such that Uses(w, "count") such that Uses(w, "dummy")
+TRUE
+5000
+84 - (Valid Query) Uses + Modifies
+stmt s; variable v;
+Select BOOLEAN such that Uses(s, v) such that Modifies(s, v)
+TRUE
+5000
+85 - (Valid Query) Uses + Next
+stmt s1, s2;
+Select BOOLEAN such that Uses(s2,"tree") such that Next(s1,s2)
+TRUE
+5000
+86 - (Valid Query) Uses + Next*
+stmt s1, s2;
+Select BOOLEAN such that Uses(s2,"tree") such that Next*(s1,s2)
+TRUE
+5000
+87 - (Valid Query) Uses + Pattern
+assign a; 
+Select BOOLEAN such that Uses(a,"H2O") pattern a(_,_)
+TRUE
+5000
+88 - (Valid Query) Uses + Follows* (Non-intersecting, positive)
+assign a; variable v; stmt s; while w;
+Select BOOLEAN such that Uses(a, v) such that Follows*(s, w)
+TRUE
+5000
+89 - (Valid Query) Uses + Follows* (Non-intersecting, negative)
+assign a; variable v; call c; if ifs;
+Select BOOLEAN such that Uses(a, v) such that Follows*(c, ifs)
+FALSE
+5000
