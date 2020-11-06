@@ -318,6 +318,10 @@ class State {
         case qpbackend::NEXTT:
         case qpbackend::AFFECTS:
         case qpbackend::AFFECTST:
+        case qpbackend::NEXTBIP:
+        case qpbackend::NEXTBIPT:
+        case qpbackend::AFFECTSBIP:
+        case qpbackend::AFFECTSBIPT:
         case qpbackend::WITH:
         case qpbackend::INVALID_CLAUSE_TYPE:
             break;
@@ -689,6 +693,8 @@ STATESTATUSPAIR parseRelRef(State state) {
     case qpbackend::AFFECTST:
     case qpbackend::NEXTBIP:
     case qpbackend::NEXTBIPT:
+    case qpbackend::AFFECTSBIP:
+    case qpbackend::AFFECTSBIPT:
         return parseRelationStmtStmtOrLineLine(state, relationClauseType);
     case qpbackend::USES:
     case qpbackend::MODIFIES:
