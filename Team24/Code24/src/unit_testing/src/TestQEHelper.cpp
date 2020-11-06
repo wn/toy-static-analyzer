@@ -1722,7 +1722,128 @@ PROGRAM_LINE_SET PKBMock::getStatementsAffectedBy(PROGRAM_LINE statementNumber, 
     }
     return lines;
 }
+
+PROGRAM_LINE_SET PKBMock::getStatementsAffectedBipBy(PROGRAM_LINE statementNumber, bool isTransitive) const {
+    PROGRAM_LINE_SET lines;
+    if (test_idx == 3) {
+        if (!isTransitive) {
+            switch (statementNumber) {
+            case 10:
+                lines = { 15, 21, 22 };
+                break;
+            case 11:
+                lines = { 16, 21, 23 };
+                break;
+            case 12:
+                lines = { 17, 22, 23 };
+                break;
+            case 15:
+                lines = { 15, 21, 22 };
+                break;
+            case 16:
+                lines = { 16, 21, 23 };
+                break;
+            case 17:
+                lines = { 17, 22, 23 };
+                break;
+            case 21:
+                lines = { 23 };
+                break;
+            case 22:
+                lines = { 23 };
+                break;
+            default:
+                lines = {};
+            }
+        } else {
+            switch (statementNumber) {
+            case 10:
+                lines = { 15, 21, 22, 23 };
+                break;
+            case 11:
+                lines = { 16, 21, 23 };
+                break;
+            case 12:
+                lines = { 17, 22, 23 };
+                break;
+            case 15:
+                lines = { 15, 21, 23 };
+                break;
+            case 16:
+                lines = { 16, 21, 23 };
+                break;
+            case 17:
+                lines = { 17, 22, 23 };
+                break;
+            case 21:
+                lines = { 23 };
+                break;
+            case 22:
+                lines = { 23 };
+                break;
+            default:
+                lines = {};
+            }
+        }
+    }
+    return lines;
+}
+
 PROGRAM_LINE_SET PKBMock::getStatementsThatAffect(PROGRAM_LINE statementNumber, bool isTransitive) const {
+    PROGRAM_LINE_SET lines;
+    if (test_idx == 3) {
+        if (!isTransitive) {
+            switch (statementNumber) {
+            case 15:
+                lines = { 10, 15 };
+                break;
+            case 16:
+                lines = { 11, 16 };
+                break;
+            case 17:
+                lines = { 12, 17 };
+                break;
+            case 21:
+                lines = { 10, 11, 15, 16 };
+                break;
+            case 22:
+                lines = { 10, 12, 15, 17 };
+                break;
+            case 23:
+                lines = { 11, 12, 16, 17, 21, 22 };
+                break;
+            default:
+                lines = {};
+            }
+        } else {
+            switch (statementNumber) {
+            case 15:
+                lines = { 10, 15 };
+                break;
+            case 16:
+                lines = { 11, 16 };
+                break;
+            case 17:
+                lines = { 12, 17 };
+                break;
+            case 21:
+                lines = { 10, 11, 15, 16 };
+                break;
+            case 22:
+                lines = { 10, 12, 15, 17 };
+                break;
+            case 23:
+                lines = { 10, 11, 12, 16, 17, 21, 22 };
+                break;
+            default:
+                lines = {};
+            }
+        }
+    }
+    return lines;
+}
+
+PROGRAM_LINE_SET PKBMock::getStatementsThatAffectBip(PROGRAM_LINE statementNumber, bool isTransitive) const {
     PROGRAM_LINE_SET lines;
     if (test_idx == 3) {
         if (!isTransitive) {
@@ -1780,21 +1901,20 @@ const PROGRAM_LINE_SET& PKBMock::getAllStatementsThatAffect() const {
     static PROGRAM_LINE_SET lines = { 10, 11, 12, 15, 16, 17, 21, 22 };
     return lines;
 }
+
+const PROGRAM_LINE_SET& PKBMock::getAllStatementsThatAffectBip() const {
+    static PROGRAM_LINE_SET lines = { 10, 11, 12, 15, 16, 17, 21, 22 };
+    return lines;
+}
+
 const PROGRAM_LINE_SET& PKBMock::getAllStatementsThatAreAffected() const {
     static PROGRAM_LINE_SET lines = { 15, 16, 17, 21, 22, 23 };
     return lines;
 }
-PROGRAM_LINE_SET PKBMock::getStatementsAffectedBipBy(PROGRAM_LINE statementNumber, bool isTransitive) const {
-    return PROGRAM_LINE_SET();
-}
-PROGRAM_LINE_SET PKBMock::getStatementsThatAffectBip(PROGRAM_LINE statementNumber, bool isTransitive) const {
-    return PROGRAM_LINE_SET();
-}
-const PROGRAM_LINE_SET& PKBMock::getAllStatementsThatAffectBip() const {
-    return PROGRAM_LINE_SET();
-}
+
 const PROGRAM_LINE_SET& PKBMock::getAllStatementsThatAreAffectedBip() const {
-    return PROGRAM_LINE_SET();
+    static PROGRAM_LINE_SET lines = { 15, 16, 17, 21, 22, 23 };
+    return lines;
 }
 
 } // namespace qetest
