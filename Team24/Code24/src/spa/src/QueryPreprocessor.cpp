@@ -617,21 +617,21 @@ STATESTATUSPAIR chainClauseWithAnd(const SINGLE_CLAUSE_PARSER& firstClauseParser
     }
 
     while (isValid) {
-        newState.popToNextNonWhitespaceToken();
         state = newState;
-        if (!state.hasTokensLeftToParse() || state.peekToken().type != backend::lexer::NAME ||
-            state.peekToken().nameValue != "and") {
-            if (state.hasTokensLeftToParse()) {
+        newState.popToNextNonWhitespaceToken();
+        if (!newState.hasTokensLeftToParse() || newState.peekToken().type != backend::lexer::NAME ||
+            newState.peekToken().nameValue != "and") {
+            if (newState.hasTokensLeftToParse()) {
                 logLine(kQppLogInfoPrefix +
-                        "chainClauseWithAnd: exiting on token: " + state.peekToken().nameValue);
+                        "chainClauseWithAnd: exiting on token: " + newState.peekToken().nameValue);
             } else {
                 logLine(kQppLogInfoPrefix + "chainClauseWithAnd: ran out of tokens, exiting");
             };
             break;
         }
-        state.popUntilNonWhitespaceToken();
-        state.popToNextNonWhitespaceToken();
-        std::tie(newState, isValid) = singleClauseParser(state);
+        newState.popUntilNonWhitespaceToken();
+        newState.popToNextNonWhitespaceToken();
+        std::tie(newState, isValid) = singleClauseParser(newState);
     }
 
 
