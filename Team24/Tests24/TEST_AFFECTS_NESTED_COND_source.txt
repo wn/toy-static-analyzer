@@ -1,0 +1,51 @@
+procedure proc1 {
+	a = 1;
+	b = 1;
+	if (a < 1) then {
+		a = 1;
+		b = 1;
+	} else {
+		b = 1;
+	}
+	b = a + b;
+	call proc2;
+	b = a + b;
+	read b;
+	b = a + b;
+}
+
+procedure proc2 {
+	a = 1;
+	while (a == 1) {
+		a = 2;
+	}
+	b = a;
+	a = b;
+}
+
+procedure proc3 {
+	a = 1;
+	b = 1;
+	c = 1;
+	d = 1;
+	if (a == 1) then {
+		if (2 == 2) then {
+			while (b > a) {
+				if (c > a) then {
+					a = b;
+				} else {
+					while (b < 2){
+						a = b;
+						c = d;
+					}
+				}
+			}
+		} else {
+			b = 2;
+		}
+	} else {
+		b = 2;
+	}
+	d = a + b + c;
+	d = c;
+}

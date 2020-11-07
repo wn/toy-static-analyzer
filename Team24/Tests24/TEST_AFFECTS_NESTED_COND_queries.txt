@@ -1,0 +1,60 @@
+1 - (Valid Query) One branch in if branch valid
+
+Select BOOLEAN such that Affects(1, 7)
+TRUE
+5000
+2 - (Valid Query) Both branches in if blocked
+
+Select BOOLEAN such that Affects(2, 7)
+FALSE
+5000
+3 - (Valid Query) Affects does not hold if Proc modifies
+
+Select BOOLEAN such that Affects(1, 9)
+FALSE
+5000
+4 - (Valid Query) Affects does not hold if Read modifies
+
+Select BOOLEAN such that Affects(9, 11)
+FALSE
+5000
+5 - (Valid Query) Affects does not hold if statement across procedures
+
+Select BOOLEAN such that Affects(11, 12)
+FALSE
+5000
+6 - (Valid Query) Affects Can escape while loop
+
+Select BOOLEAN such that Affects(14, 15)
+TRUE
+5000
+7 - (Valid Query) Affects Can skip while loop
+
+Select BOOLEAN such that Affects(12, 15)
+TRUE
+5000
+8 - (Valid Query) Affects does not hold over other assign
+
+Select BOOLEAN such that Affects(12, 16)
+FALSE
+5000
+9 - (Valid Query) Affects* holds over other assign if relationship is indirect
+
+Select BOOLEAN such that Affects*(12, 16)
+TRUE
+5000
+10 - (Valid Query) Affects can find path over nested conds
+
+Select BOOLEAN such that Affects(17, 31)
+TRUE
+5000
+11 - (Valid Query) Affects can find path over nested conds
+
+Select BOOLEAN such that Affects(18, 31)
+TRUE
+5000
+12 - (Valid Query) Affects* can find connection through nested conds
+
+Select BOOLEAN such that Affects*(20, 32)
+TRUE
+5000
