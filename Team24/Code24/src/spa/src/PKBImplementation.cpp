@@ -844,49 +844,28 @@ const PROGRAM_LINE_SET& PKBImplementation::getAllStatementsThatAreAffected() con
     return statementsThatAreAffected;
 }
 
-ScopedStatements
-PKBImplementation::affectsBipHelper(const ScopedStatement& start,
-                                    const std::map<ScopedStatement, ScopedStatements>& graph) const {
-    if (affectsBipStarMemo.find(start) != affectsBipStarMemo.end()) {
-        return affectsBipStarMemo.at(start);
+ScopedStatements affectsBipStarHelper(const ScopedStatement& start,
+                                      const std::map<ScopedStatement, ScopedStatements>& graph,
+                                      std::map<ScopedStatement, ScopedStatements>& memo) {
+    if (memo.find(start) != memo.end()) {
+        return memo.at(start);
     }
 
-    affectsBipStarMemo[start] = ScopedStatements();
+    memo[start] = ScopedStatements();
     if (graph.find(start) != graph.end()) {
         for (const ScopedStatement& affected : graph.at(start)) {
-            affectsBipStarMemo[start].insert(affected);
+            memo[start].insert(affected);
             if (start == affected) {
                 continue;
             }
-            ScopedStatements subAns = affectsBipHelper(affected, graph);
-            affectsBipStarMemo[start].insert(subAns.begin(), subAns.end());
+            ScopedStatements subAns = affectsBipStarHelper(affected, graph, memo);
+            memo[start].insert(subAns.begin(), subAns.end());
         }
     }
 
-    return affectsBipStarMemo.at(start);
+    return memo.at(start);
 }
 
-ScopedStatements
-PKBImplementation::affectedBipHelper(const ScopedStatement& start,
-                                     const std::map<ScopedStatement, ScopedStatements>& graph) const {
-    if (affectedBipStarMemo.find(start) != affectedBipStarMemo.end()) {
-        return affectedBipStarMemo.at(start);
-    }
-
-    affectedBipStarMemo[start] = ScopedStatements();
-    if (graph.find(start) != graph.end()) {
-        for (const ScopedStatement& affected : graph.at(start)) {
-            affectedBipStarMemo[start].insert(affected);
-            if (start == affected) {
-                continue;
-            }
-            ScopedStatements subAns = affectedBipHelper(affected, graph);
-            affectedBipStarMemo[start].insert(subAns.begin(), subAns.end());
-        }
-    }
-
-    return affectedBipStarMemo.at(start);
-}
 
 PROGRAM_LINE_SET PKBImplementation::getStatementsAffectedBipBy(PROGRAM_LINE statementNumber,
                                                                bool isTransitive) const {
@@ -900,7 +879,7 @@ PROGRAM_LINE_SET PKBImplementation::getStatementsAffectedBipBy(PROGRAM_LINE stat
         if (p.first.first != statementNumber) {
             continue;
         }
-        ScopedStatements ss = affectsBipHelper(p.first, affectsBipStarMapping);
+        ScopedStatements ss = affectsBipStarHelper(p.first, affectsBipStarMapping, affectsBipStarMemo);
         for (ScopedStatement s : ss) {
             ans.insert(s.first);
         }
@@ -916,7 +895,7 @@ PROGRAM_LINE_SET PKBImplementation::getStatementsThatAffectBip(PROGRAM_LINE stat
     PROGRAM_LINE_SET ans;
     // TODO optimize using map iterators
     for (const auto& p : affectedBipStarMapping) {
-        ScopedStatements ss = affectedBipHelper(p.first, affectedBipStarMapping);
+        ScopedStatements ss = affectsBipStarHelper(p.first, affectedBipStarMapping, affectedBipStarMemo);
         for (ScopedStatement s : ss) {
             ans.insert(s.first);
         }

@@ -180,10 +180,6 @@ class PKBImplementation : virtual public backend::PKB {
     std::map<ScopedStatement, ScopedStatements> affectedBipStarMapping;
     STATEMENT_NUMBER_SET statementsThatAffectBip;
     STATEMENT_NUMBER_SET statementsThatAreAffectedBip;
-    ScopedStatements affectsBipHelper(const ScopedStatement& start,
-                                      const std::map<ScopedStatement, ScopedStatements>& graph) const;
-    ScopedStatements affectedBipHelper(const ScopedStatement& start,
-                                       const std::map<ScopedStatement, ScopedStatements>& graph) const;
 
     // Performance booster fields:
     std::unordered_map<TNodeType, std::vector<const TNode*>, EnumClassHash> tNodeTypeToTNodesMap;
