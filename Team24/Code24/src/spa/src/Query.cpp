@@ -97,7 +97,8 @@ std::string stringFromRelationType(ClauseType relationType) {
 
 bool Query::operator==(const Query& s) const {
     return declarationMap == s.declarationMap && returnCandidates == s.returnCandidates &&
-           suchThatClauses == s.suchThatClauses && patternClauses == s.patternClauses;
+           suchThatClauses == s.suchThatClauses && patternClauses == s.patternClauses &&
+           withClauses == s.withClauses;
 }
 
 

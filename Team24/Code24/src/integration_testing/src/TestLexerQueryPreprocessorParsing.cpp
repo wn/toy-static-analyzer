@@ -234,6 +234,44 @@ TEST_CASE("Test selects clause TUPLE BOOLEAN with return type") {
     REQUIRE(expectedQuery == actualQuery);
 }
 
+// select-cl : declaration ‘Select’ synonym with-cl
+
+TEST_CASE("Test with") {
+    std::stringstream queryString = std::stringstream("variable v; Select v with 5 = 6");
+    qpbackend::Query expectedQuery = { { { "v", qpbackend::EntityType::VARIABLE } },
+                                       { { qpbackend::DEFAULT_VAL, "v" } },
+                                       {},
+                                       {},
+                                       { { { qpbackend::NUM_ENTITY, qpbackend::DEFAULT_VAL, "5" },
+                                           { qpbackend::NUM_ENTITY, qpbackend::DEFAULT_VAL, "6" } } } };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test with, such that") {
+    std::stringstream queryString = std::stringstream(
+    "procedure p,q; Select p such that Calls (p, q) with  q.procName = \"Third\" such "
+    "that Modifies (p, \"i\")");
+    qpbackend::Query expectedQuery = {
+        { { "p", qpbackend::EntityType::PROCEDURE }, { "q", qpbackend::PROCEDURE } },
+        { { qpbackend::DEFAULT_VAL, "p" } },
+        { { qpbackend::CALLS, { qpbackend::PROC_SYNONYM, "p" }, { qpbackend::PROC_SYNONYM, "q" } },
+          { qpbackend::MODIFIES, { qpbackend::PROC_SYNONYM, "p" }, { qpbackend::NAME_ENTITY, "i" } } },
+        {},
+        { { { qpbackend::PROC_SYNONYM, qpbackend::PROC_NAME, "q" },
+            { qpbackend::NAME_ENTITY, qpbackend::DEFAULT_VAL, "Third" } } }
+    };
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+
 // select-cl : declaration ‘Select’ synonym suchthat-cl
 
 // General grammar tests
@@ -1797,6 +1835,11 @@ TEST_CASE("Test improper whitespace attrRef") {
     requireParsingInvalidQPLQueryToReturnEmptyQuery("stmt x; Select x.stmt #");
     requireParsingInvalidQPLQueryToReturnEmptyQuery("stmt x; Select x. stmt#");
     requireParsingInvalidQPLQueryToReturnEmptyQuery("stmt x; Select x .stmt#");
+}
+
+TEST_CASE("Test improper synonym attrRef in with") {
+    requireParsingInvalidQPLQueryToReturnEmptyQuery("Select BOOLEAN with 1.value = 1");
+    requireParsingInvalidQPLQueryToReturnEmptyQuery("Select BOOLEAN with \"x\".stmt# = 1");
 }
 
 // Test syntax error (TUPLE)
