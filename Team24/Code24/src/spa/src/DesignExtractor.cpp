@@ -874,7 +874,7 @@ getAffectsMapping(const std::unordered_map<TNodeType, std::vector<const TNode*>,
                   const std::unordered_map<int, std::unordered_set<int>>& previousRelationship,
                   const std::unordered_map<const TNode*, std::unordered_set<std::string>>& usesMapping,
                   // TODO(remo5000) use const here
-                  std::unordered_map<const TNode*, std::unordered_set<std::string>> modifiesMapping) {
+                  const std::unordered_map<const TNode*, std::unordered_set<std::string>>& modifiesMapping) {
     // This is an implementation of a worklist algorithm for reaching definition analysis.
 
     // Represents the assignment that cause a certain variable to be modified.
@@ -896,9 +896,11 @@ getAffectsMapping(const std::unordered_map<TNodeType, std::vector<const TNode*>,
     for (const TNode* tNode : startingTNodes) {
         STATEMENT_NUMBER statementNumber = tNodeToStatementNumber.at(tNode);
         VariableToAssigners initialVariableToAssigners;
-        for (const VARIABLE_NAME& variable : modifiesMapping[tNode]) {
-            initialVariableToAssigners[variable] = STATEMENT_NUMBER_SET();
-            initialVariableToAssigners[variable].insert(statementNumber);
+        if (modifiesMapping.count(tNode)) {
+            for (const VARIABLE_NAME& variable : modifiesMapping.at(tNode)) {
+                initialVariableToAssigners[variable] = STATEMENT_NUMBER_SET();
+                initialVariableToAssigners[variable].insert(statementNumber);
+            }
         }
         variablesGoingOut[statementNumber] = initialVariableToAssigners;
     }
@@ -945,16 +947,17 @@ getAffectsMapping(const std::unordered_map<TNodeType, std::vector<const TNode*>,
 
         // - KILL modified variables
         if (tNode->type == Assign || tNode->type == Read || tNode->type == Call) {
-            const VARIABLE_NAME_SET& modifiedVariables = modifiesMapping[tNode];
-            for (const VARIABLE_NAME& modifiedVariable : modifiedVariables) {
-                variablesGoingOut[statementNumber].erase(modifiedVariable);
+            if (modifiesMapping.count(tNode)) {
+                const VARIABLE_NAME_SET& modifiedVariables = modifiesMapping.at(tNode);
+                for (const VARIABLE_NAME& modifiedVariable : modifiedVariables) {
+                    variablesGoingOut[statementNumber].erase(modifiedVariable);
+                }
             }
         }
 
         // + GEN new variables
         if (tNode->type == Assign) {
-            assert(modifiesMapping[tNode].size() == 1);
-            VARIABLE_NAME variableModified = *modifiesMapping[tNode].begin();
+            VARIABLE_NAME variableModified = *modifiesMapping.at(tNode).begin();
             variablesGoingOut[statementNumber][variableModified] = { statementNumber };
         }
 

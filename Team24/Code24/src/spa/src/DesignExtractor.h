@@ -165,7 +165,7 @@ getAffectsMapping(const std::unordered_map<TNodeType, std::vector<const TNode*>,
                   const std::unordered_map<int, std::unordered_set<int>>& nextRelationship,
                   const std::unordered_map<int, std::unordered_set<int>>& previousRelationship,
                   const std::unordered_map<const TNode*, std::unordered_set<std::string>>& usesMapping,
-                  std::unordered_map<const TNode*, std::unordered_set<std::string>> modifiesMapping);
+                  const std::unordered_map<const TNode*, std::unordered_set<std::string>>& modifiesMapping);
 
 std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET>
 getAffectedMapping(const std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET>& affectsMapping);
