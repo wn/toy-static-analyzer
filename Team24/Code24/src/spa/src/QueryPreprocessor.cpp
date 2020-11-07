@@ -61,7 +61,9 @@ bool isStmtRefOrLineRefToken(const TOKEN& token);
 STATE_ARG_RESULT_STATUS_TRIPLE parseEntRef(State state);
 // Declarations for patten clauses
 STATESTATUSPAIR parseSinglePatternClause(State state);
-STATESTATUSPAIR parseSingleIfPatternClause(State state);
+STATESTATUSPAIR parsePatternCond(State state);
+STATESTATUSPAIR parseAssignOrWhilePatternCond(State state);
+STATESTATUSPAIR parseIfPatternCond(State state);
 STATE_STRING_RESULT_CLAUSE_TYPE_STATUS_QUADRUPLE parseExpressionSpec(State state, const TOKEN& synToken);
 // Declaration for with clauses
 STATESTATUSPAIR parseSingleWithClause(State state);
@@ -672,21 +674,16 @@ State parseFilteringClauses(State state) {
     bool isParseWithValid = true;
     bool isParseSuchThatValid = true;
     bool isParsePatternValid = true;
-    bool isParsePatternExtendedValid = true;
-    while (state.hasTokensLeftToParse() && (isParseWithValid || isParseSuchThatValid ||
-                                            isParsePatternValid || isParsePatternExtendedValid)) {
+    while (state.hasTokensLeftToParse() && (isParseSuchThatValid || isParsePatternValid || isParseWithValid)) {
         std::tie(tempState, isParseSuchThatValid) =
         chainClauseWithAnd(parseSingleSuchThatClause, parseRelRef, state);
         if (isParseSuchThatValid) {
             state = tempState;
         }
-        std::tie(tempState, isParsePatternValid) = parseSinglePatternClause(state);
-        if (isParsePatternValid) {
-            state = tempState;
-        }
 
-        std::tie(tempState, isParsePatternExtendedValid) = parseSingleIfPatternClause(state);
-        if (isParsePatternExtendedValid) {
+        std::tie(tempState, isParsePatternValid) =
+        chainClauseWithAnd(parseSinglePatternClause, parsePatternCond, state);
+        if (isParsePatternValid) {
             state = tempState;
         }
 
@@ -697,7 +694,7 @@ State parseFilteringClauses(State state) {
 
         state.popToNextNonWhitespaceToken();
     }
-    if (!isParsePatternValid && !isParseSuchThatValid && !isParsePatternExtendedValid && !isParseWithValid) {
+    if (!isParsePatternValid && !isParseSuchThatValid && !isParseWithValid) {
         throw std::runtime_error(kQppErrorPrefix + "parseFilteringClauses: Unable to parse such that or pattern clauses\n" +
                                  state.getQuery().toString());
     }
@@ -1220,7 +1217,7 @@ STATE_ARG_RESULT_STATUS_TRIPLE parseEntRef(State state) {
  * @param state
  * @return
  */
-STATESTATUSPAIR parseSingleIfPatternClause(State state) {
+STATESTATUSPAIR parseIfPatternCond(State state) {
     state.popToNextNonWhitespaceToken();
     if (!state.hasTokensLeftToParse()) return STATESTATUSPAIR(state, false);
     // Mutable vars
@@ -1229,13 +1226,7 @@ STATESTATUSPAIR parseSingleIfPatternClause(State state) {
     qpbackend::ARG entRefArg;
     std::string expressionSpec;
     // state is also mutable
-    logLine(kQppLogInfoPrefix + "parseSingleIfPatternClause: Begin");
-    TOKEN patternToken = state.popUntilNonWhitespaceToken();
-    state.popIfCurrentTokenIsWhitespaceToken();
-    if (patternToken.type != backend::lexer::NAME || patternToken.nameValue != kPatternKeyword ||
-        !state.hasTokensLeftToParse()) {
-        return STATESTATUSPAIR(state, false);
-    }
+    logLine(kQppLogInfoPrefix + "parseIfPatternCond: Begin");
 
     TOKEN synIfToken = state.popUntilNonWhitespaceToken();
     state.popIfCurrentTokenIsWhitespaceToken();
@@ -1283,15 +1274,13 @@ STATESTATUSPAIR parseSingleIfPatternClause(State state) {
     return STATESTATUSPAIR(state, true);
 }
 
-
 /**
- * pattern-cl : ‘pattern’ (assign | while)
  * assign : syn-assign ‘(‘ entRef ‘,’ expression-spec ‘)’
  * entRef : synonym | ‘_’ | ‘"’ IDENT ‘"’
  * expression-spec :  ‘"‘ expr’"’ | ‘_’ ‘"’ expr ‘"’ ‘_’ | ‘_’
  * while : syn-while ‘(’ entRef ‘,’ ‘_’ ‘)’
  */
-STATESTATUSPAIR parseSinglePatternClause(State state) {
+STATESTATUSPAIR parseAssignOrWhilePatternCond(State state) {
     state.popToNextNonWhitespaceToken();
     if (!state.hasTokensLeftToParse()) return STATESTATUSPAIR(state, false);
     // Mutable vars
@@ -1300,13 +1289,7 @@ STATESTATUSPAIR parseSinglePatternClause(State state) {
     qpbackend::ARG entRefArg;
     std::string expressionSpec;
     // state is also mutable
-    logLine(kQppLogInfoPrefix + "parseSinglePatternClause: Begin");
-    TOKEN patternToken = state.popUntilNonWhitespaceToken();
-    state.popIfCurrentTokenIsWhitespaceToken();
-    if (patternToken.type != backend::lexer::NAME || patternToken.nameValue != kPatternKeyword ||
-        !state.hasTokensLeftToParse()) {
-        return STATESTATUSPAIR(state, false);
-    }
+    logLine(kQppLogInfoPrefix + "parseAssignOrWhilePatternCond: Begin");
 
     TOKEN synAssignToken = state.popUntilNonWhitespaceToken();
     state.popIfCurrentTokenIsWhitespaceToken();
@@ -1340,8 +1323,58 @@ STATESTATUSPAIR parseSinglePatternClause(State state) {
     // Modify State::addPatternClause to take in an ARG rather than value strings.
     state.addPatternClause(clauseType, state.getArgFromSynonymString(synAssignToken.nameValue),
                            entRefArg, expressionSpec);
-    logLine(kQppLogInfoPrefix + "parseSinglePatternClause: Success End");
+    logLine(kQppLogInfoPrefix + "parseAssignOrWhilePatternCond: Success End");
     return STATESTATUSPAIR(state, true);
+}
+
+/**
+ * pattern-cl : ‘pattern’ patternCond
+ * patternCond : pattern ( ‘and’ pattern )*
+ */
+STATESTATUSPAIR parseSinglePatternClause(State state) {
+
+    state.popToNextNonWhitespaceToken();
+    if (!state.hasTokensLeftToParse()) return STATESTATUSPAIR(state, false);
+
+    // state is also mutable
+    logLine(kQppLogInfoPrefix + "parseSinglePatternClause: Begin");
+
+    TOKEN patternToken = state.popUntilNonWhitespaceToken();
+    state.popIfCurrentTokenIsWhitespaceToken();
+    if (patternToken.type != backend::lexer::NAME || patternToken.nameValue != kPatternKeyword ||
+        !state.hasTokensLeftToParse()) {
+        return STATESTATUSPAIR(state, false);
+    }
+
+    State tempState = state;
+    bool isParsePatternValid = true;
+    std::tie(tempState, isParsePatternValid) = parsePatternCond(state);
+    if (isParsePatternValid) {
+        return STATESTATUSPAIR(tempState, true);
+    }
+
+    return STATESTATUSPAIR(state, false);
+}
+
+/**
+ * pattern: assign | while | if
+ * We split the work here like so:
+ * pattern: assign_or_while_pattern | if_pattern
+ */
+STATESTATUSPAIR parsePatternCond(State state) {
+    State tempState = state;
+    bool isParsePatternValid = true;
+    std::tie(tempState, isParsePatternValid) = parseAssignOrWhilePatternCond(state);
+    if (isParsePatternValid) {
+        return STATESTATUSPAIR(tempState, true);
+    }
+
+    std::tie(tempState, isParsePatternValid) = parseIfPatternCond(state);
+    if (isParsePatternValid) {
+        return STATESTATUSPAIR(tempState, true);
+    }
+
+    return STATESTATUSPAIR(state, false);
 }
 
 bool isSynAssignToken(const TOKEN& token, State& state) {
