@@ -687,7 +687,8 @@ State parseFilteringClauses(State state) {
             state = tempState;
         }
 
-        std::tie(tempState, isParseWithValid) = parseSingleWithClause(state);
+        std::tie(tempState, isParseWithValid) =
+        chainClauseWithAnd(parseSingleWithClause, parseAttrCompare, state);
         if (isParseWithValid) {
             state = tempState;
         }
@@ -825,6 +826,8 @@ qpbackend::ATTR_ARG extractAttrArg(const STATE_ARGTYPE_RETURNTYPE_SYNSTRING_STAT
  * ref : ‘”’ IDENT ‘”’ | INTEGER | attrRef | synonym
  */
 STATESTATUSPAIR parseAttrCompare(State state) {
+    state.popToNextNonWhitespaceToken();
+    if (!state.hasTokensLeftToParse()) return STATESTATUSPAIR(state, false);
     STATE_ARGTYPE_RETURNTYPE_SYNSTRING_STATUS refQuintuple1 = parseRef(state);
     if (!std::get<4>(refQuintuple1) || !state.hasTokensLeftToParse()) {
         return { std::get<0>(refQuintuple1), false };

@@ -1597,6 +1597,37 @@ TEST_CASE("Test multiple pattern and such-that clause") {
     REQUIRE(expectedQuery == actualQuery);
 }
 
+// Test multiple with clauses
+
+TEST_CASE("Test multiple and-delimited mixed with clause") {
+    std::stringstream queryString = std::stringstream("call call; read rd; print pn; Select pn "
+                                                      "with rd.varName = pn.varName "
+                                                      "and 1 = 2 "
+                                                      "with 3 = pn.stmt#"
+                                                      "and call.procName = \"commit\" "
+                                                      "and call.stmt# = 1 ");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "call", qpbackend::EntityType::CALL },
+                       { "rd", qpbackend::EntityType::READ },
+                       { "pn", qpbackend::EntityType::PRINT } },
+                     { { qpbackend::DEFAULT_VAL, "pn" } }, {}, {},
+                     { { { qpbackend::STMT_SYNONYM, qpbackend::VAR_NAME, "rd" },
+                         { qpbackend::STMT_SYNONYM, qpbackend::VAR_NAME, "pn" } },
+                       { { qpbackend::NUM_ENTITY, qpbackend::DEFAULT_VAL, "1" },
+                         { qpbackend::NUM_ENTITY, qpbackend::DEFAULT_VAL, "2" } },
+                       { { qpbackend::NUM_ENTITY, qpbackend::DEFAULT_VAL, "3" },
+                         { qpbackend::STMT_SYNONYM, qpbackend::STMT_NO, "pn" } },
+                       { { qpbackend::STMT_SYNONYM, qpbackend::PROC_NAME, "call" },
+                         { qpbackend::NAME_ENTITY, qpbackend::DEFAULT_VAL, "commit" } },
+                       { { qpbackend::STMT_SYNONYM, qpbackend::STMT_NO, "call" },
+                         { qpbackend::NUM_ENTITY, qpbackend::DEFAULT_VAL, "1" } } });
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
 // Test multiple declarations
 
 TEST_CASE("Test multiple declarations, single synonym each") {
