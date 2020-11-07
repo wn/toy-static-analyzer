@@ -895,6 +895,9 @@ PROGRAM_LINE_SET PKBImplementation::getStatementsThatAffectBip(PROGRAM_LINE stat
     PROGRAM_LINE_SET ans;
     // TODO optimize using map iterators
     for (const auto& p : affectedBipStarMapping) {
+        if (p.first.first != statementNumber) {
+            continue;
+        }
         ScopedStatements ss = affectsBipStarHelper(p.first, affectedBipStarMapping, affectedBipStarMemo);
         for (ScopedStatement s : ss) {
             ans.insert(s.first);
