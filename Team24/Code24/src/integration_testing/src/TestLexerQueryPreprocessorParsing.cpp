@@ -271,6 +271,20 @@ TEST_CASE("Test with, such that") {
     REQUIRE(expectedQuery == actualQuery);
 }
 
+TEST_CASE("Test with clause ending with \"IDENT\"") {
+    std::stringstream queryString =
+    std::stringstream("procedure p1, p2; Select <p1, p2> with p1.procName = \"procA\"");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "p1", qpbackend::EntityType::PROCEDURE }, { "p2", qpbackend::PROCEDURE } },
+                     { { qpbackend::DEFAULT_VAL, "p1" }, { qpbackend::DEFAULT_VAL, "p2" } }, {}, {},
+                     { { { qpbackend::PROC_SYNONYM, qpbackend::PROC_NAME, "p1" },
+                         { qpbackend::NAME_ENTITY, qpbackend::DEFAULT_VAL, "procA" } } });
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
 
 // select-cl : declaration ‘Select’ synonym suchthat-cl
 

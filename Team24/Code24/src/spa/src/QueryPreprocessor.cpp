@@ -756,7 +756,7 @@ STATE_ARG_RESULT_STATUS_TRIPLE parseIdent(State state) {
     }
     TOKEN closingDoubleQuoteToken = state.popToken();
     state.popIfCurrentTokenIsWhitespaceToken();
-    if (closingDoubleQuoteToken.type != backend::lexer::DOUBLE_QUOTE || !state.hasTokensLeftToParse()) {
+    if (closingDoubleQuoteToken.type != backend::lexer::DOUBLE_QUOTE) {
         logLine(kQppLogWarnPrefix + "parseIdent: Either ran out of tokens or expected DOUBLE_QUOTE Token, found " +
                 backend::lexer::prettyPrintType(closingDoubleQuoteToken.type));
         return STATE_ARG_RESULT_STATUS_TRIPLE(state, qpbackend::ARG(qpbackend::INVALID_ARG, ""), false);
