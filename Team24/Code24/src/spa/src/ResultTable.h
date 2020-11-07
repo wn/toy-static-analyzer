@@ -12,13 +12,12 @@ namespace qpbackend {
  * The hashing method of a pair of strings
  */
 struct StringVectorHash {
-    std::size_t operator()(const std::vector<std::string>& v) const {
-        std::string combined = "";
-        for (const auto& str : v) {
-            combined += str;
-            combined += "&";
+    int operator()(const std::vector<std::string>& V) const {
+        int hash = V.size();
+        for (auto& i : V) {
+            hash ^= std::hash<std::string>()(i) + 0x9e3779b9 + (hash << 6) + (hash >> 2);
         }
-        return std::hash<std::string>()(combined);
+        return hash;
     }
 };
 
@@ -90,6 +89,8 @@ class ResultTable {
     bool operator==(const ResultTable& other) const;
     friend std::ostream& operator<<(std::ostream& os, const ResultTable& rt);
     void sortTable();
+    void DeleteColumn(const std::string& synonym);
+    void FlushTable();
 
   private:
     int colNum;

@@ -17,6 +17,48 @@ ResultTable::ResultTable(const std::string& synName, const std::unordered_set<st
     isInitialized = true;
 }
 
+void ResultTable::DeleteColumn(const std::string& synonym) {
+    if (colIndexTable.find(synonym) == colIndexTable.end()) {
+        return;
+    }
+    colNum--;
+    int index = colIndexTable.at(synonym);
+    colIndexTable.erase(synonym);
+
+    for (auto& vec : table) {
+        vec.erase(vec.begin() + index);
+    }
+    for (auto& i : colIndexTable) {
+        if (i.second > index) {
+            i.second--;
+        }
+    }
+}
+
+void ResultTable::FlushTable() {
+    bool non_empty = rowNum > 0;
+    std::unordered_set<std::string> seen;
+    std::vector<std::vector<std::string>> newTable;
+    for (const auto& row : table) {
+        const char* const delim = "&";
+
+        std::ostringstream imploded;
+        std::copy(row.begin(), row.end(), std::ostream_iterator<std::string>(imploded, delim));
+        std::string h = imploded.str();
+        if (h.empty() || seen.find(h) != seen.end()) {
+            rowNum--;
+            continue;
+        }
+        seen.insert(h);
+        newTable.push_back(row);
+    }
+    table = std::move(newTable);
+
+    if (non_empty && rowNum == 0) {
+        isInitialized = false;
+    }
+}
+
 ResultTable::ResultTable(const std::vector<std::string>& synNames,
                          const std::unordered_set<std::vector<std::string>, StringVectorHash>& listOfTuples) {
     colNum = 0;
@@ -183,6 +225,7 @@ bool ResultTable::updateSynonymValueTupleVector(const std::vector<std::string>& 
         std::copy(setResult.begin(), setResult.end(), std::back_inserter(result));
         return true;
     }
+
     return false;
 }
 

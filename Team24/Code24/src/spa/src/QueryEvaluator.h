@@ -16,11 +16,46 @@ namespace qpbackend {
 namespace queryevaluator {
 // helper relation type used for evaluation
 
-
 class SingleQueryEvaluator {
   public:
     explicit SingleQueryEvaluator(const Query& query)
     : query(query), failed(false), hasEvaluationCompleted(false) {
+        for (const auto& i : query.returnCandidates) {
+            returnSynonyms.insert(i.second);
+        }
+        for (const auto& i : query.declarationMap) {
+            synonymCounters[i.first] = 0;
+        }
+        for (const auto& clause : query.patternClauses) {
+            const ArgType argType1 = std::get<1>(clause).first;
+            const ArgType argType2 = std::get<2>(clause).first;
+            if (typeIsSynonym(argType1)) {
+                synonymCounters[std::get<1>(clause).second]++;
+            }
+            if (typeIsSynonym(argType2)) {
+                synonymCounters[std::get<2>(clause).second]++;
+            }
+        }
+        for (const auto& clause : query.suchThatClauses) {
+            const ArgType argType1 = std::get<1>(clause).first;
+            const ArgType argType2 = std::get<2>(clause).first;
+            if (typeIsSynonym(argType1)) {
+                synonymCounters[std::get<1>(clause).second]++;
+            }
+            if (typeIsSynonym(argType2)) {
+                synonymCounters[std::get<2>(clause).second]++;
+            }
+        }
+        for (const auto& clause : query.withClauses) {
+            const ArgType argType1 = std::get<0>(std::get<0>(clause));
+            const ArgType argType2 = std::get<0>(std::get<1>(clause));
+            if (typeIsSynonym(argType1)) {
+                synonymCounters[std::get<2>(std::get<0>(clause))]++;
+            }
+            if (typeIsSynonym(argType2)) {
+                synonymCounters[std::get<2>(std::get<1>(clause))]++;
+            }
+        }
     }
 
     static SRT_LOOKUP_TABLE srt_table;
@@ -33,8 +68,14 @@ class SingleQueryEvaluator {
     std::vector<std::string> evaluateQuery(const backend::PKB* pkb); // evaluate the query with the assistance of PKB
 
   private:
+    bool typeIsSynonym(ArgType a) {
+        return a == STMT_SYNONYM || a == VAR_SYNONYM || a == PROC_SYNONYM || a == CONST_SYNONYM ||
+               a == CALL_TO_PROC_SYNONYM || a == READ_TO_VAR_SYNONYM || a == PRINT_TO_VAR_SYNONYM;
+    }
     // table stored candidates of synonyms
     std::unordered_map<std::string, std::vector<std::string>> synonym_candidates;
+    std::unordered_set<std::string> returnSynonyms;
+    std::unordered_map<std::string, int> synonymCounters;
 
     // table store tuples
     ResultTable resultTable;
@@ -107,7 +148,7 @@ class SingleQueryEvaluator {
     std::vector<std::vector<CLAUSE_LIST>> getClausesSortedAndGrouped(const backend::PKB* pkb);
 
     // update synonym table with a given result table
-    void updateSynonymsWithResultTable(ResultTable& table);
+    void updateSynonymsWithResultTable(ResultTable& table, bool prune = false);
 
     // helper function
     // check and link synonyms to declared entity type

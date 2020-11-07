@@ -70,9 +70,17 @@ std::vector<std::string> SingleQueryEvaluator::evaluateQuery(const backend::PKB*
                     break;
                 }
                 failed = failed || !(evaluateClause(pkb, clause, subGroupRT));
+                const std::string& argName1 = std::get<1>(clause).second;
+                const std::string& argName2 = std::get<2>(clause).second;
+                if (isSynonym(argName1)) {
+                    synonymCounters[argName1]--;
+                }
+                if (isSynonym(argName2)) {
+                    synonymCounters[argName2]--;
+                }
             }
             failed = failed || !stGroupRT.mergeTable(std::move(subGroupRT));
-            updateSynonymsWithResultTable(stGroupRT);
+            updateSynonymsWithResultTable(stGroupRT, true);
         }
         failed = failed || !resultTable.mergeTable(std::move(stGroupRT));
         updateSynonymsWithResultTable(resultTable);
@@ -120,7 +128,11 @@ std::vector<std::string> SingleQueryEvaluator::produceResult(const backend::PKB*
                 std::unordered_set<std::string> tempSet(synonym_candidates[synName].begin(),
                                                         synonym_candidates[synName].end());
                 ResultTable tempTable(synName, tempSet);
-                resultTable.mergeTable(std::move(tempTable));
+                if (resultTable.isEmpty()) {
+                    resultTable = tempTable;
+                } else {
+                    resultTable.mergeTable(std::move(tempTable));
+                }
             }
             synNames.push_back(synName);
         } else {
@@ -132,7 +144,11 @@ std::vector<std::string> SingleQueryEvaluator::produceResult(const backend::PKB*
             // assign cl.procName to cl_0
             std::string attrName = assignSynonymToAttribute(synName, returnType);
             ResultTable tempTable({ synName, attrName }, pairs);
-            resultTable.mergeTable(std::move(tempTable));
+            if (resultTable.isEmpty()) {
+                resultTable = tempTable;
+            } else {
+                resultTable.mergeTable(std::move(tempTable));
+            }
             synNames.push_back(attrName);
         }
     }
@@ -341,8 +357,9 @@ bool SingleQueryEvaluator::evaluateSynonymSynonym(const backend::PKB* pkb,
         ResultTable newRT({ arg1, arg2 }, pairs);
         groupResultTable.mergeTable(std::move(newRT));
     }
+    bool isNotFailed = !groupResultTable.isEmpty();
     updateSynonymsWithResultTable(groupResultTable);
-    return !groupResultTable.isEmpty();
+    return isNotFailed;
 }
 
 /**
@@ -380,8 +397,9 @@ bool SingleQueryEvaluator::evaluateEntitySynonym(const backend::PKB* pkb,
     }
     ResultTable newRT(arg2, resultSet);
     groupResultTable.mergeTable(std::move(newRT));
+    bool isNotFailed = !groupResultTable.isEmpty();
     updateSynonymsWithResultTable(groupResultTable);
-    return !groupResultTable.isEmpty();
+    return isNotFailed;
 }
 
 /**
@@ -422,8 +440,9 @@ bool SingleQueryEvaluator::evaluateSynonymWildcard(const backend::PKB* pkb,
     std::unordered_set<std::string> resultSet(result.begin(), result.end());
     ResultTable newRT(arg, resultSet);
     groupResultTable.mergeTable(std::move(newRT));
+    bool isNotFailed = !groupResultTable.isEmpty();
     updateSynonymsWithResultTable(groupResultTable);
-    return !groupResultTable.isEmpty();
+    return isNotFailed;
 }
 
 /**
@@ -927,9 +946,18 @@ bool SingleQueryEvaluator::validateClause(const CLAUSE& clause) {
  * update synonym candidates with a given Intermediate Result Table
  * @param table : the IRT used
  */
-void SingleQueryEvaluator::updateSynonymsWithResultTable(ResultTable& table) {
+void SingleQueryEvaluator::updateSynonymsWithResultTable(ResultTable& table, bool prune) {
     for (const auto& p : synonym_candidates) {
         table.updateSynonymValueVector(p.first, synonym_candidates[p.first]);
+    }
+    if (prune) {
+        for (const auto& i : synonymCounters) {
+            if (returnSynonyms.find(i.first) == returnSynonyms.end() && i.second == 0) {
+                // flush and compress
+                table.DeleteColumn(i.first);
+            }
+        }
+        table.FlushTable();
     }
 }
 
