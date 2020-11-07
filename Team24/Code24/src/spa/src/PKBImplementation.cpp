@@ -109,6 +109,13 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
     allStatementsThatFollows = extractor::getKeysInMap(followFollowedRelation);
     allStatementsThatAreFollowed = extractor::getKeysInMap(followedFollowRelation);
 
+    for (auto i : allStatementsNumber) {
+        transitiveFollows[i] = extractor::getVisitedPathFromStart(i, followedFollowRelation);
+    }
+    for (auto i : allStatementsNumber) {
+        transitiveFollowed[i] = extractor::getVisitedPathFromStart(i, followFollowedRelation);
+    }
+
     // Parent
     std::tie(childrenParentRelation, parentChildrenRelation) = extractor::getParentRelationship(ast);
     allStatementsThatHaveAncestors = extractor::getKeysInMap(childrenParentRelation);
@@ -337,12 +344,18 @@ STATEMENT_NUMBER_SET PKBImplementation::getDirectFollowedBy(STATEMENT_NUMBER s) 
 
 // TODO(weineng) optimize in the future.
 STATEMENT_NUMBER_SET PKBImplementation::getStatementsThatFollows(STATEMENT_NUMBER s) const {
-    return extractor::getVisitedPathFromStart(s, followedFollowRelation);
+    if (transitiveFollows.find(s) == transitiveFollows.end()) {
+        return {};
+    }
+    return transitiveFollows.at(s);
 }
 
 // TODO(weineng) optimize in the future.
 STATEMENT_NUMBER_SET PKBImplementation::getStatementsFollowedBy(STATEMENT_NUMBER s) const {
-    return extractor::getVisitedPathFromStart(s, followFollowedRelation);
+    if (transitiveFollowed.find(s) == transitiveFollowed.end()) {
+        return {};
+    }
+    return transitiveFollowed.at(s);
 }
 
 STATEMENT_NUMBER_SET PKBImplementation::getAllStatementsThatFollows() const {

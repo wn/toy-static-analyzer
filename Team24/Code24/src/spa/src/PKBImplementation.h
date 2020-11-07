@@ -109,6 +109,8 @@ class PKBImplementation : virtual public backend::PKB {
     // Stmt list is private to prevent modification.
     STATEMENT_NUMBER_SET allStatementsThatFollows;
     STATEMENT_NUMBER_SET allStatementsThatAreFollowed;
+    std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> transitiveFollows;
+    std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> transitiveFollowed;
 
     // Parent helper:
     // for k, v in map, parent(k, j) for j in v
