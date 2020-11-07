@@ -1402,33 +1402,6 @@ TEST_CASE("Test pattern clause sub-expression white space handling") {
     REQUIRE(expectedQuery == actualQuery);
 }
 
-// Test valid QPP queries but "invalid" at PKB query level.
-
-TEST_CASE("Test pattern clause EXPR valid QPP but invalid PKB") {
-    std::stringstream queryString = std::stringstream("assign a; Select a pattern a (_, \"()\" )");
-    qpbackend::Query expectedQuery = qpbackend::Query(
-    { { "a", qpbackend::EntityType::ASSIGN } }, { "a" }, {},
-    { { qpbackend::ASSIGN_PATTERN_EXACT, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::WILDCARD, "_" }, "()" } });
-
-    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
-    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
-
-    REQUIRE(expectedQuery == actualQuery);
-}
-
-TEST_CASE("Test pattern clause EXPR valid QPP but invalid PKB unbalanced round brackets") {
-    std::stringstream queryString =
-    std::stringstream("assign a; Select a pattern a (_, \"   (( \" )");
-    qpbackend::Query expectedQuery = qpbackend::Query(
-    { { "a", qpbackend::EntityType::ASSIGN } }, { "a" }, {},
-    { { qpbackend::ASSIGN_PATTERN_EXACT, { qpbackend::STMT_SYNONYM, "a" }, { qpbackend::WILDCARD, "_" }, "(( " } });
-
-    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
-    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
-
-    REQUIRE(expectedQuery == actualQuery);
-}
-
 // Test multiple patterns
 
 TEST_CASE("Test multiple pattern clause") {
@@ -2029,6 +2002,17 @@ TEST_CASE("Test pattern and such-that clause invalid keywords failure") {
     requireParsingInvalidQPLQueryToReturnEmptyQuery(
     "assign a; Select a such that pattern a (_, _\"x+s+Follows*38\"_)   Follows*(a,a)  "
     " ");
+}
+
+
+TEST_CASE("Test patterns expr syntax error") {
+    requireParsingInvalidQPLQueryToReturnEmptyQuery("assign a; Select BOOLEAN pattern a(_, \"\")");
+    requireParsingInvalidQPLQueryToReturnEmptyQuery("assign a; Select a pattern a (_, \"()\" )");
+    requireParsingInvalidQPLQueryToReturnEmptyQuery("assign a; Select a pattern a (_, _\"()\"_ )");
+    requireParsingInvalidQPLQueryToReturnEmptyQuery(
+    "assign a; Select a pattern a (_, \"   (( \" )");
+    requireParsingInvalidQPLQueryToReturnEmptyQuery(
+    "assign a; Select a pattern a (_, _\"   (( \"_ )");
 }
 
 TEST_CASE("Test pattern invalid expression spec (\"\") failure") {

@@ -504,4 +504,9 @@ std::string Parser::parseExpr(const std::string& exprStr) {
         return "";
     }
 }
+
+bool Parser::isValidExpr(const std::string& exprStr) {
+    return !Parser::parseExpr(exprStr).empty();
+}
+
 } // namespace backend

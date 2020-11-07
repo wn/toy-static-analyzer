@@ -77,5 +77,7 @@ class Parser {
     State parsePrint(int tokenPos);
     State parseCall(int tokenPos);
     lexer::Token assertToken(int& tokenPos, lexer::TokenType type);
+
+    static bool isValidExpr(const std::string& exprStr);
 };
 } // namespace backend

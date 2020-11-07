@@ -2,6 +2,7 @@
 
 #include "Lexer.h"
 #include "Logger.h"
+#include "Parser.h"
 #include "QPTypes.h"
 #include "Query.h"
 
@@ -1481,6 +1482,10 @@ STATE_STRING_RESULT_CLAUSE_TYPE_STATUS_QUADRUPLE parseExpressionSpec(State state
             return STATE_STRING_RESULT_CLAUSE_TYPE_STATUS_QUADRUPLE(state, "", qpbackend::INVALID_CLAUSE_TYPE, false);
         }
     }
+
+    if (!backend::Parser::isValidExpr(expressionSpec)) {
+        return STATE_STRING_RESULT_CLAUSE_TYPE_STATUS_QUADRUPLE(state, "", qpbackend::INVALID_CLAUSE_TYPE, false);
+    };
 
     if (nonWhitespaceTokensInExpr == 0) {
         logLine(kQppLogWarnPrefix + "parseExpressionSpec: no EXPR is matched between 2 "
