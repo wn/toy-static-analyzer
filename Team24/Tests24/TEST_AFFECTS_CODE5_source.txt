@@ -1,0 +1,19 @@
+procedure Second {
+    x = 0;
+    i = 5;
+    while (i!=0) {
+        x = x + 2*y;
+        call Third;
+        i = i - 1; }
+    if (x==1) then {
+        x = x+1; }
+    else {
+        z = 1; }
+    z = z + x + i;
+    y = z + 2;
+    x = x * y + z; }
+
+procedure Third {
+    z = 5;
+    v = z;
+    print v; }

@@ -1,0 +1,35 @@
+1 - (Valid Query) Invalid argument, not assign statement
+while w; assign a;
+Select w such that Affects (a, w)
+none
+5000
+2 - (Valid Query) Invalid argument, not assign statement
+call c; stmt s;
+Select c such that Affects (c, s)
+none
+5000
+3 - (Valid Query) Invalid argument, not assign statement
+if ifs;
+Select w such that Affects (ifs, _)
+none
+5000
+4 - (Valid Query) Invalid argument, not assign statement
+print pt;
+Select a such that Affects (_, pt)
+none
+5000
+5 - (Valid Query) Invalid argument, not assign statement
+procedure proc; while w;
+Select w such that Affects (proc, w)
+none
+5000
+6 - (Valid Query) Invalid argument, out of bounds reference
+assign a;
+Select a such that Affects (166, a)
+none
+5000
+7 - (Valid Query) Invalid argument, out of bounds reference
+assign a;
+Select a such that Affects (a, 0)
+none
+5000

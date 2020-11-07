@@ -1,0 +1,45 @@
+1 - (Valid Query) Synonym + Synonym
+assign a1, a2;
+Select a1 such that Affects (a1, a2)
+1, 2, 4
+5000
+2 - (Valid Query) Synonym + Entity
+assign a;
+Select a such that Affects (a, 6)
+4
+5000
+3 - (Valid Query) Synonym + Wildcard
+assign a;
+Select a such that Affects (a, _)
+1, 2, 4
+5000
+4 - (Valid Query) Entity + Synonym
+assign a;
+Select a such that Affects (2, a)
+4
+5000
+5 - (Valid Query) Entity + Entity
+
+Select BOOLEAN such that Affects(1,6)
+FALSE
+5000
+6 - (Valid Query) Entity + Wildcard
+
+Select BOOLEAN such that Affects(6, _)
+FALSE
+5000
+7 - (Valid Query) Wildcard + Synonym
+assign a;
+Select a such that Affects(_, a)
+3, 4, 6
+5000
+8 - (Valid Query) Wildcard + Entity
+
+Select BOOLEAN such that Affects(_,3)
+TRUE
+5000
+9 - (Valid Query) Wildcard + Wildcard
+
+Select BOOLEAN such that Affects(_,_)
+TRUE
+5000

@@ -1,0 +1,18 @@
+procedure proc1 {
+	a = 1;
+	b = 2;
+	c = a;
+	a = a + b;
+	call proc2;
+	a = a + b + c;
+}
+
+procedure proc2 {
+	c = a;
+	if (a > b) then {
+		b = 2;
+	} else {
+		print a;
+	}
+}
+	

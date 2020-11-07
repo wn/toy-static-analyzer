@@ -1,0 +1,90 @@
+1 - (Valid Query) Affects(2,6)
+
+Select BOOLEAN such that Affects (2,6)
+TRUE
+5000
+2 - (Valid Query) Affects(4,8)
+
+Select BOOLEAN such that Affects (4,8)
+TRUE
+5000
+3 - (Valid Query) Affects(4,10)
+
+Select BOOLEAN such that Affects (4,10)
+TRUE
+5000
+4 - (Valid Query) Affects(6,6)
+
+Select BOOLEAN such that Affects (6,6)
+TRUE
+5000
+5 - (Valid Query) Affects(1,4)
+
+Select BOOLEAN such that Affects(1, 4)
+TRUE
+5000
+6 - (Valid Query) Affects(1,8)
+
+Select BOOLEAN such that Affects(1,8)
+TRUE
+5000
+7 - (Valid Query) Affects(1,10)
+
+Select BOOLEAN such that Affects(1,10)
+TRUE
+5000
+8 - (Valid Query) Affects(1,12)
+
+Select BOOLEAN such that Affects(1,12)
+TRUE
+5000
+9 - (Valid Query) Affects(2,10)
+
+Select BOOLEAN such that Affects(2,10)
+TRUE
+5000
+10 - (Valid Query) Affects(9,10)
+
+Select BOOLEAN such that Affects(9,10)
+TRUE
+5000
+11 - (Valid Query) Affects (9, 11)
+
+Select BOOLEAN such that Affects (9, 11)
+FALSE
+5000
+12 - (Valid Query) Affects (9,12)
+
+Select BOOLEAN such that Affects (9,12)
+FALSE
+5000
+13 - (Valid Query) Affects (2, 3)
+
+Select BOOLEAN such that Affects (2, 3)
+FALSE
+5000
+14 - (Valid Query) Affects (9, 6)
+
+Select BOOLEAN such that Affects (9, 6)
+FALSE
+5000
+15 - (Valid Query) Affects*(1,4)
+
+Select BOOLEAN such that Affects*(1,4)
+TRUE
+5000
+16 - (Valid Query) Affects*(1,10)
+
+Select BOOLEAN such that Affects*(1,10)
+TRUE
+5000
+17 - (Valid Query) Affects*(1,11)
+
+Select BOOLEAN such that Affects*(1,11)
+TRUE
+5000
+18 - (Valid Query) Affects*(1,12)
+
+Select BOOLEAN such that Affects*(1,12)
+TRUE
+5000
