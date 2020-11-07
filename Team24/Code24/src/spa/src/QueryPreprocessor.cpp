@@ -39,8 +39,10 @@ bool isValidDeclarationDelimiter(const TOKEN& token);
 STATESTATUSPAIR parseResultClause(State state);
 STATESTATUSPAIR parseTuple(State state);
 STATESTATUSPAIR parseElem(State state);
-void parseAttrRef(State state);
-void parseAttrName(State state);
+typedef std::tuple<State, qpbackend::ArgType, qpbackend::ReturnType, std::string /*synonym*/, bool> STATE_ARGTYPE_RETURNTYPE_SYNSTRING_STATUS;
+STATE_ARGTYPE_RETURNTYPE_SYNSTRING_STATUS parseAttrRef(State state);
+typedef std::tuple<State, qpbackend::ReturnType, bool> STATE_RETURN_TYPE_STATUS;
+STATE_RETURN_TYPE_STATUS parseAttrName(State state);
 // Declaration for 'filtering' clauses
 State parseFilteringClauses(State state);
 template <typename SINGLE_CLAUSE_PARSER>
@@ -152,7 +154,6 @@ class State {
     // Tokens manipulation
 
     TOKEN peekToken() {
-        logLine(hasTokensLeftToParse() ? "yes" : "aurora boreealis");
         if (!hasTokensLeftToParse()) {
             throw std::runtime_error(kQppErrorPrefix +
                                      "State::peekToken: There are no more tokens left to peek.");
@@ -188,11 +189,9 @@ class State {
      * left to pop.
      */
     void popToNextNonWhitespaceToken() {
-        logLine("hi");
         while (hasTokensLeftToParse() && peekToken().type == backend::lexer::WHITESPACE) {
             popToken();
         }
-        logLine("exit");
     }
 
     bool popIfCurrentTokenIsWhitespaceToken() {
@@ -238,6 +237,7 @@ class State {
         case qpbackend::INVALID_ENTITY_TYPE:
             return { qpbackend::INVALID_ARG, synonymString };
         }
+        return { qpbackend::INVALID_ARG, synonymString };
     }
 
 
@@ -256,13 +256,16 @@ class State {
 
     void addSynonymToReturn(const TOKEN& token) {
         throwIfTokenDoesNotHaveExpectedTokenType(backend::lexer::TokenType::NAME, token);
-        if (query.declarationMap.find(token.nameValue) == query.declarationMap.end()) {
-            throw std::runtime_error(kQppErrorPrefix + "State::addSynonymToReturn: Cannot return values for synonym " +
-                                     token.nameValue + " as it has not been declared.");
-        }
+        addAttrRefToReturn(qpbackend::DEFAULT_VAL, token.nameValue);
+    }
 
-        qpbackend::ReturnType returnType = qpbackend::DEFAULT_VAL;
-        query.returnCandidates.emplace_back(returnType, token.nameValue);
+    void addAttrRefToReturn(qpbackend::ReturnType returnType, const std::string& synString) {
+        if (query.declarationMap.find(synString) == query.declarationMap.end()) {
+            logLine(kQppLogWarnPrefix + "State::addSynonymToReturn: Cannot return values for synonym " +
+                    synString + " as it has not been declared.");
+            returnType = qpbackend::INVALID_RETURN_TYPE;
+        }
+        query.returnCandidates.emplace_back(returnType, synString);
     }
 
     void addSuchThatClause(qpbackend::ClauseType relationType, const qpbackend::ARG& arg1, const qpbackend::ARG& arg2) {
@@ -485,23 +488,26 @@ bool isValidDeclarationDelimiter(const TOKEN& token) {
  * result-cl : tuple | ‘BOOLEAN’
  */
 STATESTATUSPAIR parseResultClause(State state) {
-    STATESTATUSPAIR parseTupleStateStatusPair = parseTuple(state);
+    State backupState = state;
+    // Parse terminal 'BOOLEAN'
+    TOKEN returnValueToken = state.popUntilNonWhitespaceToken();
+    qpbackend::DECLARATION_MAP declarationMap = state.getQuery().declarationMap;
+    if (returnValueToken.type == backend::lexer::NAME && returnValueToken.nameValue == "BOOLEAN" &&
+        declarationMap.find("BOOLEAN") == declarationMap.end()) {
+        state.setReturnValueToBoolean();
+        return { state, true };
+    }
+    logLine(kQppLogWarnPrefix + "parseResultClause: Unable to parse 'BOOLEAN' Found:" +
+            backend::lexer::prettyPrintType(returnValueToken.type));
+
+    STATESTATUSPAIR parseTupleStateStatusPair = parseTuple(backupState);
     if (parseTupleStateStatusPair.second) {
         logLine(kQppLogInfoPrefix +
                 "parseResultClause: parsing tuple is successful, query should return tuples");
         return parseTupleStateStatusPair;
     }
 
-    // Parse terminal 'BOOLEAN'
-    TOKEN returnValueToken = state.popUntilNonWhitespaceToken();
-    if (returnValueToken.type != backend::lexer::NAME || returnValueToken.nameValue != "BOOLEAN") {
-        logLine(kQppLogWarnPrefix + "parseResultClause: Unable to parse tuple | 'BOOLEAN' Found:" +
-                backend::lexer::prettyPrintType(returnValueToken.type));
-        return { state, false };
-    }
-
-    state.setReturnValueToBoolean();
-    return { state, true };
+    return { parseTupleStateStatusPair.first, false };
 }
 
 /**
@@ -548,7 +554,19 @@ STATESTATUSPAIR parseTuple(State state) {
  * Implemented as `elem: attrRef | synonym` which is easier and still correct.
  */
 STATESTATUSPAIR parseElem(State state) {
-    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/338): Parse attrRef before synonym
+    State tempState;
+    qpbackend::ArgType argType;
+    qpbackend::ReturnType returnType;
+    std::string synString;
+    bool isValid;
+
+    std::tie(tempState, argType, returnType, synString, isValid) = parseAttrRef(state);
+
+    if (isValid) {
+        tempState.addAttrRefToReturn(returnType, synString);
+        return { tempState, true };
+    }
+
     try {
         const TOKEN& synonymToken = state.popUntilNonWhitespaceToken();
         state.addSynonymToReturn(synonymToken);
@@ -564,13 +582,49 @@ STATESTATUSPAIR parseElem(State state) {
  * attrRef : synonym ‘.’ attrName
  *
  */
-void parseAttrRef(State state) {
+STATE_ARGTYPE_RETURNTYPE_SYNSTRING_STATUS parseAttrRef(State state) {
+    TOKEN synonym = state.popUntilNonWhitespaceToken();
+    if (synonym.type != backend::lexer::NAME || !state.hasTokensLeftToParse()) {
+        return { state, qpbackend::INVALID_ARG, qpbackend::INVALID_RETURN_TYPE, "", false };
+    }
+
+    TOKEN period = state.popToken();
+    if (period.type != backend::lexer::PERIOD || !state.hasTokensLeftToParse()) {
+        return { state, qpbackend::INVALID_ARG, qpbackend::INVALID_RETURN_TYPE, "", false };
+    }
+
+    qpbackend::ReturnType returnType;
+    bool isValid;
+    std::tie(state, returnType, isValid) = parseAttrName(state);
+    if (!isValid) {
+        return { state, qpbackend::INVALID_ARG, qpbackend::INVALID_RETURN_TYPE, "", false };
+    }
+    qpbackend::ARG arg = state.getArgFromSynonymString(synonym.nameValue);
+    return { state, arg.first, returnType, synonym.nameValue, true };
 }
 
 /**
  * attrName : ‘procName’| ‘varName’ | ‘value’ | ‘stmt#’
  */
-void parseAttrName(State state) {
+STATE_RETURN_TYPE_STATUS parseAttrName(State state) {
+    TOKEN token = state.popToken();
+    if (token.type != backend::lexer::NAME) {
+        return { state, qpbackend::INVALID_RETURN_TYPE, false };
+    }
+    if (token.nameValue == "procName") {
+        return { state, qpbackend::PROC_NAME, true };
+    } else if (token.nameValue == "varName") {
+        return { state, qpbackend::VAR_NAME, true };
+    } else if (token.nameValue == "value") {
+        return { state, qpbackend::CONST_VALUE, true };
+    } else if (token.nameValue == "stmt" && state.hasTokensLeftToParse()) {
+        TOKEN hash = state.popToken();
+        if (hash.type != backend::lexer::HASH) {
+            return { state, qpbackend::INVALID_RETURN_TYPE, false };
+        }
+        return { state, qpbackend::STMT_NO, true };
+    }
+    return { state, qpbackend::INVALID_RETURN_TYPE, false };
 }
 
 /**

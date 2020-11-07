@@ -193,6 +193,47 @@ TEST_CASE("Test selects clause TUPLE return type multiple duplicates") {
     REQUIRE(expectedQuery == actualQuery);
 }
 
+// select-cl : declaration(AttrRef) ‘Select’ TUPLE
+
+TEST_CASE("Test selects clause TUPLE all return type") {
+    std::stringstream queryString =
+    std::stringstream("read rd; Select <rd,rd.stmt#,rd.varName,rd.procName,rd.value>");
+    qpbackend::Query expectedQuery = qpbackend::Query(
+    {
+    { "rd", qpbackend::EntityType::READ },
+    },
+    {
+    { qpbackend::ReturnType::DEFAULT_VAL, "rd" },
+    { qpbackend::ReturnType::STMT_NO, "rd" },
+    { qpbackend::ReturnType::VAR_NAME, "rd" },
+    { qpbackend::ReturnType::PROC_NAME, "rd" },
+    { qpbackend::ReturnType::CONST_VALUE, "rd" },
+    },
+    {}, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
+TEST_CASE("Test selects clause TUPLE BOOLEAN with return type") {
+    std::stringstream queryString = std::stringstream("variable BOOLEAN; Select <BOOLEAN.value>");
+    qpbackend::Query expectedQuery = qpbackend::Query(
+    {
+    { "BOOLEAN", qpbackend::EntityType::VARIABLE },
+    },
+    {
+    { qpbackend::ReturnType::CONST_VALUE, "BOOLEAN" },
+    },
+    {}, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+}
+
 // select-cl : declaration ‘Select’ synonym suchthat-cl
 
 // General grammar tests
@@ -1609,20 +1650,61 @@ TEST_CASE("Test redeclaration failure") {
 }
 
 TEST_CASE("Test selected synonyms missing failure") {
-    requireParsingInvalidQPLQueryToReturnEmptyQuery("procedure a; Select v");
+    std::stringstream queryString = std::stringstream("procedure a; Select v");
+    qpbackend::Query expectedQuery = qpbackend::Query({ { "a", qpbackend::EntityType::PROCEDURE } },
+                                                      { { qpbackend::INVALID_RETURN_TYPE, "v" } }, {}, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
 }
 
+
 TEST_CASE("Test selected synonyms missing due to no declaration failure") {
-    requireParsingInvalidQPLQueryToReturnEmptyQuery("Select v");
+    std::stringstream queryString = std::stringstream("Select v");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({}, { { qpbackend::INVALID_RETURN_TYPE, "v" } }, {}, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
 }
 
 TEST_CASE("Test undeclared synonym with BOOLEAN synonym declaration") {
-    requireParsingInvalidQPLQueryToReturnEmptyQuery("variable BOOLEAN; Select BOOLEAN, v");
-    requireParsingInvalidQPLQueryToReturnEmptyQuery("variable BOOLEAN; Select v, BOOLEAN");
+    std::stringstream queryString = std::stringstream("variable BOOLEAN; Select <BOOLEAN, v>");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({ { "BOOLEAN", qpbackend::VARIABLE } },
+                     { { qpbackend::DEFAULT_VAL, "BOOLEAN" }, { qpbackend::INVALID_RETURN_TYPE, "v" } },
+                     {}, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
+
+    queryString = std::stringstream("variable BOOLEAN; Select <v, BOOLEAN>");
+    expectedQuery =
+    qpbackend::Query({ { "BOOLEAN", qpbackend::VARIABLE } },
+                     { { qpbackend::INVALID_RETURN_TYPE, "v" }, { qpbackend::DEFAULT_VAL, "BOOLEAN" } },
+                     {}, {});
+
+    lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
 }
 
 TEST_CASE("Test undeclared synonym without declaration statement") {
-    requireParsingInvalidQPLQueryToReturnEmptyQuery("Select v");
+    std::stringstream queryString = std::stringstream("Select v");
+    qpbackend::Query expectedQuery =
+    qpbackend::Query({}, { { qpbackend::INVALID_RETURN_TYPE, "v" } }, {}, {});
+
+    std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
+    qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
+
+    REQUIRE(expectedQuery == actualQuery);
 }
 
 // Test select BOOLEAN Redeclaration error
@@ -1705,6 +1787,17 @@ TEST_CASE("Test parsing invalid variable name (Expresion)") {
     requireParsingInvalidQPLQueryToReturnEmptyQuery(R"(stmt "x"; Select "x")");
 }
 
+// Test syntax error (attrRef)
+TEST_CASE("Test improper synonym attrRef") {
+    requireParsingInvalidQPLQueryToReturnEmptyQuery(R"(stmt x; Select "x".stmt#)");
+    requireParsingInvalidQPLQueryToReturnEmptyQuery("Select 1.stmt#");
+}
+
+TEST_CASE("Test improper whitespace attrRef") {
+    requireParsingInvalidQPLQueryToReturnEmptyQuery("stmt x; Select x.stmt #");
+    requireParsingInvalidQPLQueryToReturnEmptyQuery("stmt x; Select x. stmt#");
+    requireParsingInvalidQPLQueryToReturnEmptyQuery("stmt x; Select x .stmt#");
+}
 
 // Test syntax error (TUPLE)
 
