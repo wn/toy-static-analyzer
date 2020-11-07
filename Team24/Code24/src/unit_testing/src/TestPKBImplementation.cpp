@@ -1683,6 +1683,173 @@ TEST_CASE("Test getNextBipStatementOf basic") {
     REQUIRE(pkb.getNextBipStatementOf(7, true) == expected);
 }
 
+TEST_CASE("Test getNextBipRelationship procedure with different scopes are traversed") {
+    const char program[] = "procedure A { call B; x = 1; call C; y = 1; } " // 1 2 3 4
+                           "procedure B { call C; }" // 5
+                           "procedure C { b = 1; }" // 6
+    ;
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+    REQUIRE(pkb.getNextBipStatementOf(5, true).count(4));
+}
+
+TEST_CASE("Test getNextBipRelationship Gandilf regression") {
+    const char program[] = "procedure Gandalf {"
+                           "read shine;" // 01
+                           "ring = shine * 2;" // 02
+                           "f = ring + 3;" // 03
+                           "read lost;" // 04
+                           "call Frodo;" // 05
+                           "if (lost == shine) then {" // 06
+                           "call Aragon;" // 07
+                           "d = (shine + 12) * (lost + 13);}" // 8
+                           "else {"
+                           "while (f > 10) {" // 9
+                           "read g;" // 10
+                           "f = ring + 4 + g * a * 2 * 1 + shine;" // 11
+                           "call Frodo;}" // 12
+                           "d = 2;}" // 13
+                           "print d;}" // 14
+
+                           "procedure Frodo {"
+                           "a = f + shine;" // 15
+                           "if (a < 2) then {" // 16
+                           "call Aragon;}" // 17
+                           "else{"
+                           "f = f + 19;}}" // 18
+                           // -4
+
+                           "procedure Aragon {"
+                           "while (shine < 3) {" // 19
+                           "a = 1 * 2 + lost - f;" // 20
+                           "while (lost == a) {" // 21
+                           "lost = lost - 1;" // 22
+                           "w = a + lost;" // 23
+                           "shine = 1 + ring;}" // 24
+                           "if (a != shine) then {" // 25
+                           "a = lost + 1;" // 26
+                           "w = shine * 2;}" // 27
+                           "else {"
+                           "w = 1;}}}" // 28
+                           // -3
+
+                           "procedure Shire {"
+                           "call Aragon;"
+                           "Frodo = Frodo + 2;"
+                           "if (gold == 8) then {"
+                           "read elves;"
+                           "print elves;"
+                           "} else {"
+                           "call Elves;"
+                           "}"
+                           "}"
+
+                           "procedure Elves {"
+                           "while (Shire != 3) {"
+                           "while (1 < 0) {"
+                           "print TRUE;"
+                           "}"
+                           "}"
+                           "lost = lost + 1;"
+                           "}";
+
+    Parser parser = testhelpers::GenerateParserFromTokens(program);
+    TNode ast(parser.parse());
+    PKBImplementation pkb(ast);
+
+    STATEMENT_NUMBER_SET expected;
+    expected = { 2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+                 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 };
+    REQUIRE(pkb.getNextBipStatementOf(1, true) == expected);
+    expected = { 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 };
+    REQUIRE(pkb.getNextBipStatementOf(10, true) == expected);
+    expected = { 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 };
+    REQUIRE(pkb.getNextBipStatementOf(11, true) == expected);
+    expected = { 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 };
+    REQUIRE(pkb.getNextBipStatementOf(12, true) == expected);
+    expected = { 14 };
+    REQUIRE(pkb.getNextBipStatementOf(13, true) == expected);
+    expected = { 6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17,
+                 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 };
+    REQUIRE(pkb.getNextBipStatementOf(15, true) == expected);
+    expected = { 6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17,
+                 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 };
+    REQUIRE(pkb.getNextBipStatementOf(16, true) == expected);
+    expected = { 6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17,
+                 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 };
+    REQUIRE(pkb.getNextBipStatementOf(17, true) == expected);
+    expected = { 6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17,
+                 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 };
+    REQUIRE(pkb.getNextBipStatementOf(18, true) == expected);
+    expected = { 6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+                 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38 };
+    REQUIRE(pkb.getNextBipStatementOf(19, true) == expected);
+    expected = { 3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+                 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 };
+    REQUIRE(pkb.getNextBipStatementOf(2, true) == expected);
+    expected = { 6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+                 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38 };
+    REQUIRE(pkb.getNextBipStatementOf(20, true) == expected);
+    expected = { 6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+                 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38 };
+    REQUIRE(pkb.getNextBipStatementOf(21, true) == expected);
+    expected = { 6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+                 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38 };
+    REQUIRE(pkb.getNextBipStatementOf(22, true) == expected);
+    expected = { 6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+                 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38 };
+    REQUIRE(pkb.getNextBipStatementOf(23, true) == expected);
+    expected = { 6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+                 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38 };
+    REQUIRE(pkb.getNextBipStatementOf(24, true) == expected);
+    expected = { 6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+                 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38 };
+    REQUIRE(pkb.getNextBipStatementOf(25, true) == expected);
+    expected = { 6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+                 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38 };
+    REQUIRE(pkb.getNextBipStatementOf(26, true) == expected);
+    expected = { 6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+                 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38 };
+    REQUIRE(pkb.getNextBipStatementOf(27, true) == expected);
+    expected = { 6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+                 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38 };
+    REQUIRE(pkb.getNextBipStatementOf(28, true) == expected);
+    expected = { 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 30, 31, 32, 33, 34, 35, 36, 37, 38 };
+    REQUIRE(pkb.getNextBipStatementOf(29, true) == expected);
+    expected = { 4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16,
+                 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 };
+    REQUIRE(pkb.getNextBipStatementOf(3, true) == expected);
+    expected = { 32, 33, 34, 35, 36, 37, 38, 31 };
+    REQUIRE(pkb.getNextBipStatementOf(30, true) == expected);
+    expected = { 32, 33, 34, 35, 36, 37, 38 };
+    REQUIRE(pkb.getNextBipStatementOf(31, true) == expected);
+    expected = { 33 };
+    REQUIRE(pkb.getNextBipStatementOf(32, true) == expected);
+    expected = { 35, 36, 37, 38 };
+    REQUIRE(pkb.getNextBipStatementOf(34, true) == expected);
+    expected = { 35, 36, 37, 38 };
+    REQUIRE(pkb.getNextBipStatementOf(35, true) == expected);
+    expected = { 35, 36, 37, 38 };
+    REQUIRE(pkb.getNextBipStatementOf(36, true) == expected);
+    expected = { 35, 36, 37, 38 };
+    REQUIRE(pkb.getNextBipStatementOf(37, true) == expected);
+    expected = { 5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16,
+                 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 };
+    REQUIRE(pkb.getNextBipStatementOf(4, true) == expected);
+    expected = { 6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17,
+                 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 };
+    REQUIRE(pkb.getNextBipStatementOf(5, true) == expected);
+    expected = { 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 };
+    REQUIRE(pkb.getNextBipStatementOf(6, true) == expected);
+    expected = { 8, 14, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 };
+    REQUIRE(pkb.getNextBipStatementOf(7, true) == expected);
+    expected = { 14 };
+    REQUIRE(pkb.getNextBipStatementOf(8, true) == expected);
+    expected = { 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28 };
+    REQUIRE(pkb.getNextBipStatementOf(9, true) == expected);
+}
+
 TEST_CASE("Test getNextBipStatementOf branching") {
     const char program[] = "procedure left {      "
                            "  y = 1;              " // 1

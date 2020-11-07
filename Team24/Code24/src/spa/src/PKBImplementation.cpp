@@ -730,7 +730,7 @@ traverseBipGraph(PROGRAM_LINE start,
     }
 
     // [(statement, procedure_scope)]
-    std::vector<std::pair<STATEMENT_NUMBER, std::vector<int>>> toVisit = {};
+    std::vector<ScopedStatement> toVisit = {};
     for (extractor::NextBipEdge edge : it->second) {
         std::vector<int> scope;
 
@@ -742,18 +742,19 @@ traverseBipGraph(PROGRAM_LINE start,
         toVisit.emplace_back(edge.nextLine, scope);
     }
 
-    STATEMENT_NUMBER_SET visited;
+    ScopedStatements visited;
     while (!toVisit.empty()) {
-        auto p = toVisit.back(); // Copy to prevent destruction of vector
+        ScopedStatement scopedStatement = toVisit.back(); // Copy to prevent destruction of vector
         toVisit.pop_back();
 
-        STATEMENT_NUMBER visiting = p.first;
-        std::vector<int>& scope = p.second;
+        STATEMENT_NUMBER visiting;
+        std::vector<STATEMENT_NUMBER> scope;
+        std::tie(visiting, scope) = scopedStatement;
 
-        if (visited.find(visiting) != visited.end()) {
+        if (visited.find(scopedStatement) != visited.end()) {
             continue;
         }
-        visited.insert(visiting);
+        visited.insert(scopedStatement);
 
         if (bipGraph.find(visiting) == bipGraph.end()) {
             continue;
@@ -784,9 +785,9 @@ traverseBipGraph(PROGRAM_LINE start,
     }
 
     STATEMENT_NUMBER_SET result;
-    for (STATEMENT_NUMBER s : visited) {
-        if (!isProcedureEndLine(s)) {
-            result.insert(s);
+    for (const ScopedStatement& s : visited) {
+        if (!isProcedureEndLine(s.first)) {
+            result.insert(s.first);
         }
     }
 
