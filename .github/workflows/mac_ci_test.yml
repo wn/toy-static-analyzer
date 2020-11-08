@@ -15,10 +15,10 @@ jobs:
   run-tests-on-mac:
     # autotester.a lib provided does not conform to x64 archi, which is what github actions uses.
     runs-on: macos-latest
-    timeout-minutes: 6
+    timeout-minutes: 20
     strategy:
       matrix:
-        build-type: [ Release ]
+        build-type: [ Release, Debug ]
 
     steps:
       - uses: actions/checkout@v2
