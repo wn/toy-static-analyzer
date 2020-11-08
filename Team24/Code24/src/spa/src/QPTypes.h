@@ -84,21 +84,21 @@ enum ArgType {
     INVALID_ARG // invalid argument, not accepted for evaluation
 };
 
-// Get clause argument type, where SynonymEntity implies arg1 is a synonym, and arg2 is an entity.
+// Get clause argument type, where SYNONYM_ENTITY implies arg1 is a synonym, and arg2 is an entity.
 enum ClauseArgsType {
-    SynonymSynonym,
-    SynonymEntity,
-    SynonymWildcard,
+    SYNONYM_SYNONYM,
+    SYNONYM_ENTITY,
+    SYNONYM_WILDCARD,
 
-    EntitySynonym,
-    EntityEntity,
-    EntityWildcard,
+    ENTITY_SYNONYM,
+    ENTITY_ENTITY,
+    ENTITY_WILDCARD,
 
-    WildcardWildcard,
-    WildcardSynonym,
-    WildcardEntity,
-    Invalid1, // Arg 1 is invalid
-    Invalid2, // Arg 2 is invalid
+    WILDCARD_WILDCARD,
+    WILDCARD_SYNONYM,
+    WILDCARD_ENTITY,
+    INVALID_1, // Arg 1 is invalid
+    INVALID_2, // Arg 2 is invalid
 };
 
 typedef std::unordered_map<std::string, EntityType> DECLARATION_MAP;

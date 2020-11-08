@@ -269,21 +269,21 @@ class Optimisation {
             const std::string& arg2 = std::get<2>(clause).second;
             ClauseArgsType clauseTypes = getClauseArgsType(arg_type_1, arg_type_2);
             switch (clauseTypes) {
-            case EntityEntity:
-            case EntityWildcard:
-            case WildcardEntity:
-            case WildcardWildcard:
+            case ENTITY_ENTITY:
+            case ENTITY_WILDCARD:
+            case WILDCARD_ENTITY:
+            case WILDCARD_WILDCARD:
                 entityEntityClauses.push_back({ { clause } });
                 break;
-            case EntitySynonym:
-            case WildcardSynonym:
+            case ENTITY_SYNONYM:
+            case WILDCARD_SYNONYM:
                 entitySynonymClauses.emplace_back(arg1, arg2, clause);
                 break;
-            case SynonymEntity:
-            case SynonymWildcard:
+            case SYNONYM_ENTITY:
+            case SYNONYM_WILDCARD:
                 entitySynonymClauses.emplace_back(arg2, arg1, clause);
                 break;
-            case SynonymSynonym:
+            case SYNONYM_SYNONYM:
                 if (graph.find(arg1) == graph.end()) {
                     graph[arg1] = {};
                 }
@@ -303,8 +303,8 @@ class Optimisation {
                 graph[arg1][arg2].push_back(clause);
                 graph[arg2][arg1].push_back(clause);
                 break;
-            case Invalid1:
-            case Invalid2:
+            case INVALID_1:
+            case INVALID_2:
                 isInvalid = true;
                 return;
             }

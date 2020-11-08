@@ -92,14 +92,14 @@ ClauseArgsType getClauseArgsType(ArgType arg_type_1, ArgType arg_type_2) {
         case CALL_TO_PROC_SYNONYM:
         case READ_TO_VAR_SYNONYM:
         case PRINT_TO_VAR_SYNONYM:
-            return SynonymSynonym;
+            return SYNONYM_SYNONYM;
         case NUM_ENTITY:
         case NAME_ENTITY:
-            return SynonymEntity;
+            return SYNONYM_ENTITY;
         case WILDCARD:
-            return SynonymWildcard;
+            return SYNONYM_WILDCARD;
         default:
-            return Invalid2;
+            return INVALID_2;
         }
     } else if (arg_type_1 == NUM_ENTITY || arg_type_1 == NAME_ENTITY) {
         switch (arg_type_2) {
@@ -110,14 +110,14 @@ ClauseArgsType getClauseArgsType(ArgType arg_type_1, ArgType arg_type_2) {
         case CALL_TO_PROC_SYNONYM:
         case READ_TO_VAR_SYNONYM:
         case PRINT_TO_VAR_SYNONYM:
-            return EntitySynonym;
+            return ENTITY_SYNONYM;
         case NUM_ENTITY:
         case NAME_ENTITY:
-            return EntityEntity;
+            return ENTITY_ENTITY;
         case WILDCARD:
-            return EntityWildcard;
+            return ENTITY_WILDCARD;
         default:
-            return Invalid2;
+            return INVALID_2;
         }
     } else if (arg_type_1 == WILDCARD) {
         switch (arg_type_2) {
@@ -125,17 +125,17 @@ ClauseArgsType getClauseArgsType(ArgType arg_type_1, ArgType arg_type_2) {
         case VAR_SYNONYM:
         case PROC_SYNONYM:
         case CONST_SYNONYM:
-            return WildcardSynonym;
+            return WILDCARD_SYNONYM;
         case NUM_ENTITY:
         case NAME_ENTITY:
-            return WildcardEntity;
+            return WILDCARD_ENTITY;
         case WILDCARD:
-            return WildcardWildcard;
+            return WILDCARD_WILDCARD;
         default:
-            return Invalid2;
+            return INVALID_2;
         }
     } else {
-        return Invalid1;
+        return INVALID_1;
     }
 }
 std::string prettyPrintClauseType(ClauseType t) {

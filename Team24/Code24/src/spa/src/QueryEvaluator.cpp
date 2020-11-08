@@ -253,29 +253,29 @@ bool SingleQueryEvaluator::evaluateClause(const backend::PKB* pkb, const CLAUSE&
     ClauseArgsType argsType = getClauseArgsType(arg_type_1, arg_type_2);
 
     switch (argsType) {
-    case SynonymSynonym:
+    case SYNONYM_SYNONYM:
         return evaluateSynonymSynonym(pkb, srt, arg_type_2, arg_type_1, arg2, arg1, patternStr, groupResultTable);
-    case SynonymEntity:
+    case SYNONYM_ENTITY:
         return evaluateEntitySynonym(pkb, srt, arg_type_1, arg2, arg1, patternStr,
                                      groupResultTable); // swap the arguments as the called method required
-    case SynonymWildcard:
+    case SYNONYM_WILDCARD:
         return evaluateSynonymWildcard(pkb, srt, arg1, patternStr, groupResultTable);
-    case EntitySynonym:
+    case ENTITY_SYNONYM:
         return evaluateEntitySynonym(pkb, srt, arg_type_2, arg1, arg2, patternStr, groupResultTable);
-    case EntityEntity:
+    case ENTITY_ENTITY:
         return evaluateEntityEntity(pkb, srt, arg1, arg2);
-    case EntityWildcard:
+    case ENTITY_WILDCARD:
         return evaluateEntityWildcard(pkb, srt, arg1);
-    case WildcardSynonym:
+    case WILDCARD_SYNONYM:
         return evaluateSynonymWildcard(pkb, srt, arg2, patternStr, groupResultTable);
-    case WildcardEntity:
+    case WILDCARD_ENTITY:
         return evaluateEntityWildcard(pkb, srt, arg2);
-    case WildcardWildcard:
+    case WILDCARD_WILDCARD:
         return evaluateWildcardWildcard(pkb, srt);
-    case Invalid1:
+    case INVALID_1:
         handleError("invalid arg1 type: " + arg1);
         return false;
-    case Invalid2:
+    case INVALID_2:
         handleError("invalid arg2 type: " + arg2);
         return false;
     default:
