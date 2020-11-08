@@ -90,18 +90,21 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
         PROCEDURE_NAME calledProcedureName = tNode->children.front().name;
         STATEMENT_NUMBER statementNumber = tNodeToStatementNumber[tNode];
         procedureNameToCallStatements[calledProcedureName].insert(statementNumber);
+        callStatementsToProcedureName[statementNumber] = calledProcedureName;
     }
 
     for (auto tNode : tNodeTypeToTNodesMap[Read]) {
         VARIABLE_NAME variableName = tNode->children.front().name;
         STATEMENT_NUMBER statementNumber = tNodeToStatementNumber[tNode];
         variableNameToReadStatements[variableName].insert(statementNumber);
+        readStatementsToVariableName[statementNumber] = variableName;
     }
 
     for (auto tNode : tNodeTypeToTNodesMap[Print]) {
         VARIABLE_NAME variableName = tNode->children.front().name;
         STATEMENT_NUMBER statementNumber = tNodeToStatementNumber[tNode];
         variableNameToPrintStatements[variableName].insert(statementNumber);
+        printStatementsToVariableName[statementNumber] = variableName;
     }
 
     // Follow
@@ -282,7 +285,7 @@ PKBImplementation::getProcedureNameFromCallStatement(STATEMENT_NUMBER callStatem
         return VARIABLE_NAME();
     }
 
-    return statementNumberToTNode.at(callStatementNumber)->children.front().name;
+    return callStatementsToProcedureName.at(callStatementNumber);
 }
 
 const STATEMENT_NUMBER_SET PKBImplementation::getReadStatementsWithVariableName(VARIABLE_NAME variableName) const {
@@ -300,8 +303,7 @@ const VARIABLE_NAME PKBImplementation::getVariableNameFromReadStatement(STATEMEN
     if (statementNumberToTNodeType.at(readStatementNumber) != Read) {
         return VARIABLE_NAME();
     }
-
-    return statementNumberToTNode.at(readStatementNumber)->children.front().name;
+    return readStatementsToVariableName.at(readStatementNumber);
 }
 
 const STATEMENT_NUMBER_SET PKBImplementation::getPrintStatementsWithVariableName(VARIABLE_NAME variableName) const {
@@ -320,8 +322,7 @@ PKBImplementation::getVariableNameFromPrintStatement(STATEMENT_NUMBER printState
     if (statementNumberToTNodeType.at(printStatementNumber) != Print) {
         return VARIABLE_NAME();
     }
-
-    return statementNumberToTNode.at(printStatementNumber)->children.front().name;
+    return printStatementsToVariableName.at(printStatementNumber);
 }
 
 /** -------------------------- FOLLOWS ---------------------------- **/

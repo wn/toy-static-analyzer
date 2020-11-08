@@ -199,6 +199,9 @@ class PKBImplementation : virtual public backend::PKB {
 
     std::unordered_map<PROCEDURE_NAME, STATEMENT_NUMBER_SET> procedureNameToCallStatements;
     std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_SET> variableNameToReadStatements;
+    std::unordered_map<STATEMENT_NUMBER, VARIABLE_NAME> readStatementsToVariableName;
+    std::unordered_map<STATEMENT_NUMBER, VARIABLE_NAME> printStatementsToVariableName;
+    std::unordered_map<STATEMENT_NUMBER, PROCEDURE_NAME> callStatementsToProcedureName;
     std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_SET> variableNameToPrintStatements;
 };
 } // namespace backend
