@@ -34,7 +34,7 @@ TEST_CASE("Test and with such that clauses") {
     std::vector<lexer::Token> lexerTokens = backend::lexer::tokenizeWithWhitespace(queryString);
     qpbackend::Query actualQuery = querypreprocessor::parseTokens(lexerTokens);
 
-    //    REQUIRE(expectedQuery == actualQuery);
+    REQUIRE(expectedQuery == actualQuery);
 }
 
 // select-cl : declaration ‘Select’ synonym
