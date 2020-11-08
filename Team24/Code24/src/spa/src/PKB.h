@@ -89,7 +89,7 @@ class PKB {
 
 
     /* -- PARENT / PARENT* -- */
-    // Retrieves all the statements that (TODO(jeff) see this comment)
+    // Retrieves all the statements that
     // have the statement at `statementNumber` as a direct or indirect descendant.
     //
     // A list of statements is returned such that for statement s,
@@ -250,7 +250,6 @@ class PKB {
                                                                      bool isSubExpr) const = 0;
 
 
-    // TODO(weineng) this method currently do not take in any pattern. isSubExpr is always true.
     /**
      * Example:
      *   pattern w(_, "_") -> getAllWhileStatementsThatMatch("", "", true, "", true);
@@ -265,7 +264,6 @@ class PKB {
                                                                 const std::string& pattern,
                                                                 bool isSubExpr) const = 0;
 
-    // TODO(weineng) this method currently do not take in any pattern. isSubExpr is always true.
     /**
      * Example:
      *   pattern ifs(_, "_") -> getAllIfElseStatementsThatMatch("", "", true, "", true);

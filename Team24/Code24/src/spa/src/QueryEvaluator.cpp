@@ -303,9 +303,6 @@ bool SingleQueryEvaluator::evaluateSynonymSynonym(const backend::PKB* pkb,
                                                   std::string const& arg2,
                                                   std::string const& patternStr,
                                                   ResultTable& groupResultTable) {
-    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/246)
-    // note that relation between the synonym and itself is not allowed
-    // however, this does not hold for Next, fix it for the advanced
     bool isSelfRelation = (arg1 == arg2);
     std::vector<std::string> candidates_1 = synonym_candidates[arg1];
     std::vector<std::string> candidates_2 = synonym_candidates[arg2];
@@ -841,8 +838,6 @@ SingleQueryEvaluator::inquirePKBForAttribute(const backend::PKB* pkb, ArgType ar
  * @return empty list if any clause is invalid
  */
 std::vector<std::vector<CLAUSE_LIST>> SingleQueryEvaluator::getClausesSortedAndGrouped(const backend::PKB* pkb) {
-    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/271)
-    // remove construction of CLAUSE into QPP after refactoring Query struct
     CLAUSE_LIST clauses;
     for (const auto& relationClause : query.suchThatClauses) {
         clauses.emplace_back(std::get<0>(relationClause), std::get<1>(relationClause),
@@ -961,8 +956,6 @@ void SingleQueryEvaluator::updateSynonymsWithResultTable(ResultTable& table, boo
     }
 }
 
-// TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/281)
-// implement error handling other than logging
 /**
  * handle exception or error
  */

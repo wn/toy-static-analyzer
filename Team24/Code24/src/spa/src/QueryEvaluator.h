@@ -163,7 +163,6 @@ class SingleQueryEvaluator {
     bool validateClause(const CLAUSE& clause);
 
     // error handle
-    // TODO
     void handleError(std::string const& msg);
 };
 

@@ -187,12 +187,9 @@ def check_output_xml(output_xml):
         text_chunks = Counter(output.split())
         passed_test_cases = text_chunks[SUCCESS_TAG]
         failed_test_cases = text_chunks[FAILURE_CLOSING_TAG]
-        # TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/135):
-        # Provide more descriptive test summary on test cases failed and reason for failure.
         test_summary = f'Test passed:{passed_test_cases}\nTest failed:{failed_test_cases}'
         if failed_test_cases > 0:
             raise RuntimeError(f'Some test cases failed.\n{test_summary}')
-        # TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/134):
         # Check if any of the queries exceed the 5s limit.
         log(test_summary)
 

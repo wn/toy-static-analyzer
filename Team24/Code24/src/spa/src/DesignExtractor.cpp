@@ -873,7 +873,6 @@ getAffectsMapping(const std::unordered_map<TNodeType, std::vector<const TNode*>,
                   const std::unordered_map<int, std::unordered_set<int>>& nextRelationship,
                   const std::unordered_map<int, std::unordered_set<int>>& previousRelationship,
                   const std::unordered_map<const TNode*, std::unordered_set<std::string>>& usesMapping,
-                  // TODO(remo5000) use const here
                   const std::unordered_map<const TNode*, std::unordered_set<std::string>>& modifiesMapping) {
     // This is an implementation of a worklist algorithm for reaching definition analysis.
 

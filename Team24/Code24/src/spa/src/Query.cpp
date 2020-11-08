@@ -124,8 +124,6 @@ Query::Query(const DECLARATION_MAP& declarationMap,
     this->withClauses = withClauses;
 }
 
-// TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/157):
-// Complete this implementation for better debugging.
 std::string Query::toString() const {
     std::stringstream stringstream;
     stringstream << "Query {\nDeclaration map:";

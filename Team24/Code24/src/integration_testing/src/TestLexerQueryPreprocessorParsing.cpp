@@ -2063,9 +2063,7 @@ TEST_CASE("Test pattern invalid expression spec missing starting DOUBLE_QUOTES f
     requireParsingInvalidQPLQueryToReturnEmptyQuery(
     "assign a; Select a such that pattern a (_, 1+1\")");
 }
-/** Ignored test cases
- * TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/235):
- * Bug in lexer causing exceptions to be thrown.
+
 TEST_CASE("Test pattern invalid expression spec (sub expr) missing both DOUBLE_QUOTES failure") {
     requireParsingInvalidQPLQueryToReturnEmptyQuery(
     "assign a; Select a such that pattern a (_, _1+1_)");
@@ -2075,7 +2073,6 @@ TEST_CASE("Test pattern invalid expression spec (sub expr) missing closing DOUBL
     requireParsingInvalidQPLQueryToReturnEmptyQuery(
     "assign a; Select a such that pattern a (_, _\"1+1_)");
 }
-**/
 
 TEST_CASE("Test pattern invalid expression spec (sub expr) missing starting DOUBLE_QUOTES "
           "failure") {

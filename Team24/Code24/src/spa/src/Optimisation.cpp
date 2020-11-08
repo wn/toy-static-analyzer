@@ -1,5 +1,4 @@
 #define OPTIMIZER 1
-#define DEBUG 1 // TODO(wn) remove before final submission
 
 #include "Optimisation.h"
 
@@ -392,20 +391,6 @@ optimizeQueries(const CLAUSE_LIST& clauses, const RETURN_CANDIDATE_LIST& returnC
         std::unordered_set<std::string> selectSynonyms;
         for (const RETURN_CANDIDATE& c : returnCandidate) {
             selectSynonyms.insert(c.second);
-        }
-        if (DEBUG) {
-            std::vector<std::vector<CLAUSE_LIST>> result =
-            Optimisation(clauses, selectSynonyms).generateSortedClauses();
-            int count = 0;
-            for (auto i : result) {
-                for (auto j : i) {
-                    for (auto k : j) {
-                        count += 1;
-                    }
-                }
-            }
-            assert(count == clauses.size());
-            return result;
         }
         return Optimisation(clauses, selectSynonyms).generateSortedClauses();
     }

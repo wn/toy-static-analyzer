@@ -343,7 +343,6 @@ STATEMENT_NUMBER_SET PKBImplementation::getDirectFollowedBy(STATEMENT_NUMBER s) 
     return { it->second };
 }
 
-// TODO(weineng) optimize in the future.
 STATEMENT_NUMBER_SET PKBImplementation::getStatementsThatFollows(STATEMENT_NUMBER s) const {
     if (transitiveFollows.find(s) == transitiveFollows.end()) {
         return {};
@@ -351,7 +350,6 @@ STATEMENT_NUMBER_SET PKBImplementation::getStatementsThatFollows(STATEMENT_NUMBE
     return transitiveFollows.at(s);
 }
 
-// TODO(weineng) optimize in the future.
 STATEMENT_NUMBER_SET PKBImplementation::getStatementsFollowedBy(STATEMENT_NUMBER s) const {
     if (transitiveFollowed.find(s) == transitiveFollowed.end()) {
         return {};
@@ -819,7 +817,6 @@ STATEMENT_NUMBER_SET PKBImplementation::getPreviousBipStatementOf(STATEMENT_NUMB
 }
 
 STATEMENT_NUMBER_SET PKBImplementation::getAllStatementsWithNextBip() const {
-    // TODO(remo5000) cache this after the first time it's called
     STATEMENT_NUMBER_SET result;
     for (auto& p : nextBipRelationship) {
         if (isProcedureEndLine(p.first)) {
@@ -833,7 +830,6 @@ STATEMENT_NUMBER_SET PKBImplementation::getAllStatementsWithNextBip() const {
 }
 
 STATEMENT_NUMBER_SET PKBImplementation::getAllStatementsWithPreviousBip() const {
-    // TODO(remo5000) cache this after the first time it's called
     STATEMENT_NUMBER_SET result;
     for (auto& p : previousBipRelationship) {
         if (isProcedureEndLine(p.first)) {
@@ -889,7 +885,6 @@ PROGRAM_LINE_SET PKBImplementation::getStatementsAffectedBipBy(PROGRAM_LINE stat
     }
 
     PROGRAM_LINE_SET ans;
-    // TODO optimize using map iterators
     for (const auto& p : affectsBipStarMapping) {
         if (p.first.first != statementNumber) {
             continue;
@@ -908,7 +903,6 @@ PROGRAM_LINE_SET PKBImplementation::getStatementsThatAffectBip(PROGRAM_LINE stat
         return foost::getVisitedInDFS(statementNumber, affectedBipMapping, false);
     }
     PROGRAM_LINE_SET ans;
-    // TODO optimize using map iterators
     for (const auto& p : affectedBipStarMapping) {
         if (p.first.first != statementNumber) {
             continue;

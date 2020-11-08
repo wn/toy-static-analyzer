@@ -5,13 +5,6 @@
 #include <string>
 #include <vector>
 
-// TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/131)
-// Testing the values of NAME tokens. e.g.
-// map<int, string> indexToExpectedName = {{0, "select"}, ...};
-// for (auto& p : indexToExpectedName) {
-//   REQUIRE(lexerTokens2[p.first].name == p.second);
-// }
-
 std::string prettyTypeStr(const std::vector<backend::lexer::Token>& tokens) {
     std::string result;
     for (const auto& token : tokens) {
