@@ -56,9 +56,6 @@ jobs:
       - name: Run integration tests
         run: ./Team24/Code24/build/src/integration_testing/${{ matrix.build-type }}/integration_testing.exe
 
-      # TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/130):
-      # Add script to configure which queries and source code to run autotester
-      # with on CI.
       - name: Run autotester tests
         run: |
           cd Team24/Tests24

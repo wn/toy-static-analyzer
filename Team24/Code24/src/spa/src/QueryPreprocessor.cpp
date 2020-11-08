@@ -922,9 +922,6 @@ STATESTATUSPAIR parseRelRef(State state) {
         return parseRelationStmtStmtOrLineLine(state, relationClauseType);
     case qpbackend::USES:
     case qpbackend::MODIFIES:
-        // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/335): Currently
-        //  `Modifies(_,...)` and `Uses(_,...)` are coded as syntactic errors, this should
-        //  not be the case.
         return parseRelationStmtEntOrEntEnt(state, relationClauseType);
     case qpbackend::CALLS:
     case qpbackend::CALLST:
@@ -1323,8 +1320,6 @@ STATESTATUSPAIR parseAssignOrWhilePatternCond(State state) {
         return STATESTATUSPAIR(state, false);
     }
 
-    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/272):
-    // Modify State::addPatternClause to take in an ARG rather than value strings.
     state.addPatternClause(clauseType, state.getArgFromSynonymString(synAssignToken.nameValue),
                            entRefArg, expressionSpec);
     logLine(kQppLogInfoPrefix + "parseAssignOrWhilePatternCond: Success End");
@@ -1414,8 +1409,6 @@ STATE_STRING_RESULT_CLAUSE_TYPE_STATUS_QUADRUPLE parseExpressionSpec(State state
     int doubleQuotesPoppedCount = 0; // When doubleQuotesPoppedCount = 2, it means the end of the expr is reached.
     int nonWhitespaceTokensInExpr = 0;
     std::string expressionSpec;
-    // TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/231):
-    //  Use switch case statements to optimise.
     if (firstToken.type == backend::lexer::DOUBLE_QUOTE) {
         isSubExpression = false;
         doubleQuotesPoppedCount += 1;
@@ -1520,10 +1513,6 @@ STATE_STRING_RESULT_CLAUSE_TYPE_STATUS_QUADRUPLE parseExpressionSpec(State state
 
 /**
  * Parses tokens of a QPL query into a Query struct for easier processing.
- *
- * TODO(https://github.com/nus-cs3203/team24-cp-spa-20s1/issues/166):
- * tokens can be converted to an rvalue reference for optimization in the future.
- * `Tokens` are currently copied within state.
  *
  * @return A Query struct representing the valid QPL query. If the QPL query is invalid,
  * return an empty Query struct.
