@@ -101,6 +101,8 @@ class PKBImplementation : virtual public backend::PKB {
                                                          bool elsePatternIsSubExpr) const override;
 
   private:
+    std::unordered_map<const TNode*, int> tNodeToStatementNumber;
+
     // Follows helper:
     // for k, v in map, follow(v, k).
     std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER> followedFollowRelation;
@@ -123,6 +125,7 @@ class PKBImplementation : virtual public backend::PKB {
 
 
     // Uses helper:
+    std::unordered_map<const TNode*, std::unordered_set<std::string>> usesMapping;
     std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_SET> variableToStatementsThatUseIt;
     STATEMENT_NUMBER_SET allStatementsThatUseSomeVariable;
     std::unordered_map<VARIABLE_NAME, PROCEDURE_NAME_SET> variableToProceduresThatUseIt;
@@ -133,6 +136,7 @@ class PKBImplementation : virtual public backend::PKB {
     VARIABLE_NAME_SET allVariablesUsedBySomeStatement;
 
     // Modifies helper:
+    std::unordered_map<const TNode*, std::unordered_set<std::string>> modifiesMapping;
     std::unordered_map<VARIABLE_NAME, STATEMENT_NUMBER_SET> variableToStatementsThatModifyIt;
     STATEMENT_NUMBER_SET allStatementsThatModifySomeVariable;
     std::unordered_map<VARIABLE_NAME, PROCEDURE_NAME_SET> variableToProceduresThatModifyIt;
@@ -168,10 +172,10 @@ class PKBImplementation : virtual public backend::PKB {
     std::unordered_map<STATEMENT_NUMBER, std::unique_ptr<const TNode>> procedureEndNodes;
 
     // Affects helper:
-    std::unordered_map<PROGRAM_LINE, PROGRAM_LINE_SET> affectsMapping;
-    std::unordered_map<PROGRAM_LINE, PROGRAM_LINE_SET> affectedMapping;
-    STATEMENT_NUMBER_SET statementsThatAffect;
-    STATEMENT_NUMBER_SET statementsThatAreAffected;
+    mutable std::unordered_map<PROGRAM_LINE, PROGRAM_LINE_SET> affectsMapping;
+    mutable std::unordered_map<PROGRAM_LINE, PROGRAM_LINE_SET> affectedMapping;
+    mutable STATEMENT_NUMBER_SET statementsThatAffect;
+    mutable STATEMENT_NUMBER_SET statementsThatAreAffected;
 
     // AffectsBip helper:
     std::unordered_map<STATEMENT_NUMBER, STATEMENT_NUMBER_SET> affectsBipMapping;

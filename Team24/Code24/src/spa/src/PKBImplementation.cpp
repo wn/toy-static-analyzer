@@ -22,7 +22,7 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
     }
 
 
-    std::unordered_map<const TNode*, int> tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
+    tNodeToStatementNumber = extractor::getTNodeToStatementNumber(ast);
     statementNumberToTNode = extractor::getStatementNumberToTNode(tNodeToStatementNumber);
     tNodeTypeToTNodesMap = extractor::getTNodeTypeToTNodes(ast);
     statementNumberToTNodeType = extractor::getStatementNumberToTNodeTypeMap(statementNumberToTNode);
@@ -154,8 +154,7 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
     allIfElseCondWithVariables = foost::SetIntersection(allConditionStatementWithVariables, allIfElseStatements);
 
     // Uses
-    std::unordered_map<const TNode*, std::unordered_set<std::string>> usesMapping =
-    extractor::getUsesMapping(tNodeTypeToTNodesMap);
+    usesMapping = extractor::getUsesMapping(tNodeTypeToTNodesMap);
 
     for (auto& p : usesMapping) {
         const TNode* tNode = p.first;
@@ -190,8 +189,7 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
     }
 
     // Modifies
-    std::unordered_map<const TNode*, std::unordered_set<std::string>> modifiesMapping =
-    extractor::getModifiesMapping(tNodeTypeToTNodesMap);
+    modifiesMapping = extractor::getModifiesMapping(tNodeTypeToTNodesMap);
     for (auto& p : modifiesMapping) {
         const TNode* tNode = p.first;
         std::unordered_set<VARIABLE_NAME> modifiedVariables = p.second;
@@ -225,16 +223,16 @@ PKBImplementation::PKBImplementation(const TNode& ast) {
     }
 
 
-    affectsMapping = extractor::getAffectsMapping(tNodeTypeToTNodesMap, tNodeToStatementNumber,
-                                                  statementNumberToTNode, nextRelationship,
-                                                  previousRelationship, usesMapping, modifiesMapping);
-    for (const auto& p : affectsMapping) {
-        statementsThatAffect.insert(p.first);
-    }
-    affectedMapping = extractor::getAffectedMapping(affectsMapping);
-    for (const auto& p : affectedMapping) {
-        statementsThatAreAffected.insert(p.first);
-    }
+    // affectsMapping = extractor::getAffectsMapping(tNodeTypeToTNodesMap, tNodeToStatementNumber,
+    // statementNumberToTNode, nextRelationship,
+    // previousRelationship, usesMapping, modifiesMapping);
+    // for (const auto& p : affectsMapping) {
+    // statementsThatAffect.insert(p.first);
+    //}
+    // affectedMapping = extractor::getAffectedMapping(affectsMapping);
+    // for (const auto& p : affectedMapping) {
+    // statementsThatAreAffected.insert(p.first);
+    //}
 
     std::tie(affectsBipMapping, affectsBipStarMapping) =
     extractor::getAffectsBipMapping(tNodeTypeToTNodesMap, tNodeToStatementNumber,
@@ -843,15 +841,60 @@ STATEMENT_NUMBER_SET PKBImplementation::getAllStatementsWithPreviousBip() const 
 }
 
 PROGRAM_LINE_SET PKBImplementation::getStatementsAffectedBy(PROGRAM_LINE statementNumber, bool isTransitive) const {
+    // AVOIDING PRE-COMPUTATION
+    affectsMapping = extractor::getAffectsMapping(tNodeTypeToTNodesMap, tNodeToStatementNumber,
+                                                  statementNumberToTNode, nextRelationship,
+                                                  previousRelationship, usesMapping, modifiesMapping);
+    for (const auto& p : affectsMapping) {
+        statementsThatAffect.insert(p.first);
+    }
+    affectedMapping = extractor::getAffectedMapping(affectsMapping);
+    for (const auto& p : affectedMapping) {
+        statementsThatAreAffected.insert(p.first);
+    }
+
     return foost::getVisitedInDFS(statementNumber, affectsMapping, isTransitive);
 }
 PROGRAM_LINE_SET PKBImplementation::getStatementsThatAffect(PROGRAM_LINE statementNumber, bool isTransitive) const {
+    // AVOIDING PRE-COMPUTATION
+    affectsMapping = extractor::getAffectsMapping(tNodeTypeToTNodesMap, tNodeToStatementNumber,
+                                                  statementNumberToTNode, nextRelationship,
+                                                  previousRelationship, usesMapping, modifiesMapping);
+    for (const auto& p : affectsMapping) {
+        statementsThatAffect.insert(p.first);
+    }
+    affectedMapping = extractor::getAffectedMapping(affectsMapping);
+    for (const auto& p : affectedMapping) {
+        statementsThatAreAffected.insert(p.first);
+    }
     return foost::getVisitedInDFS(statementNumber, affectedMapping, isTransitive);
 }
 const PROGRAM_LINE_SET& PKBImplementation::getAllStatementsThatAffect() const {
+    // AVOIDING PRE-COMPUTATION
+    affectsMapping = extractor::getAffectsMapping(tNodeTypeToTNodesMap, tNodeToStatementNumber,
+                                                  statementNumberToTNode, nextRelationship,
+                                                  previousRelationship, usesMapping, modifiesMapping);
+    for (const auto& p : affectsMapping) {
+        statementsThatAffect.insert(p.first);
+    }
+    affectedMapping = extractor::getAffectedMapping(affectsMapping);
+    for (const auto& p : affectedMapping) {
+        statementsThatAreAffected.insert(p.first);
+    }
     return statementsThatAffect;
 }
 const PROGRAM_LINE_SET& PKBImplementation::getAllStatementsThatAreAffected() const {
+    // AVOIDING PRE-COMPUTATION
+    affectsMapping = extractor::getAffectsMapping(tNodeTypeToTNodesMap, tNodeToStatementNumber,
+                                                  statementNumberToTNode, nextRelationship,
+                                                  previousRelationship, usesMapping, modifiesMapping);
+    for (const auto& p : affectsMapping) {
+        statementsThatAffect.insert(p.first);
+    }
+    affectedMapping = extractor::getAffectedMapping(affectsMapping);
+    for (const auto& p : affectedMapping) {
+        statementsThatAreAffected.insert(p.first);
+    }
     return statementsThatAreAffected;
 }
 
